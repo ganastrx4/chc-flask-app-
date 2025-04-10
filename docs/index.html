@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bienvenida a CharlyCoin</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e2f;
+      color: #ffffff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #2c2c3e;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+    }
+    input, button {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background: #f39c12;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #e67e22; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #3a3a55;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background: #f39c12;
+      color: #000;
+    }
+    h3 { color: #f39c12; margin-top: 20px; }
+    .binance-link, .grafica-link, .next-button {
+      display: inline-block;
+      margin-top: 10px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 5px;
+      background: #f39c12;
+      transition: background-color 0.3s ease;
+    }
+    .binance-link:hover, .grafica-link:hover, .next-button:hover {
+      background: #e67e22;
+    }
+    .gif-container img {
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    #world-id-button {
+      margin: 20px 0;
+    }
+  </style>
+  <script src="https://cdn.worldcoin.org/idkit/idkit.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="gif-container">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo" />
+    </div>
+
+    <h2>Verifica tu identidad con World ID</h2>
+    <div id="world-id-button"></div>
+
+    <!-- Navegación -->
+    <a href="./apuestaswldchain.html" class="next-button">🎡RULETA🎡</a>
+     <a href="./billetera.html" class="grafica-link">📉WLD Gráfica en Vivo📉</a>
+    <a href="./buscador.html" class="next-button">🎲DADOS🎲</a>
+    <a href="./dados.html" class="next-button">🤑MULTIPLICA TU WDD🤑</a>     
+    <a href="./enviarwld.html" class="next-button">ID</a>
+    <a href="./ganachun.html" class="next-button">DONACION DE ❤️💛❤️</a>
+
+<a href="./ganarchun.html" class="next-button">🎡RULETA🎡</a>
+     <a href="./id.html" class="grafica-link">📉WLD Gráfica en Vivo📉</a>
+    <a href="./next_page.html" class="next-button">🎲DADOS🎲</a>
+    <a href="./reclamarchun.html" class="next-button">🤑MULTIPLICA TU WDD🤑</a>     
+    <a href="./enviarwld.html" class="next-button">ID</a>
+    <a href="./ruleta.html" class="next-button">DONACION DE ❤️💛❤️</a>
+
+    <a href="./salas.html" class="next-button">ID</a>
+    <a href="./tokenchc.html" class="next-button">DONACION DE ❤️💛❤️</a>
+    <a href="./transacciones.html" class="next-button">DONACION DE ❤️💛❤️</a>
+    <a href="./wdd.html" class="next-button">DONACION DE ❤️💛❤️</a>
+     </div>
+
+  <a href="./tokenchc.html" target="_blank">
+    <button style="padding: 15px; font-size: 18px; border-radius: 10px; background-color: #6c47ff; color: white;">
+      ¡Apoya nuestros Tokens CHC y CHUN en PUF y espera el PUMP!<br />
+      ¡Solo los débiles venden!
+    </button>
+  </a>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      new IDKitWidget({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu app_id
+        action: "login",
+        signal: "wld-comparativa-login",
+        onSuccess: (response) => {
+          console.log("✅ Verificado:", response);
+          alert("✅ Verificación exitosa con World ID");
+        },
+        onError: (error) => {
+          console.error("❌ Error al verificar:", error);
+          alert("❌ Ocurrió un error con World ID");
+        },
+      }).mount("#world-id-button");
+    });
+  </script>
+
+</body>
+</html>
