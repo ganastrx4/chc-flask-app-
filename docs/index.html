@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bienvenida a CharlyCoin</title>
-  <link rel="stylesheet" href="style.css" />
+  
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -116,13 +116,12 @@
     </button>
   </a>
 
-  <script>
-  const script = document.createElement('script');
-  script.src = "https://cdn.worldcoin.org/idkit/idkit.umd.min.js";
-  script.onload = () => {
-    const { IDKitWidget } = window.IDKit; // 👈 Esta línea es clave
+  <!-- Carga del SDK de World ID desde jsDelivr -->
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.1.0/dist/idkit.umd.min.js"></script>
 
-    new IDKitWidget({
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    const widget = new IDKitWidget({
       app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
       action: "login",
       signal: "wld-comparativa-login",
@@ -153,10 +152,12 @@
         console.error("❌ Error al verificar:", error);
         alert("❌ Ocurrió un error con World ID");
       },
-    }).mount("#world-id-button");
-  };
-  document.head.appendChild(script);
+    });
+
+    widget.mount("#world-id-button");
+  });
 </script>
+
 
 
 
