@@ -119,22 +119,43 @@
   </a>
 
   <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      new IDKitWidget({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu app_id
-        action: "login",
-        signal: "wld-comparativa-login",
-        onSuccess: (response) => {
-          console.log("✅ Verificado:", response);
-          alert("✅ Verificación exitosa con World ID");
-        },
-        onError: (error) => {
-          console.error("❌ Error al verificar:", error);
-          alert("❌ Ocurrió un error con World ID");
-        },
-      }).mount("#world-id-button");
-    });
-  </script>
+  window.addEventListener('DOMContentLoaded', function () {
+    new IDKitWidget({
+      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "login",
+      signal: "wld-comparativa-login",
+      onSuccess: async (response) => {
+        console.log("✅ Verificado:", response);
+
+        try {
+          const res = await fetch("http://localhost:5000/api/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(response),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            alert("✅ Verificación exitosa con World ID (backend confirmado)");
+          } else {
+            console.error("❌ Fallo en backend:", data.error);
+            alert("❌ Error en backend: " + JSON.stringify(data.error));
+          }
+        } catch (err) {
+          console.error("❌ Error conectando con backend:", err);
+          alert("❌ Error conectando con backend");
+        }
+      },
+      onError: (error) => {
+        console.error("❌ Error al verificar:", error);
+        alert("❌ Ocurrió un error con World ID");
+      },
+    }).mount("#world-id-button");
+  });
+</script>
+
 
 </body>
 </html>
