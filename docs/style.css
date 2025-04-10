@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f4f4f4;
+    flex-direction: column; /* Asegura que los elementos se alineen en columna en pantallas pequeñas */
+}
+
+.container {
+    text-align: center;
+    padding: 20px;
+    width: 100%; /* Asegura que el contenedor ocupe todo el ancho disponible */
+    max-width: 1000px; /* Limita el ancho máximo en pantallas grandes */
+}
+
+.gif-container img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.loading-bar {
+    width: 80%;
+    height: 10px;
+    margin: 20px auto;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background-color: #4CAF50;
+    animation: loading 3s infinite;
+}
+
+@keyframes loading {
+    0% { width: 0%; }
+    50% { width: 50%; }
+    100% { width: 100%; }
+}
+
+.next-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    font-size: 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.next-button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos responsivos */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    .gif-container img {
+        width: 80%; /* Hacemos que la imagen sea un poco más pequeña en pantallas pequeñas */
+    }
+
+    .loading-bar {
+        width: 90%; /* La barra de carga se ajusta más en pantallas pequeñas */
+    }
+
+    .next-button {
+        width: 100%; /* Botón a pantalla completa en dispositivos pequeños */
+        font-size: 14px; /* Reduce el tamaño de la fuente en dispositivos pequeños */
+    }
+}
+
+@media (min-width: 601px) {
+    .next-button {
+        font-size: 16px; /* Tamaño normal para pantallas más grandes */
+    }
+}
