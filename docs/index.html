@@ -120,6 +120,8 @@
   const script = document.createElement('script');
   script.src = "https://cdn.worldcoin.org/idkit/idkit.umd.min.js";
   script.onload = () => {
+    const { IDKitWidget } = window.IDKit; // 👈 Esta línea es clave
+
     new IDKitWidget({
       app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
       action: "login",
@@ -155,6 +157,7 @@
   };
   document.head.appendChild(script);
 </script>
+
 
 
 </body>
