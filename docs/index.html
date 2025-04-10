@@ -117,41 +117,45 @@
   </a>
 
   <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      new IDKitWidget({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-        action: "login",
-        signal: "wld-comparativa-login",
-        onSuccess: async (response) => {
-          console.log("✅ Verificado:", response);
-          try {
-            const res = await fetch("https://1b73-187-191-39-117.ngrok-free.app/api/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(response),
-            });
+  const script = document.createElement('script');
+  script.src = "https://cdn.worldcoin.org/idkit/idkit.umd.min.js";
+  script.onload = () => {
+    new IDKitWidget({
+      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "login",
+      signal: "wld-comparativa-login",
+      onSuccess: async (response) => {
+        console.log("✅ Verificado:", response);
+        try {
+          const res = await fetch("https://1b73-187-191-39-117.ngrok-free.app/api/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(response),
+          });
 
-            const result = await res.json();
+          const result = await res.json();
 
-            if (result.success) {
-              alert("✅ Verificación exitosa con World ID");
-            } else {
-              alert("❌ Verificación fallida");
-            }
-          } catch (error) {
-            console.error("❌ Error al verificar en backend:", error);
-            alert("❌ Ocurrió un error al verificar");
+          if (result.success) {
+            alert("✅ Verificación exitosa con World ID");
+          } else {
+            alert("❌ Verificación fallida");
           }
-        },
-        onError: (error) => {
-          console.error("❌ Error al verificar:", error);
-          alert("❌ Ocurrió un error con World ID");
-        },
-      }).mount("#world-id-button");
-    });
-  </script>
+        } catch (error) {
+          console.error("❌ Error al verificar en backend:", error);
+          alert("❌ Ocurrió un error al verificar");
+        }
+      },
+      onError: (error) => {
+        console.error("❌ Error al verificar:", error);
+        alert("❌ Ocurrió un error con World ID");
+      },
+    }).mount("#world-id-button");
+  };
+  document.head.appendChild(script);
+</script>
+
 
 </body>
 </html>
