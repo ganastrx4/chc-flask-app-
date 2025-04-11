@@ -88,8 +88,9 @@
       <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo" />
     </div>
 
-    <h2>Verifica tu identidad con World ID</h2>
-    <div id="world-id-button"></div>
+     <h1>Verifica tu identidad con World ID</h1>
+  <button id="open-idkit">Iniciar Verificación</button>
+  <div id="idkit-container"></div>
 
     <!-- Navegación -->
     <a href="./apuestaswldchain.html" class="next-button">🎡RULETA🎡</a>
@@ -117,46 +118,53 @@
     </button>
   </a>
 
-  <!-- SDK oficial actualizado -->
+ 
   
  
-<script src="https://raw.githubusercontent.com/worldcoin/idkit-js/main/dist/idkit.umd.min.js"></script>
-  <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      const widget = new IDKitWidget({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-        action: "login",
-        signal: "wld-comparativa-login",
-        onSuccess: async (response) => {
-          console.log("✅ Verificado:", response);
-          try {
-            const res = await fetch("https://1b73-187-191-39-117.ngrok-free.app/api/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(response),
-            });
+<!-- Carga del módulo -->
+  <script type="module">
+    import '@worldcoin/idkit-standalone';
 
-            const result = await res.json();
+    IDKit.init({
+      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "login",
+      signal: "wld-comparativa-login",
+      container_id: "idkit-container",
+      show_modal: true,
+      partner: true,
+      verification_level: "orb",
+      handleVerify: async (response) => {
+        try {
+          const res = await fetch("https://1b73-187-191-39-117.ngrok-free.app/api/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(response),
+          });
 
-            if (result.success) {
-              alert("✅ Verificación exitosa con World ID");
-            } else {
-              alert("❌ Verificación fallida");
-            }
-          } catch (error) {
-            console.error("❌ Error al verificar en backend:", error);
-            alert("❌ Ocurrió un error al verificar");
+          const result = await res.json();
+          if (result.success) {
+            alert("✅ Verificación exitosa con World ID");
+          } else {
+            alert("❌ Verificación fallida");
           }
-        },
-        onError: (error) => {
-          console.error("❌ Error al verificar:", error);
-          alert("❌ Ocurrió un error con World ID");
-        },
-      });
+        } catch (error) {
+          console.error("❌ Error al verificar en backend:", error);
+          alert("❌ Error al conectar con el backend");
+        }
+      },
+      onSuccess: (response) => {
+        console.log("✅ Verificado:", response);
+      },
+      onError: (error) => {
+        console.error("❌ Error en el proceso:", error);
+        alert("❌ Ocurrió un error durante la verificación");
+      },
+    });
 
-      widget.mount("#world-id-button");
+    document.getElementById('open-idkit').addEventListener('click', async () => {
+      await IDKit.open();
     });
   </script>
 </body>
