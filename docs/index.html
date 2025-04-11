@@ -121,50 +121,53 @@
  
   
  
-<!-- Carga del módulo -->
-  <script type="module">
-    import '@worldcoin/idkit-standalone';
+<!-- ✅ UMD Script para navegadores -->
+  <script src="https://cdn.jsdelivr.net/gh/worldcoin/idkit-js@main/dist/idkit.umd.min.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      const widget = new IDKitWidget({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        action: "login",
+        signal: "wld-comparativa-login",
+        verification_level: "orb",
+        container_id: "idkit-container",
+        show_modal: true,
+        onSuccess: async (response) => {
+          console.log("✅ Verificado:", response);
 
-    IDKit.init({
-      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-      action: "login",
-      signal: "wld-comparativa-login",
-      container_id: "idkit-container",
-      show_modal: true,
-      partner: true,
-      verification_level: "orb",
-      handleVerify: async (response) => {
-        try {
-          const res = await fetch("https://5dff-189-217-220-181.ngrok-free.app/api/verify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(response),
-          });
+          try {
+            const res = await fetch("https://5dff-189-217-220-181.ngrok-free.app/api/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(response),
+            });
 
-          const result = await res.json();
-          if (result.success) {
-            alert("✅ Verificación exitosa con World ID");
-          } else {
-            alert("❌ Verificación fallida");
+            const result = await res.json();
+            if (result.success) {
+              alert("✅ Verificación exitosa con World ID");
+            } else {
+              alert("❌ Verificación fallida");
+            }
+          } catch (error) {
+            console.error("❌ Error al verificar en backend:", error);
+            alert("❌ Error al conectar con el backend");
           }
-        } catch (error) {
-          console.error("❌ Error al verificar en backend:", error);
-          alert("❌ Error al conectar con el backend");
-        }
-      },
-      onSuccess: (response) => {
-        console.log("✅ Verificado:", response);
-      },
-      onError: (error) => {
-        console.error("❌ Error en el proceso:", error);
-        alert("❌ Ocurrió un error durante la verificación");
-      },
-    });
+        },
+        onError: (error) => {
+          console.error("❌ Error en la verificación:", error);
+          alert("❌ Ocurrió un error con World ID");
+        },
+      });
 
-    document.getElementById('open-idkit').addEventListener('click', async () => {
-      await IDKit.open();
+      // Montar el widget al cargar
+      widget.mount();
+
+      // Abrir el modal manualmente
+      document.getElementById('open-idkit').addEventListener('click', () => {
+        widget.open();
+      });
     });
   </script>
 </body>
