@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Criptomonedas</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2f;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #2c2c3e;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+        }
+        input, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background: #f39c12;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #e67e22; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #3a3a55;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background: #f39c12;
+            color: #000;
+        }
+        h3 { color: #f39c12; margin-top: 20px; }
+        .link-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .link-box {
+            background: linear-gradient(135deg, #6c47ff, #a078ff);
+            border-radius: 15px;
+            padding: 20px 30px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            min-width: 200px;
+        }
+        .link-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .next-button, .grafica-link, .binance-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 10px 0;
+            display: inline-block;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f39c12;
+            transition: background-color 0.3s ease;
+        }
+        .next-button:hover, .grafica-link:hover, .binance-link:hover {
+            background: #e67e22;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Buscador de Criptomonedas</h1>
+    <input id="cryptoInput" placeholder="Ejemplo: BTC, ETH, BNB" type="text" />
+    <button id="searchBtn">Buscar</button>
+    <div id="cryptoInfo">
+        <h2 id="cryptoName"></h2>
+        <p><strong>💲 Precio en USDT:</strong> $<span id="priceUSD"></span></p>
+    </div>
+
+    <div id="wldComparativa">
+        <h3>💎 Comparativa WLD</h3>
+        <table>
+            <tr><th>Pareja</th><th>Precio</th></tr>
+            <tr><td>WLD/USDT</td><td id="wldUSDT">...</td></tr>
+            <tr><td>WLD/MXN</td><td id="wldMXN">...</td></tr>
+            <tr><td>WLD/BTC</td><td id="wldBTC">...</td></tr>
+            <tr><td>WLD/XRP</td><td id="wldXRP">...</td></tr>
+            <tr><td>WLD/ETH</td><td id="wldETH">...</td></tr>
+            <tr><td>WLD/SOL</td><td id="wldSOL">...</td></tr>
+        </table>
+    </div>
+
+    <h3>📈 Pares con WLD</h3>
+    <table id="wldPairs"></table>
+</div>
+
+<div class="link-container">
+         <!-- Navegación -->
+    <a href="./ruleta.html" class="next-button">🎡RULETA🎡</a>
+     <a href="./next_page.html" class="grafica-link">📉WLD Gráfica en Vivo📉</a>
+    <a href="./dados.html" class="next-button">🎲DADOS🎲</a>
+    <a href="./wdd.html" class="next-button">🤑MULTIPLICA TU WDD🤑</a>     
+    <a href="./id.html" class="next-button">ID</a>
+    <a href="./enviarwld.html" class="next-button">DONACION DE ❤️💛❤️</a>
+    <a href="./index.html" class="next-button">🏠HOME🏠</a> 
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#searchBtn').click(async function () {
+            const symbol = $('#cryptoInput').val().toUpperCase().trim();
+            if (!symbol) return alert('⚠️ Ingresa un símbolo.');
+            const price = await getPrice(symbol + 'USDT');
+            if (price) {
+                $('#cryptoName').text(symbol);
+                $('#priceUSD').text(parseFloat(price).toFixed(8));
+                $('#cryptoInfo').show();
+            } else {
+                alert('❌ Criptomoneda no encontrada.');
+            }
+        });
+        actualizarComparativaWLD();
+        cargarParesWLD();
+    });
+
+    async function getPrice(pair) {
+        try {
+            const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
+            const data = await res.json();
+            return parseFloat(data.price);
+        } catch {
+            return null;
+        }
+    }
+
+    async function actualizarComparativaWLD() {
+        const wldUSDT = await getPrice("WLDUSDT");
+        const usdtMXN = await getPrice("USDTMXN") || 20.24;
+
+        $('#wldUSDT').text(`$${wldUSDT.toFixed(8)}`);
+        $('#wldMXN').text(`$${(wldUSDT * usdtMXN).toFixed(8)}`);
+
+        await mostrarPar("BTC", wldUSDT);
+        await mostrarPar("XRP", wldUSDT);
+        await mostrarPar("ETH", wldUSDT);
+        await mostrarPar("SOL", wldUSDT);
+    }
+
+    async function mostrarPar(cripto, wldUSDT) {
+        const otraUSDT = await getPrice(cripto + 'USDT');
+        const ratio = (wldUSDT / otraUSDT).toFixed(8);
+        $(`#wld${cripto}`).text(ratio);
+    }
+
+    async function cargarParesWLD() {
+        const res = await fetch("https://api.binance.com/api/v3/ticker/price");
+        const data = await res.json();
+        const paresWLD = data.filter(d => d.symbol.startsWith("WLD") && d.symbol !== "WLDUSDT");
+        const tabla = $('#wldPairs');
+        tabla.empty();
+        tabla.append(`<tr><th>Par</th><th>Precio</th></tr>`);
+        paresWLD.forEach(p => {
+            const simbolo = p.symbol.replace("WLD", "WLD/");
+            tabla.append(`<tr><td>${simbolo}</td><td>${parseFloat(p.price).toFixed(8)}</td></tr>`);
+        });
+    }
+</script>
+</body>
+
+</div>
+
+<a href="./tokenchc.html" target="_blank">
+    <button style="padding: 15px; font-size: 18px; border-radius: 10px; background-color: #6c47ff; color: white;">
+        ¡Apoya nuestros Tokens CHC y CHUN en PUF y espera el PUMP!
+        <br> ¡Solo los débiles venden!
+    </button>
+</a>
+</html>
