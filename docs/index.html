@@ -119,57 +119,25 @@
   </a>
 
  
-  
- 
-<!-- ✅ UMD Script para navegadores -->
-  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.0.9/dist/idkit.umd.min.js"></script>
+<script type="module">
+  import { IDKitWidget } from "https://cdn.jsdelivr.net/npm/@worldcoin/idkit@2.0.2/+esm";
 
-  <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      const widget = new IDKitWidget({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-        action: "login",
-        signal: "wld-comparativa-login",
-         verification_level: "device",
-        container_id: "idkit-container",
-        show_modal: true,
-        onSuccess: async (response) => {
-          console.log("✅ Verificado:", response);
+  const widget = new IDKitWidget({
+    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+    action: "login",
+    signal: "wld-comparativa-login",
+    verification_level: "device",
+    container_id: "idkit-container",
+    show_modal: true,
+    onSuccess: (response) => console.log("Verificado", response),
+    onError: (err) => console.error("Error", err),
+  });
 
-          try {
-            const res = await fetch("https://5dff-189-217-220-181.ngrok-free.app/api/verify", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(response),
-            });
+  widget.mount();
+  document.getElementById('open-idkit').addEventListener('click', () => {
+    widget.open();
+  });
+</script>
 
-            const result = await res.json();
-            if (result.success) {
-              alert("✅ Verificación exitosa con World ID");
-            } else {
-              alert("❌ Verificación fallida");
-            }
-          } catch (error) {
-            console.error("❌ Error al verificar en backend:", error);
-            alert("❌ Error al conectar con el backend");
-          }
-        },
-        onError: (error) => {
-          console.error("❌ Error en la verificación:", error);
-          alert("❌ Ocurrió un error con World ID");
-        },
-      });
-
-      // Montar el widget al cargar
-      widget.mount();
-
-      // Abrir el modal manualmente
-      document.getElementById('open-idkit').addEventListener('click', () => {
-        widget.open();
-      });
-    });
-  </script>
 </body>
 </html>
