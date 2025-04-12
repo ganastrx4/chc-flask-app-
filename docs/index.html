@@ -124,6 +124,20 @@
     widget.open();
   });
 </script>
+  <script>
+  async function verificarUsuario() {
+    const respuesta = await fetch("https://23a8-189-217-220-181.ngrok-free.app/api/verificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: "charly" }),
+    });
+    const resultado = await respuesta.json();
+    console.log(resultado);
+  }
+
+  verificarUsuario();
+</script>
+
 
 </body>
 </html>
