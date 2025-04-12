@@ -21,37 +21,19 @@
       border-radius: 10px;
       box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
     }
-    input, button {
+    button {
       width: 80%;
       padding: 10px;
       margin: 10px 0;
       border: none;
       border-radius: 5px;
-    }
-    button {
       background: #f39c12;
       color: white;
       cursor: pointer;
       font-weight: bold;
     }
     button:hover { background: #e67e22; }
-    h1 {
-      color: #f39c12;
-    }
-    a.next-button {
-      display: inline-block;
-      margin-top: 10px;
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 16px;
-      padding: 10px;
-      border-radius: 5px;
-      background: #f39c12;
-      transition: background-color 0.3s ease;
-    }
-    a.next-button:hover {
-      background: #e67e22;
-    }
+    h1 { color: #f39c12; }
     .gif-container img {
       width: 100%;
       height: auto;
@@ -84,45 +66,34 @@
     </button>
   </a>
 
-  <!-- ✅ Carga el script de IDKit UMD global -->
- <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.1.0-beta.18/dist/idkit.umd.production.min.js"></script>
-<script>
-  const widget = window.IDKitWidget.init({
-    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-    action: "login",
-    signal: "wld-comparativa-login",
-    verification_level: "device",
-    container_id: "idkit-container",
-    show_modal: true,
-    onSuccess: (response) => {
-      console.log("✅ Verificado:", response);
-      fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(response)
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log("📬 Backend:", data);
-        if (data.status === "ok") {
-          alert("✅ ¡Verificado!");
-          window.location.href = "./buscador.html";
-        } else {
-          alert("❌ Error al verificar: " + data.mensaje);
-        }
-      })
-      .catch(err => {
-        console.error("❌ POST error:", err);
-        alert("❌ Error en el servidor");
-      });
-    }
-  });
+  <!-- ✅ Importar IDKit v2 correctamente -->
+  <script type="module">
+    import { IDKitWidget } from "https://cdn.skypack.dev/@worldcoin/idkit";
 
-  document.getElementById("open-idkit").addEventListener("click", () => {
-    widget.open();
-  });
-</script>
+    const widget = IDKitWidget.init({
+      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "login",
+      signal: "wld-comparativa-login",
+      verification_level: "device",
+      container_id: "idkit-container",
+      show_modal: true,
+      onSuccess: (response) => {
+        console.log("✅ Verificado:", response);
+        fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(response)
+        })
+        .then(res => res.json())
+        .then(data => console.log("📬 Respuesta backend:", data))
+        .catch(err => console.error("❌ Error en POST:", err));
+      }
+    });
 
+    document.getElementById("open-idkit").addEventListener("click", () => {
+      widget.open();
+    });
+  </script>
 
 </body>
 </html>
