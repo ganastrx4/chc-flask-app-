@@ -1,94 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verificación con World ID</title>
+  <meta charset="UTF-8">
+  <title>World ID Verificación</title>
+  <script src="https://unpkg.com/@worldcoin/idkit@0.2.2/dist/idkit.umd.production.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #1e1e2f;
-      color: #ffffff;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
       text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 600px;
-      margin: 50px auto;
-      padding: 20px;
-      background: #2c2c3e;
-      border-radius: 10px;
-      box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+      margin-top: 50px;
     }
     button {
-      padding: 12px 20px;
+      padding: 10px 20px;
+      font-size: 18px;
       border: none;
-      border-radius: 5px;
-      background: #f39c12;
+      border-radius: 8px;
+      background: #6c63ff;
       color: white;
-      font-size: 16px;
       cursor: pointer;
     }
-    button:hover {
-      background: #e67e22;
-    }
   </style>
-
-  <!-- Primero declaramos el fallback para evitar errores de ejecución -->
-  <script>
-    function loadFallback() {
-      const fallbackScript = document.createElement("script");
-      fallbackScript.src = "https://unpkg.com/@worldcoin/idkit@0.2.2/dist/idkit.umd.production.min.js";
-      fallbackScript.onload = () => console.log("✅ Fallback cargado desde unpkg");
-      document.head.appendChild(fallbackScript);
-    }
-  </script>
-
-  <!-- Cargar el script de IDKit -->
-  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.2.2/dist/idkit.umd.production.min.js" onerror="loadFallback()"></script>
 </head>
 <body>
-
-  <div class="container">
-    <h1>Verifica tu identidad con World ID</h1>
-    <button id="verificarBtn">Iniciar Verificación</button>
-  </div>
+  <h1>Verifica tu identidad con World ID</h1>
+  <button id="verificarBtn">Verificar</button>
 
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const btn = document.getElementById("verificarBtn");
+    document.getElementById("verificarBtn").addEventListener("click", () => {
+      if (!window.IDKit) {
+        alert("❌ Error: IDKit no está disponible.");
+        return;
+      }
 
-      btn.addEventListener("click", () => {
-        if (!window.IDKit) {
-          console.error("❌ IDKit no está disponible. Revisa que el script haya cargado correctamente.");
-          alert("❌ Error: IDKit no cargó. Revisa tu conexión.");
-          return;
-        }
-
-        const widget = window.IDKit.init({
-          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-          action: "login",
-          signal: "wld-comparativa-login",
-          credential_types: ["orb"],
-          verification_level: "device",
-          show_modal: true,
-          onSuccess: (result) => {
-            console.log("✅ Verificado:", result);
-
-            fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(result),
-            })
-            .then(res => res.json())
-            .then(data => console.log("📬 Backend:", data))
-            .catch(err => console.error("❌ Error en POST:", err));
-          }
-        });
-
-        widget.open();
+      const widget = window.IDKit.init({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        action: "login",
+        signal: "verificacion-wld",
+        credential_types: ["orb"],
+        verification_level: "device",
+        show_modal: true,
+        onSuccess: (result) => {
+          console.log("✅ Verificado:", result);
+          fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(result),
+          })
+          .then(res => res.json())
+          .then(data => console.log("📬 Backend respondió:", data))
+          .catch(err => console.error("❌ Error en el POST:", err));
+        },
       });
+
+      widget.open();
     });
   </script>
 </body>
