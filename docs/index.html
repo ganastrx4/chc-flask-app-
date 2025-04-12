@@ -115,9 +115,18 @@
     verification_level: "device",
     container_id: "idkit-container",
     show_modal: true,
-    onSuccess: (response) => console.log("Verificado", response),
-    onError: (err) => console.error("Error", err),
-  });
+    onSuccess: (response) => {
+  console.log("Verificado", response);
+  fetch("https://TU_NGROK/api/verificar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(response)
+  })
+  .then(res => res.json())
+  .then(data => console.log(data))
+  .catch(err => console.error(err));
+},
+});
 
   widget.mount();
   document.getElementById('open-idkit').addEventListener('click', () => {
