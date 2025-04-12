@@ -49,5 +49,18 @@
       });
     });
   </script>
+  <!-- Script principal desde un CDN confiable -->
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.2.2/dist/idkit.umd.production.min.js" onerror="loadFallback()"></script>
+
+<!-- Fallback desde un espejo alternativo (ej: unpkg) -->
+<script>
+  function loadFallback() {
+    const fallbackScript = document.createElement("script");
+    fallbackScript.src = "https://unpkg.com/@worldcoin/idkit@0.2.2/dist/idkit.umd.production.min.js";
+    fallbackScript.onload = () => console.log("✅ Fallback cargado desde unpkg");
+    document.head.appendChild(fallbackScript);
+  }
+</script>
+
 </body>
 </html>
