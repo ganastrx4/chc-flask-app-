@@ -3,44 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <title>Verifica tu ID con Worldcoin</title>
+  <style>
+    #loader {
+      display: none;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <h1>Verifica tu identidad con World ID</h1>
   <button id="verificar">Verificar con Worldcoin</button>
-  <div id="idkit-container"></div>
+  <div id="loader">Cargando... Por favor espera.</div>
 
-  <!-- Usa tu archivo descargado -->
-  <script src="./static/js/index.global.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof window.IDKitWidget !== "undefined") {
-        const widget = window.IDKitWidget.init({
-          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Reemplaza por tu app_id real
-          action: "charlycoin-login",
-          signal: "verificacion-charly4k",
-          verification_level: "device",
-          container_id: "idkit-container",
-          show_modal: true,
-          onSuccess: (result) => {
-            console.log("✅ Verificación exitosa:", result);
-            // Aquí puedes enviar los datos a tu backend
-            fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(result)
-            })
-            .then(res => res.json())
-            .then(data => console.log("📬 Respuesta del backend:", data))
-            .catch(err => console.error("❌ Error enviando datos:", err));
-          }
-        });
+    document.getElementById("verificar").addEventListener("click", () => {
+      const loader = document.getElementById("loader");
+      loader.style.display = "block";
 
-        document.getElementById("verificar").addEventListener("click", () => {
-          widget.open();
-        });
-      } else {
-        console.error("❌ IDKit no cargó correctamente.");
-      }
+      setTimeout(() => {
+        window.location.href = "buscador.html";
+      }, 3000); // Redirige después de 3 segundos
     });
   </script>
 </body>
