@@ -2,19 +2,50 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Verifica tu identidad con Worldcoin para acceder de forma segura y rápida." />
+  <meta name="author" content="TuNombre" />
   <title>Verifica tu ID con Worldcoin</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    button {
+      padding: 12px 24px;
+      background-color: #2b74f3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1744b5;
+    }
+
     #loader {
       display: none;
       margin-top: 20px;
       font-weight: bold;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <h1>Verifica tu identidad con World ID</h1>
-  <button id="verificar">Verificar con Worldcoin</button>
-  <div id="loader">Cargando... Por favor espera.</div>
+  <h1>Verifica tu identidad con <strong>World ID</strong></h1>
+  <button id="verificar" aria-label="Verificar con Worldcoin">Verificar con Worldcoin</button>
+  <div id="loader" role="alert">Cargando... Por favor espera.</div>
 
   <script>
     document.getElementById("verificar").addEventListener("click", () => {
@@ -23,7 +54,7 @@
 
       setTimeout(() => {
         window.location.href = "buscador.html";
-      }, 3000); // Redirige después de 3 segundos
+      }, 3000);
     });
   </script>
 </body>
