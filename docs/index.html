@@ -2,34 +2,45 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>World ID Verificación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World ID Login</title>
 </head>
-<body>
-  <h1>🔐 Inicia Verificación</h1>
-  <div id="idkit-container"></div>
-  <button id="open-idkit">Verificar con World ID</button>
+<body style="font-family:sans-serif; background:#1a1a2e; color:white; text-align:center; padding:40px">
 
+  <h1>🔐 Verificación con World ID</h1>
+  <button id="open-idkit" style="padding:10px 20px; font-size:16px; background:#f39c12; color:white; border:none; border-radius:5px;">
+    Iniciar verificación
+  </button>
+  <div id="idkit-container" style="margin-top: 30px;"></div>
+
+  <!-- CARGA CORRECTA DEL SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.2.2/dist/idkit.umd.production.min.js"></script>
+
   <script>
     window.addEventListener("DOMContentLoaded", () => {
+      if (!window.IDKit || !window.IDKit.init) {
+        console.error("❌ IDKit no está disponible. Revisa que el script haya cargado correctamente.");
+        return;
+      }
+
       const widget = window.IDKit.init({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // tu app_id
         action: "login",
-        signal: "demo-login",
+        signal: "wld-comparativa-login",
         verification_level: "device",
         credential_types: ["orb", "phone"],
         container_id: "idkit-container",
         onSuccess: (response) => {
-          console.log("✅ Verificado:", response);
+          console.log("✅ Verificación exitosa:", response);
 
           fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(response)
           })
-            .then((res) => res.json())
-            .then((data) => console.log("📬 Backend respondió:", data))
-            .catch((err) => console.error("❌ Error en verificación:", err));
+          .then(res => res.json())
+          .then(data => console.log("📬 Backend respondió:", data))
+          .catch(err => console.error("❌ Error en POST:", err));
         },
       });
 
