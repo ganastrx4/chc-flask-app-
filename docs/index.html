@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bienvenida a CharlyCoin</title>
- 
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,25 +35,10 @@
       font-weight: bold;
     }
     button:hover { background: #e67e22; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: #3a3a55;
-      border-radius: 10px;
-      overflow: hidden;
+    h1 {
+      color: #f39c12;
     }
-    th, td {
-      padding: 10px;
-      text-align: center;
-      border-bottom: 1px solid #444;
-    }
-    th {
-      background: #f39c12;
-      color: #000;
-    }
-    h3 { color: #f39c12; margin-top: 20px; }
-    .binance-link, .grafica-link, .next-button {
+    a.next-button {
       display: inline-block;
       margin-top: 10px;
       color: #ffffff;
@@ -65,7 +49,7 @@
       background: #f39c12;
       transition: background-color 0.3s ease;
     }
-    .binance-link:hover, .grafica-link:hover, .next-button:hover {
+    a.next-button:hover {
       background: #e67e22;
     }
     .gif-container img {
@@ -74,11 +58,10 @@
       max-width: 400px;
       margin: 0 auto;
     }
-    #world-id-button {
-      margin: 20px 0;
+    #idkit-container {
+      margin: 20px auto;
     }
   </style>
- 
 </head>
 <body>
 
@@ -87,14 +70,11 @@
       <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo" />
     </div>
 
-     <h1>Verifica tu identidad con World ID</h1>
-  <button id="open-idkit">Iniciar Verificación</button>
-  <div id="idkit-container"></div>
+    <h1>Verifica tu identidad con World ID</h1>
+    <button id="open-idkit">Iniciar Verificación</button>
+    <div id="idkit-container"></div>
 
-    <!-- Navegación -->
-    
-    <a href="./buscador.html" class="next-button">🎲PRECIOS DE WLD🎲</a>
-   
+    <a href="./buscador.html" class="next-button">🎲 PRECIOS DE WLD 🎲</a>
   </div>
 
   <a href="https://ganastrx4.github.io/chc-flask-app/tokenchc.html" target="_blank">
@@ -104,49 +84,40 @@
     </button>
   </a>
 
- 
-<script type="module">
-  import { IDKitWidget } from "https://cdn.jsdelivr.net/npm/@worldcoin/idkit@2.0.2/+esm";
+  <script type="module">
+    import { IDKitWidget } from "https://cdn.jsdelivr.net/npm/@worldcoin/idkit@2.0.2/+esm";
 
-  const widget = new IDKitWidget({
-    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-    action: "login",
-    signal: "wld-comparativa-login",
-    verification_level: "device",
-    container_id: "idkit-container",
-    show_modal: true,
-    onSuccess: (response) => {
-  console.log("Verificado", response);
-  fetch("https://7c8d-189-217-220-181.ngrok-free.app/api/verificar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(response)
-  })
-  .then(res => res.json())
-  .then(data => console.log(data))
-  .catch(err => console.error(err));
-},
-});
+    const widget = new IDKitWidget({
+      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "login",
+      signal: "wld-comparativa-login",
+      verification_level: "device",
+      container_id: "idkit-container",
+      show_modal: true,
+      onSuccess: (response) => {
+        console.log("✅ Verificado:", response);
+        alert("✅ Verificación exitosa con World ID");
 
-  widget.mount();
-  document.getElementById('open-idkit').addEventListener('click', () => {
-    widget.open();
-  });
-</script>
-  <script>
-  async function verificarUsuario() {
-    const respuesta = await fetch("https://7c8d-189-217-220-181.ngrok-free.app/api/verificar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user: "charly" }),
+        fetch("https://7c8d-189-217-220-181.ngrok-free.app/api/verificar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(response),
+        })
+        .then(res => res.json())
+        .then(data => console.log("🔁 Respuesta backend:", data))
+        .catch(err => console.error("❌ Error al enviar a backend:", err));
+      },
+      onError: (error) => {
+        console.error("❌ Error de verificación:", error);
+        alert("❌ Ocurrió un error con la verificación");
+      },
     });
-    const resultado = await respuesta.json();
-    console.log(resultado);
-  }
 
-  verificarUsuario();
-</script>
-
+    widget.mount();
+    document.getElementById('open-idkit').addEventListener('click', () => {
+      widget.open();
+    });
+  </script>
 
 </body>
 </html>
