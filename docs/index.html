@@ -28,31 +28,34 @@
   <div id="idkit-container"></div>
   <button id="open-idkit">Iniciar Verificación</button>
 
-  <script src="https://unpkg.com/@worldcoin/idkit@latest/dist/index.umd.min.js"></script>
+  <!-- Script correcto para IDKit standalone -->
+  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@0.2.2/dist/index.umd.js"></script>
   <script>
-    const widget = window.IDKitWidget.init({
-      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-      action: "login",
-      signal: "wld-demo-login",
-      credential_types: ["orb", "phone"],
-      verification_level: "device",
-      container_id: "idkit-container",
-      onSuccess: (response) => {
-        console.log("✅ Verificado:", response);
+    window.addEventListener("DOMContentLoaded", () => {
+      const widget = window.IDKit.init({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        action: "login",
+        signal: "wld-demo-login",
+        credential_types: ["orb", "phone"],
+        verification_level: "device",
+        container_id: "idkit-container",
+        onSuccess: (response) => {
+          console.log("✅ Verificado:", response);
 
-        fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(response)
-        })
-        .then(res => res.json())
-        .then(data => console.log("📬 Backend respondió:", data))
-        .catch(err => console.error("❌ Error en verificación:", err));
-      }
-    });
+          fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response)
+          })
+          .then((res) => res.json())
+          .then((data) => console.log("📬 Backend respondió:", data))
+          .catch((err) => console.error("❌ Error en verificación:", err));
+        },
+      });
 
-    document.getElementById("open-idkit").addEventListener("click", () => {
-      widget.open();
+      document.getElementById("open-idkit").addEventListener("click", () => {
+        widget.open();
+      });
     });
   </script>
 </body>
