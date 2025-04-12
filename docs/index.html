@@ -2,23 +2,43 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>World ID en HTML</title>
-  <script src="https://cdn.worldcoin.org/idkit/idkit.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifica tu World ID</title>
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
-<body style="background:#111; color:white; font-family:sans-serif; text-align:center; padding:50px">
-
-  <h1>Verifica tu World ID</h1>
+<body>
+  <h1>🔐 Verificación con World ID</h1>
   <div id="idkit-container"></div>
+  <button id="open-idkit">Iniciar Verificación</button>
 
+  <script src="https://unpkg.com/@worldcoin/idkit@latest/dist/index.umd.min.js"></script>
   <script>
-    window.IDKit.init({
-      action: "login",
+    const widget = window.IDKitWidget.init({
       app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "login",
+      signal: "wld-demo-login",
       credential_types: ["orb", "phone"],
-      signal: "wld-demo",
-      onSuccess: function(response) {
-        console.log("✅ Verificación exitosa:", response);
+      verification_level: "device",
+      container_id: "idkit-container",
+      onSuccess: (response) => {
+        console.log("✅ Verificado:", response);
 
         fetch("https://82b7-189-217-220-181.ngrok-free.app/api/verificar", {
           method: "POST",
@@ -31,7 +51,9 @@
       }
     });
 
-    window.IDKit.mount("#idkit-container");
+    document.getElementById("open-idkit").addEventListener("click", () => {
+      widget.open();
+    });
   </script>
 </body>
 </html>
