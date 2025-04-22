@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bienvenida a CharlyCoin</title>
+ 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e2f;
+      color: #ffffff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #2c2c3e;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+    }
+    input, button {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background: #f39c12;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #e67e22; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #3a3a55;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background: #f39c12;
+      color: #000;
+    }
+    h3 { color: #f39c12; margin-top: 20px; }
+    .binance-link, .grafica-link, .next-button {
+      display: inline-block;
+      margin-top: 10px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 5px;
+      background: #f39c12;
+      transition: background-color 0.3s ease;
+    }
+    .binance-link:hover, .grafica-link:hover, .next-button:hover {
+      background: #e67e22;
+    }
+    .gif-container img {
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    #world-id-button {
+      margin: 20px 0;
+    }
+  </style>
+ 
+  <script type="module" crossorigin src="/chc-flask-app-/assets/index-rmiTIUQq.js"></script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="gif-container">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo" />
+    </div>
+
+     <h1>Verifica tu identidad con World ID</h1>
+  <button id="open-idkit">Iniciar Verificación</button>
+  <div id="idkit-container"></div>
+
+    <!-- Navegación -->
+    
+    <a href="./buscador.html" class="next-button">🎲PRECIOS DE WLD🎲</a>
+   
+  </div>
+
+  <a href="https://ganastrx4.github.io/chc-flask-app/tokenchc.html" target="_blank">
+    <button style="padding: 15px; font-size: 18px; border-radius: 10px; background-color: #6c47ff; color: white;">
+      ¡Apoya nuestros Tokens CHC y CHUN en PUF y espera el PUMP!<br />
+      ¡Solo los débiles venden!
+    </button>
+  </a>
+
+ 
+  <script>
+  async function verificarUsuario() {
+    const respuesta = await fetch("https://7c8d-189-217-220-181.ngrok-free.app/api/verificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: "charly" }),
+    });
+    const resultado = await respuesta.json();
+    console.log(resultado);
+  }
+
+  verificarUsuario();
+</script>
+
+
+</body>
+</html>
