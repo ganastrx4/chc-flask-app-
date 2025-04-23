@@ -2,13 +2,80 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World ID Authentication</title>
-    <script type="module" crossorigin src="./assets/index-B8KIgzOc.js"></script>
+    <title>Autenticación World ID</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #0d1117;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+      }
+
+      img {
+        width: 150px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+      }
+
+      .loader {
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-top: 20px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      button {
+        background: #4caf50;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+
+      button:hover {
+        background: #45a049;
+      }
+    </style>
+    <script src="https://unpkg.com/@worldcoin/idkit@1.1.4"></script>
   </head>
   <body>
-    <div id="root"></div>
-    <!-- Corregido el src del script -->
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="Logo" />
+
+    <div id="world-id-container"></div>
+    <div id="loader" class="loader" style="display: none;"></div>
+
+    <script>
+      window.IDKit.init({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID real
+        action: "signin",
+        signal: "login_user",
+        container: "#world-id-container",
+        onSuccess: (proof) => {
+          console.log("Autenticado:", proof);
+          document.getElementById("world-id-container").style.display = "none";
+          document.getElementById("loader").style.display = "block";
+          setTimeout(() => {
+            window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
+          }, 1000);
+        }
+      });
+    </script>
   </body>
 </html>
+
