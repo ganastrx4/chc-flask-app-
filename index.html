@@ -2,56 +2,48 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Verificación World ID</title>
-  <script src="https://unpkg.com/@worldcoin/idkit@latest/dist/idkit.umd.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Autenticación</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      background-color: #00c9a7;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: #00a48c;
+    }
+  </style>
 </head>
 <body>
-  <h1>Verificar identidad con World ID</h1>
-  <button id="verifyBtn">Verificar con World ID</button>
-
-  <script>
-    const verifyProof = async (proof) => {
-      try {
-        const res = await fetch("https://e78c-189-217-209-99.ngrok-free.app/api/verify-proof", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(proof),
-        });
-
-        if (!res.ok) {
-          const error = await res.json();
-          throw new Error(error?.error || "Error al verificar con el backend.");
-        }
-
-        const data = await res.json();
-        if (!data.success) {
-          throw new Error("La verificación falló.");
-        }
-
-        console.log("✅ Verificación exitosa con el servidor");
-        return true;
-      } catch (err) {
-        console.error("❌ Error en verificación:", err.message);
-        throw err;
-      }
-    };
-
-    const widget = IDKitWidget({
-      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-      action: "ingreso",
-      signal: "", // opcional
-      verification_level: IDKit.VerificationLevel.Device,
-      handleVerify: verifyProof,
-      onSuccess: () => {
-        console.log("✅ Usuario autenticado");
-        window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
-      },
-    });
-
-    document.getElementById("verifyBtn").addEventListener("click", () => {
-      widget.open();
-    });
-  </script>
+  <h1>Autentifícate</h1>
+  <a class="btn" href="https://595598d7-9dac-4130-8637-8ab72adaf6f4.dev2.app-preview.com" target="_blank">Ir a la IA</a>
 </body>
 </html>
