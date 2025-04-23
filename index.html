@@ -2,36 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Autenticación World ID</title>
+    <title>World ID Authentication</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
+      /* Estilos para el cargador y la página */
       body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background-color: #0d1117;
-        color: white;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
         flex-direction: column;
       }
 
-      img {
-        width: 150px;
-        margin-bottom: 20px;
-        border-radius: 12px;
-      }
-
       .loader {
-        border: 6px solid #f3f3f3;
-        border-top: 6px solid #3498db;
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
         border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin-top: 20px;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
       }
 
       @keyframes spin {
@@ -39,43 +31,59 @@
         100% { transform: rotate(360deg); }
       }
 
-      button {
-        background: #4caf50;
-        border: none;
-        padding: 10px 20px;
-        font-size: 1rem;
-        cursor: pointer;
-        border-radius: 6px;
+      .logo {
+        margin-bottom: 20px;
       }
 
-      button:hover {
-        background: #45a049;
+      .message {
+        font-size: 1.2em;
+        color: #333;
+        margin-top: 10px;
+      }
+
+      #root {
+        display: none;
       }
     </style>
-    <script src="https://unpkg.com/@worldcoin/idkit@1.1.4"></script>
   </head>
-  <body>
-    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="Logo" />
 
-    <div id="world-id-container"></div>
-    <div id="loader" class="loader" style="display: none;"></div>
+  <body>
+    <img class="logo" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="Logo" width="200" />
+    
+    <div class="loader" id="loader"></div>
+    <div class="message" id="loadingMessage">Cargando...</div>
+
+    <!-- Contenedor principal de la app -->
+    <div id="root"></div>
+
+    <!-- Cargar el SDK de Worldcoin correctamente -->
+    <script src="https://unpkg.com/@worldcoin/idkit@1.1.4"></script>
 
     <script>
-      window.IDKit.init({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID real
-        action: "signin",
-        signal: "login_user",
-        container: "#world-id-container",
-        onSuccess: (proof) => {
-          console.log("Autenticado:", proof);
-          document.getElementById("world-id-container").style.display = "none";
-          document.getElementById("loader").style.display = "block";
-          setTimeout(() => {
+      window.onload = () => {
+        // Inicialización de IDKit
+        window.IDKit.init({
+          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+          action: "charly-login",
+          signal: "login",
+          onSuccess: (proof) => {
+            // Ocultamos el loader y el mensaje
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("loadingMessage").style.display = "none";
+
+            // Mostramos el contenido de la app
+            document.getElementById("root").style.display = "block";
+
+            console.log("Éxito:", proof);
+            // Redirecciona al buscador
             window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
-          }, 1000);
-        }
-      });
+          },
+          onFailure: (error) => {
+            console.log("Error:", error);
+            document.getElementById("loadingMessage").textContent = "Error al autenticar. Inténtalo de nuevo.";
+          }
+        });
+      };
     </script>
   </body>
 </html>
-
