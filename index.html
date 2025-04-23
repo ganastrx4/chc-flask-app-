@@ -4,30 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>World ID Authentication</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <style>
       body {
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
+        justify-content: center;
         height: 100vh;
         margin: 0;
         background-color: #f0f0f0;
-        flex-direction: column;
       }
 
-      .loader {
-        border: 16px solid #f3f3f3;
-        border-top: 16px solid #3498db;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 2s linear infinite;
+      button {
+        background-color: #2563eb;
+        color: white;
+        padding: 12px 20px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
       }
 
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+      button:hover {
+        background-color: #1d4ed8;
       }
 
       .logo {
@@ -36,53 +36,67 @@
 
       .message {
         font-size: 1.2em;
+        margin-bottom: 20px;
         color: #333;
-        margin-top: 10px;
-      }
-
-      #root {
-        display: none;
       }
     </style>
   </head>
 
   <body>
-    <img class="logo" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="Logo" width="200" />
-    
-    <div class="loader" id="loader"></div>
-    <div class="message" id="loadingMessage">Cargando...</div>
+    <img
+      class="logo"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp"
+      alt="Logo"
+      width="200"
+    />
+    <div class="message">Autenticación con World ID</div>
+    <div id="world-id-button"></div>
 
-    <!-- Contenedor principal -->
-    <div id="root">
-      <!-- Aquí se montará el widget -->
-      <div id="world-id-container"></div>
-    </div>
+    <!-- World IDKit SDK (HTML) -->
+    <script src="https://cdn.worldcoin.org/idkit/bundle.min.js"></script>
 
-    <script type="module">
-      import { IDKitWidget } from "https://esm.sh/@worldcoin/idkit@1.1.4";
+    <script>
+      async function verifyProof(proof) {
+        try {
+          const res = await fetch("/api/verify-proof", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(proof),
+          });
+
+          if (!res.ok) {
+            throw new Error("Fallo al verificar el proof");
+          }
+
+          console.log("✅ Proof verificado exitosamente");
+        } catch (error) {
+          console.error("❌ Error al verificar:", error);
+          throw error;
+        }
+      }
+
+      function onSuccess(result) {
+        console.log("✅ Usuario autenticado:", result);
+        window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
+      }
 
       window.onload = () => {
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("loadingMessage").style.display = "none";
-        document.getElementById("root").style.display = "block";
-
-        const container = document.getElementById("world-id-container");
-
-        const widget = new IDKitWidget({
+        IDKit.init({
           app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-          action: "charly-login",
+          action: "ingreso",
           signal: "login",
-          onSuccess: (proof) => {
-            console.log("Éxito:", proof);
-            window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
+          credential_types: ["orb"],
+          verification_level: "device", // similar a VerificationLevel.Device
+          enable_telemetry: true,
+          onSuccess: onSuccess,
+          handleVerify: verifyProof,
+          onError: (err) => {
+            console.error("Error durante la verificación:", err);
+            alert("Error en la autenticación. Intenta de nuevo.");
           },
-          onFailure: (error) => {
-            console.log("Error:", error);
-            document.getElementById("loadingMessage").textContent = "Error al autenticar. Inténtalo de nuevo.";
-          }
         });
 
-        widget.render(container);
+        IDKit.mount("#world-id-button");
       };
     </script>
   </body>
