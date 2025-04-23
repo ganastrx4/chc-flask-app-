@@ -4,54 +4,54 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Verificación World ID</title>
+  <script src="https://unpkg.com/@worldcoin/idkit@latest/dist/idkit.umd.min.js"></script>
 </head>
 <body>
   <h1>Verificar identidad con World ID</h1>
   <button id="verifyBtn">Verificar con World ID</button>
 
- <script src="https://cdn.worldcoin.org/idkit/idkit.umd.min.js"></script>
-<script>
-  const verifyProof = async (proof) => {
-    try {
-      const res = await fetch("/api/verify-proof", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(proof),
-      });
+  <script>
+    const verifyProof = async (proof) => {
+      try {
+        const res = await fetch("https://e78c-189-217-209-99.ngrok-free.app/api/verify-proof", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(proof),
+        });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error?.error || "Error al verificar con el backend.");
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error?.error || "Error al verificar con el backend.");
+        }
+
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error("La verificación falló.");
+        }
+
+        console.log("✅ Verificación exitosa con el servidor");
+        return true;
+      } catch (err) {
+        console.error("❌ Error en verificación:", err.message);
+        throw err;
       }
+    };
 
-      const data = await res.json();
-      if (!data.success) {
-        throw new Error("La verificación falló.");
-      }
+    const widget = IDKitWidget({
+      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+      action: "ingreso",
+      signal: "", // opcional
+      verification_level: IDKit.VerificationLevel.Device,
+      handleVerify: verifyProof,
+      onSuccess: () => {
+        console.log("✅ Usuario autenticado");
+        window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
+      },
+    });
 
-      console.log("✅ Verificación exitosa con el servidor");
-      return true;
-    } catch (err) {
-      console.error("❌ Error en verificación:", err.message);
-      throw err;
-    }
-  };
-
-  const widget = IDKit.IDKitWidget({
-    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-    action: "ingreso",
-    verification_level: "device", // cadena en vez de enum, para compatibilidad UMD
-    handleVerify: verifyProof,
-    onSuccess: () => {
-      console.log("✅ Usuario autenticado");
-      window.location.href = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
-    },
-  });
-
-  document.getElementById("verifyBtn").addEventListener("click", () => {
-    widget.open();
-  });
-</script>
-
+    document.getElementById("verifyBtn").addEventListener("click", () => {
+      widget.open();
+    });
+  </script>
 </body>
 </html>
