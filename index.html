@@ -57,7 +57,11 @@
     <div id="root"></div>
 
     <!-- Cargar el SDK de Worldcoin correctamente -->
-    <script src="https://unpkg.com/@worldcoin/idkit@1.1.4/dist/idkit.umd.js"></script>
+    <script type="module">
+  import { IDKitWidget } from "https://esm.sh/@worldcoin/idkit@1.1.4";
+  window.IDKitWidget = IDKitWidget;
+</script>
+
 
     <script>
       window.onload = () => {
