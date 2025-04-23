@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verificación World ID</title>
+    <script src="https://unpkg.com/@worldcoin/idkit@0.4.1/dist/index.umd.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  </head>
+  <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full text-center">
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">Verificar identidad con World ID</h1>
+      <p class="text-gray-600 mb-6">Verifica tu identidad de forma segura y privada</p>
+      <div id="world-id-button"></div>
+      <p class="text-sm text-gray-500 mt-4">Al verificar, aceptas los términos y condiciones de World ID</p>
+    </div>
+
+    <script>
+      IDKit.init({
+        action: 'ingreso',
+        app_id: 'app_7686f9027d3e3c0b53d987a3caf1e111',
+        signal: '',
+        verification_level: 'device',
+        onSuccess: async (proof) => {
+          try {
+            const res = await fetch("https://e78c-189-217-209-99.ngrok-free.app/api/verify-proof", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(proof),
+            });
+            const result = await res.json();
+            if (result.success) {
+              alert("✅ Verificación exitosa");
+              window.location.href = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
+            } else {
+              alert("❌ Verificación fallida");
+            }
+          } catch (err) {
+            alert("🚫 Error en el servidor: " + err.message);
+          }
+        }
+      });
+      IDKit.mount("#world-id-button");
+    </script>
+  </body>
+</html>
