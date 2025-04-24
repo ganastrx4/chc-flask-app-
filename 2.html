@@ -31,6 +31,14 @@
     </div>
 
     <div id="feedback" class="text-sm text-gray-500 mt-4"></div>
+
+    <!-- Spinner oculto por defecto -->
+    <div id="spinner" class="hidden mt-4 flex justify-center">
+      <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+    </div>
   </div>
 
   <script>
@@ -41,9 +49,11 @@
       verification_level: 'device',
       onSuccess: async (proof) => {
         const feedback = document.getElementById('feedback');
-        feedback.innerText = "🔄 Procesando verificación, espera un segundo...";
-        
-        // Simula "reload visual"
+        const spinner = document.getElementById('spinner');
+
+        feedback.innerText = "🔄 Procesando verificación, espera un momento...";
+        spinner.classList.remove("hidden");
+
         setTimeout(async () => {
           try {
             const res = await fetch("https://88f0-189-217-209-99.ngrok-free.app/api/verify-proof", {
@@ -53,19 +63,17 @@
             });
             const result = await res.json();
 
-            // Mensaje de bienvenida
-            feedback.innerText = "👋 Bienvenido al sistema. Redirigiendo...";
-            setTimeout(() => {
-              window.location.href = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
-            }, 1000);
-            
+            feedback.innerText = "✅ Verificación exitosa. Redirigiendo...";
           } catch (err) {
-            feedback.innerText = "❌ Error en el servidor. Redirigiendo de todos modos...";
+            feedback.innerText = "⚠️ No se pudo verificar, pero te llevamos de todos modos...";
+          } finally {
+            spinner.classList.add("hidden");
+            // Redirigir sí o sí
             setTimeout(() => {
               window.location.href = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
             }, 1500);
           }
-        }, 1000); // Simula 1 segundo de "carga"
+        }, 1000);
       }
     });
   </script>
