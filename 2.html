@@ -56,14 +56,12 @@
   <button id="verify-button">Verificar con World ID</button>
 
   <script>
-   const { IDKit } = window;
-IDKit.init({
+  window.IDKit.init({
   app_id: 'app_7686f9027d3e3c0b53d987a3caf1e111',
   action: 'charly-verify',
   signal: 'optional-signal',
   onSuccess: (result) => {
-    console.log('Verificación exitosa:', result);
-    window.location.href = 'gracias.html'; // redirige
+    window.location.href = 'gracias.html';
   },
 });
 
