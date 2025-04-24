@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <title>Verificación CHC</title>
-  <script src="https://unpkg.com/@worldcoin/idkit@0.1.6"></script>
+  <script src="https://unpkg.com/@worldcoin/idkit@latest/dist/index.umd.js"></script>
   <style>
     body {
       display: flex;
@@ -48,26 +48,24 @@
       left: 125%;
     }
   </style>
-  <script src="https://unpkg.com/@worldcoin/idkit@latest/dist/index.umd.js"></script>
-
 </head>
 <body>
 
   <button id="verify-button">Verificar con World ID</button>
 
   <script>
-document.addEventListener('DOMContentLoaded', () => {
-  window.IDKit.init({
-    app_id: 'app_7686f9027d3e3c0b53d987a3caf1e111',
-    action: 'charly-verify',
-    signal: 'opcional',
-    onSuccess: (result) => {
-      window.location.href = 'gracias.html';
-    }
-  });
-});
-</script>
+    document.getElementById('verify-button').addEventListener('click', () => {
+      // Redirige directamente al link de verificación de Worldcoin
+      window.location.href = "https://worldcoin.org/verify?t=wld&i=cd209cbb-162b-4a11-adb7-5b3b1133ed34&k=FunGjCr3o%2Fm3zlUDif7q6jbxazyCgb9K6wd4vD8YFUY%3D";
+    });
 
-
+    // Si el usuario ya está "verificado", redirígelo automáticamente
+    window.addEventListener('DOMContentLoaded', () => {
+      const verified = localStorage.getItem('charly_user_verified');
+      if (verified === 'true') {
+        window.location.href = "/panel"; // o cambia por tu ruta real
+      }
+    });
+  </script>
 </body>
 </html>
