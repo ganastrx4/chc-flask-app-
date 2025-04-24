@@ -56,18 +56,17 @@
   <button id="verify-button">Verificar con World ID</button>
 
   <script>
-    IDKit.init({
-      app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu app_id
-      action: "charly-verification",
-      signal: "charly-signal",
-      onSuccess: () => {
-        // Redirige después de verificación
-        window.location.href = "./index.html"; // Cambia esto si quieres otra página
-      },
-      onError: (error) => {
-        alert("Error durante verificación: " + error.message);
-      },
-    });
+   const { IDKit } = window;
+IDKit.init({
+  app_id: 'app_7686f9027d3e3c0b53d987a3caf1e111',
+  action: 'charly-verify',
+  signal: 'optional-signal',
+  onSuccess: (result) => {
+    console.log('Verificación exitosa:', result);
+    window.location.href = 'gracias.html'; // redirige
+  },
+});
+
 
     document.getElementById("verify-button").onclick = function () {
       IDKit.open();
