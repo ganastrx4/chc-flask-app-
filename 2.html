@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Verificación CHC</title>
- 
   <style>
     body {
       display: flex;
@@ -55,15 +54,15 @@
 
   <script>
     document.getElementById('verify-button').addEventListener('click', () => {
-      // Redirige directamente al link de verificación de Worldcoin
-      window.location.href = "https://dane-sound-seahorse.ngrok-free.app/api/auth/signin";
+      // ✅ Redirige a tu backend en Vercel
+      window.location.href = "https://chun-drab.vercel.app/api/auth/signin";
     });
 
-    // Si el usuario ya está "verificado", redirígelo automáticamente
+    // Si el usuario ya está verificado, redirígelo automáticamente
     window.addEventListener('DOMContentLoaded', () => {
       const verified = localStorage.getItem('charly_user_verified');
       if (verified === 'true') {
-        window.location.href = "./buscador.html"; // o cambia por tu ruta real
+        window.location.href = "./buscador.html"; // Cambia si tienes otra ruta
       }
     });
   </script>
