@@ -36,13 +36,25 @@
   </button>
 
   <script>
+    // Detecta token en la URL y redirige
+    window.onload = () => {
+      const hash = window.location.hash;
+      if (hash.includes("id_token")) {
+        alert("✅ Autenticación exitosa 🎉");
+        // Aquí podrías guardar en localStorage o enviar al backend si tuvieras
+        window.location.href = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
+      }
+    };
+
     function startAuth() {
       const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
-      const redirectUri = "https://ganastrx4.github.io/chc-flask-app-/";  // Asegúrate que este esté registrado
+      const redirectUri = "https://ganastrx4.github.io/chc-flask-app-/";
       const state = Math.random().toString(36).substring(2);
+      const scope = "openid";
+      const responseType = "id_token";
       const nonce = Math.random().toString(36).substring(2);
 
-      const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token%20id_token&scope=openid&state=${state}&nonce=${nonce}`;
+      const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${encodeURIComponent(responseType)}&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
 
       window.location.href = authUrl;
     }
