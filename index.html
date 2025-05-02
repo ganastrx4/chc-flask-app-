@@ -1,49 +1,59 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Autenticación</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>Autenticación World ID</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 30px;
-    }
-
-    .btn {
-      padding: 15px 30px;
-      background-color: #00c9a7;
+      background: linear-gradient(135deg, #000428, #004e92);
       color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      text-decoration: none;
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
     }
-
-    .btn:hover {
-      background-color: #00a48c;
+    .fade-in {
+      animation: fadeIn 1s ease-in-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
-<body>
-  <h1>Autentifícate</h1>
-  <a class="btn" href="./2.html" target="_blank">Ir a la IA</a>
+<body class="flex flex-col justify-center items-center min-h-screen">
+
+  <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp"
+       alt="Logo" class="w-64 mb-8 rounded-xl shadow-xl fade-in">
+
+  <h1 class="text-4xl font-bold mb-6 fade-in">Verifica tu identidad en World App</h1>
+  <p class="mb-6 fade-in">Accede a tu cuenta de forma segura y privada.</p>
+
+  <button onclick="startAuth()"
+    class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in">
+    🔒 Autenticar con World App
+  </button>
+
+  <script>
+    function startAuth() {
+      const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
+      const redirectUri = "https://worldcoin.org/verify?t=wld&i=8c724111-a9c4-4cc4-886e-cb5c2b7280b6&k=87JwnJs2dflZP0aOpbN0E9FJJ7DFvKICP0NmV2HGRkc%3D";
+      const state = Math.random().toString(36).substring(2);
+      const scope = "openid";
+      const responseType = "token id_token";
+      const nonce = Math.random().toString(36).substring(2);
+      const authUrl = `https://id.worldcoin.org/authorize?` +
+        `client_id=${clientId}` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&response_type=${encodeURIComponent(responseType)}` +
+        `&scope=${encodeURIComponent(scope)}` +
+        `&state=${state}` +
+        `&nonce=${nonce}`;
+
+      window.location.href = authUrl;
+    }
+  </script>
+
 </body>
 </html>
