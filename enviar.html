@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagar con Worldcoin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.worldcoin.org/app/v1.0/sdk.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #000428, #004e92);
+      color: white;
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    input {
+      padding: 0.5em;
+      font-size: 1em;
+      border-radius: 0.5em;
+      border: none;
+      width: 300px;
+      margin-bottom: 1em;
+    }
+    button {
+      padding: 1em 2em;
+      font-size: 1.2em;
+      background: #9333ea;
+      border: none;
+      border-radius: 1em;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    #world-id-container {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Pagar con Worldcoin</h1>
+  <p>Introduce la dirección de la billetera World Chain a la que deseas enviar 0.1 WLD:</p>
+  <input id="addressInput" type="text" placeholder="0x..." />
+  <button onclick="iniciarPago()">Pagar 0.1 WLD</button>
+
+  <div id="world-id-container"></div>
+
+  <script>
+    function isValidAddress(address) {
+      return /^0x[a-fA-F0-9]{40}$/.test(address);
+    }
+
+    function iniciarPago() {
+      const address = document.getElementById("addressInput").value.trim();
+      if (!isValidAddress(address)) {
+        alert("Dirección no válida. Asegúrate de que comience con 0x y tenga 42 caracteres.");
+        return;
+      }
+
+      window.worldID.init({
+        action_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        signal: "pago_0.1_WLD",
+        app_name: "Chun App",
+        wallet_address: address,
+        transaction: {
+          chain: "worldcoin",
+          to: address,
+          value: "100000000000000000", // 0.1 WLD
+          data: "0x"
+        },
+        enable_telemetry: true,
+        container: "#world-id-container",
+        onSuccess: (result) => {
+          console.log("Pago aprobado:", result);
+          alert("¡Pago exitoso!");
+        },
+        onError: (error) => {
+          console.error("Error en la transacción:", error);
+          alert("Hubo un problema al intentar pagar.");
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
