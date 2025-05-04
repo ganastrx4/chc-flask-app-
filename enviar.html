@@ -2,92 +2,52 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Pagar con Worldcoin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.worldcoin.org/app/v1.0/sdk.js"></script>
+  <title>Pagar con WLD</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
   <style>
-    body {
-      background: linear-gradient(135deg, #000428, #004e92);
-      color: white;
-      text-align: center;
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      padding: 20px;
-    }
-    input {
-      padding: 0.5em;
-      font-size: 1em;
-      border-radius: 0.5em;
-      border: none;
-      width: 300px;
-      margin-bottom: 1em;
-    }
-    button {
-      padding: 1em 2em;
-      font-size: 1.2em;
-      background: #9333ea;
-      border: none;
-      border-radius: 1em;
-      cursor: pointer;
-      color: white;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
-    }
-    button:hover {
-      transform: scale(1.05);
-    }
-    #world-id-container {
-      margin-top: 20px;
-    }
+    body { font-family: sans-serif; background: #000428; color: white; text-align: center; padding: 50px; }
+    input, button { padding: 10px; margin: 10px; border-radius: 8px; }
   </style>
 </head>
 <body>
 
-  <h1>Pagar con Worldcoin</h1>
-  <p>Introduce la dirección de la billetera World Chain a la que deseas enviar 0.1 WLD:</p>
-  <input id="addressInput" type="text" placeholder="0x..." />
-  <button onclick="iniciarPago()">Pagar 0.1 WLD</button>
-
-  <div id="world-id-container"></div>
+  <h1>Enviar 0.1 WLD</h1>
+  <input id="addressInput" type="text" placeholder="Dirección 0x..." size="42">
+  <button onclick="enviarPago()">Enviar Pago</button>
 
   <script>
-    function isValidAddress(address) {
-      return /^0x[a-fA-F0-9]{40}$/.test(address);
-    }
+    const contractAddress = "0x2cfc85d8e48f8eab294be644d9e25c3030863003";
+    const abi = [
+      "function transfer(address to, uint amount) public returns (bool)"
+    ];
 
-    function iniciarPago() {
-      const address = document.getElementById("addressInput").value.trim();
-      if (!isValidAddress(address)) {
-        alert("Dirección no válida. Asegúrate de que comience con 0x y tenga 42 caracteres.");
+    async function enviarPago() {
+      const to = document.getElementById("addressInput").value.trim();
+      if (!/^0x[a-fA-F0-9]{40}$/.test(to)) {
+        alert("Dirección no válida.");
         return;
       }
 
-      window.worldID.init({
-        action_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-        signal: "pago_0.1_WLD",
-        app_name: "Chun App",
-        wallet_address: address,
-        transaction: {
-          chain: "worldcoin",
-          to: address,
-          value: "100000000000000000", // 0.1 WLD
-          data: "0x"
-        },
-        enable_telemetry: true,
-        container: "#world-id-container",
-        onSuccess: (result) => {
-          console.log("Pago aprobado:", result);
-          alert("¡Pago exitoso!");
-        },
-        onError: (error) => {
-          console.error("Error en la transacción:", error);
-          alert("Hubo un problema al intentar pagar.");
+      if (window.ethereum || window.worldcoin) {
+        // Prioridad a World App si está disponible
+        const provider = new ethers.providers.Web3Provider(
+          window.worldcoin || window.ethereum
+        );
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+
+        const contract = new ethers.Contract(contractAddress, abi, signer);
+
+        try {
+          const tx = await contract.transfer(to, ethers.utils.parseUnits("0.1", 18));
+          alert("Transacción enviada:\n" + tx.hash);
+        } catch (err) {
+          console.error(err);
+          alert("Error al enviar WLD.");
         }
-      });
+      } else {
+        alert("No se detectó World App ni Metamask.");
+      }
     }
   </script>
 
