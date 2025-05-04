@@ -2,49 +2,115 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Pagar con WLD</title>
-  <!-- 📌 Carga ethers.js UMD -->
+  <title>Pagar 0.1 WLD en World Chain</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ethers.js UMD compatible navegador -->
   <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+  <style>
+    body {
+      background: #000428;
+      background: linear-gradient(135deg,#000428,#004e92);
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+      text-align: center;
+    }
+    input, button {
+      padding: .75rem 1.5rem;
+      margin: .5rem;
+      border-radius: .5rem;
+      font-size: 1rem;
+      border: none;
+    }
+    button {
+      background: #9333ea;
+      color: #fff;
+      cursor: pointer;
+      transition: transform .2s;
+    }
+    button:hover { transform: scale(1.05); }
+  </style>
 </head>
 <body>
 
   <h1>Enviar 0.1 WLD</h1>
-  <input id="addressInput" type="text" placeholder="Dirección 0x..." size="42">
-  <button onclick="enviarPago()">Enviar Pago</button>
+  <input id="addressInput" type="text" placeholder="Dirección destino (0x…)" size="42" />
+  <button id="payBtn">Pagar</button>
+  <p id="status"></p>
 
   <script>
-    const contractAddress = "0x2cfc85d8e48f8eab294be644d9e25c3030863003";
-    const abi = [
-      "function transfer(address to, uint amount) public returns (bool)"
-    ];
+    const WLD_CONTRACT = "0x2cfc85d8e48f8eab294be644d9e25c3030863003";
+    const WLD_ABI = ["function transfer(address to, uint256 amount) public returns (bool)"];
+    const WC_CHAIN_ID_HEX = "0x1e0";       // 480 decimal
+    const WC_RPC_URL    = "https://worldchain-mainnet.g.alchemy.com/public";
+    const WC_CHAIN_NAME = "World Chain Mainnet";
+    const WC_EXPLORER   = "https://worldchain-mainnet.explorer.alchemy.com";
 
-    async function enviarPago() {
+    const statusEl = document.getElementById("status");
+    const payBtn   = document.getElementById("payBtn");
+
+    async function ensureWorldChain() {
+      if (!window.ethereum) {
+        throw new Error("Instala MetaMask u otra wallet compatible.");
+      }
+
+      const chainId = await window.ethereum.request({ method: "eth_chainId" });
+      if (chainId === WC_CHAIN_ID_HEX) return;
+
+      // Intentar agregar/cambiar a World Chain
+      try {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: WC_CHAIN_ID_HEX,
+            chainName: WC_CHAIN_NAME,
+            rpcUrls: [WC_RPC_URL],
+            blockExplorerUrls: [WC_EXPLORER],
+            nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+          }],
+        });
+      } catch (err) {
+        throw new Error("No se pudo cambiar a World Chain: " + err.message);
+      }
+    }
+
+    async function enviarWLD() {
+      statusEl.textContent = "";
+
       const to = document.getElementById("addressInput").value.trim();
       if (!/^0x[a-fA-F0-9]{40}$/.test(to)) {
-        alert("Dirección no válida.");
+        statusEl.textContent = "🛑 Dirección no válida";
         return;
       }
 
-      if (window.ethereum || window.worldcoin) {
-        const provider = new ethers.providers.Web3Provider(
-          window.worldcoin || window.ethereum
-        );
+      try {
+        await ensureWorldChain();
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         const signer = provider.getSigner();
 
-        const contract = new ethers.Contract(contractAddress, abi, signer);
+        const contract = new ethers.Contract(WLD_CONTRACT, WLD_ABI, signer);
+        statusEl.textContent = "⌛ Enviando transacción…";
 
-        try {
-          const tx = await contract.transfer(to, ethers.utils.parseUnits("0.1", 18));
-          alert("Transacción enviada:\n" + tx.hash);
-        } catch (err) {
-          console.error(err);
-          alert("Error al enviar WLD.");
-        }
-      } else {
-        alert("No se detectó World App ni Metamask.");
+        const tx = await contract.transfer(to, ethers.utils.parseUnits("0.1", 18));
+        statusEl.textContent = `🔗 Transacción enviada: ${tx.hash}`;
+
+        await tx.wait();
+        statusEl.textContent = "✅ Pago de 0.1 WLD realizado con éxito!";
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "❌ Error: " + (err.message||err);
       }
     }
+
+    payBtn.addEventListener("click", enviarWLD);
   </script>
 
 </body>
