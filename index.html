@@ -35,7 +35,6 @@
     🔒 Autenticar con World App
   </button>
 
-  <!-- Botón adicional para ir a enviar.html -->
   <button onclick="window.location.href='enviar.html'"
     class="bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in">
     🚀 Enviar
@@ -46,33 +45,29 @@
   <script>
   function startAuth() {
     const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const redirectUri = "https://ganastrx4.github.io/chc-flask-app-/";
+    const redirectUri = "https://ganastrx4.github.io/chun/";
     const state = Math.random().toString(36).substring(2);
     const scope = "openid";
     const responseType = "code";
     const nonce = Math.random().toString(36).substring(2);
 
     const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${encodeURIComponent(responseType)}&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
+
     window.location.href = authUrl;
   }
 
-  // Procesar tokens si vienen en la URL
+  // Al volver con ?code=..., mostrar autenticación completada
   window.onload = function () {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
 
-    const accessToken = params.get("access_token");
-    const idToken = params.get("id_token");
-
-    if (accessToken && idToken) {
+    if (code) {
       document.getElementById("result").innerHTML = `
-        ✅ Autenticado correctamente.<br>
-        <strong>Access Token:</strong> ${accessToken}<br>
-        <strong>ID Token:</strong> ${idToken}
+        ✅ Autenticado correctamente con World ID.<br>
+        <strong>Code:</strong> ${code}<br><br>
+        🔐 Este código debe enviarse a tu servidor para intercambiarlo por tokens.
       `;
-
-      console.log("Access Token:", accessToken);
-      console.log("ID Token:", idToken);
+      console.log("Código de autenticación:", code);
     }
   };
   </script>
