@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ganar CHUN</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black text-white flex flex-col items-center justify-center min-h-screen pb-20 px-4">
+
+  <h1 class="text-4xl font-bold mb-4">🎉 ¡Gana 1 CHUN!</h1>
+  <p class="mb-6 text-lg text-center">Verifica tu identidad con World ID y recibe 1 CHUN automáticamente en tu wallet de World Chain.</p>
+
+  <button onclick="startAuth()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold text-white mb-4">
+    🔐 Verificar con World App
+  </button>
+
+  <div id="walletInfo" class="text-sm mb-4 hidden"></div>
+  <div id="status" class="text-sm mt-2"></div>
+
+  <div id="claimSection" class="hidden mt-6">
+    <p class="mb-2">Autenticación correcta. Presiona para reclamar:</p>
+    <button onclick="claimTokens()" class="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg font-bold text-white">
+      🚀 Reclamar 1 CHUN
+    </button>
+  </div>
+
+  <nav class="fixed bottom-0 left-0 w-full bg-gray-800 border-t border-gray-700 text-white">
+    <div class="flex justify-around py-3">
+      <a href="inicio.html" class="flex flex-col items-center hover:text-blue-400">
+        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-4 0h4" />
+        </svg>
+        <span class="text-sm">Inicio</span>
+      </a>
+      <a href="recompensas.html" class="flex flex-col items-center hover:text-green-400">
+        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 8c-1.657 0-3 1.343-3 3a3 3 0 006 0c0-1.657-1.343-3-3-3zm0 9c-4.418 0-8-1.79-8-4v1c0 2.21 3.582 4 8 4s8-1.79 8-4v-1c0 2.21-3.582 4-8 4z" />
+        </svg>
+        <span class="text-sm">Recompensas</span>
+      </a>
+      <a href="perfil.html" class="flex flex-col items-center hover:text-purple-400">
+        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M5.121 17.804A9 9 0 0112 15a9 9 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span class="text-sm">Perfil</span>
+      </a>
+    </div>
+  </nav>
+
+  <script>
+    const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const redirectUri = window.location.href.split("?")[0];
+    let detectedWallet = null;
+
+    function startAuth() {
+      const state = Math.random().toString(36).substring(2);
+      const nonce = Math.random().toString(36).substring(2);
+      const url = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&state=${state}&nonce=${nonce}`;
+      window.location.href = url;
+    }
+
+    async function detectWallet() {
+      try {
+        if (window.ethereum) {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          if (accounts.length > 0) {
+            detectedWallet = accounts[0];
+            document.getElementById("walletInfo").innerText = "✅ Wallet detectada: " + detectedWallet;
+            document.getElementById("walletInfo").classList.remove("hidden");
+            return true;
+          }
+        }
+        throw new Error("No wallet encontrada");
+      } catch (err) {
+        console.error("Error detectando wallet:", err);
+        document.getElementById("walletInfo").innerText = "❌ Error detectando wallet.";
+        document.getElementById("walletInfo").classList.remove("hidden");
+        return false;
+      }
+    }
+
+    async function claimTokens() {
+      const code = new URLSearchParams(window.location.search).get("code");
+
+      if (!code) {
+        document.getElementById("status").innerText = "❌ No se encontró el código de autenticación.";
+        return;
+      }
+
+      const walletOk = await detectWallet();
+      if (!walletOk || !detectedWallet) {
+        document.getElementById("status").innerText = "❌ Wallet no detectada.";
+        return;
+      }
+
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const message = "Confirma que esta wallet te pertenece y eres humano verificado.";
+        const signature = await signer.signMessage(message);
+
+        const res = await fetch("https://charlycoin-jj6aw66sj-carlos-sandovals-projects.vercel.app/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, wallet: detectedWallet, signature })
+        });
+
+        const data = await res.json();
+        document.getElementById("status").innerText = data.message || "✅ Token reclamado con éxito.";
+      } catch (error) {
+        console.error("Error en reclamo:", error);
+        document.getElementById("status").innerText = "❌ Error reclamando tokens.";
+      }
+    }
+
+    window.onload = async () => {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        document.getElementById("status").innerText = "✅ Autenticación exitosa.";
+        document.getElementById("claimSection").classList.remove("hidden");
+      }
+    };
+  </script>
+
+</body>
+</html>
