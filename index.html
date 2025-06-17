@@ -48,7 +48,7 @@
       const state = Math.random().toString(36).substring(2);
       const nonce = Math.random().toString(36).substring(2);
 
-      const scope = "openid wallet";
+      const scope = "openid"; // funciona ✅
 
       const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
       window.location.href = authUrl;
