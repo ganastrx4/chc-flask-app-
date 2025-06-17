@@ -48,7 +48,32 @@
       const state = Math.random().toString(36).substring(2);
       const nonce = Math.random().toString(36).substring(2);
 
-      const scope = "openid profile"; // también debería funcionar ✅
+      const scope = {
+  userAuthentication: {
+    biometricVerification: true, // Incluye verificación biométrica como el escaneo de iris
+    userIdentityManagement: true // Gestión de identidad de usuarios
+  },
+  cryptocurrencyManagement: {
+    multiCryptoSupport: true, // Soporte para múltiples criptomonedas
+    stablecoinIntegration: true // Integración de stablecoins
+  },
+  defiTools: {
+    lendingBorrowing: true, // Herramientas de préstamo y préstamo
+    tokenTrading: true // Comercio de tokens
+  },
+  miniAppsEcosystem: {
+    modularArchitecture: true, // Arquitectura modular para Mini Apps
+    developerTools: true // Herramientas para desarrolladores, incluyendo APIs y SDKs
+  },
+  communityFeatures: {
+    userVerification: true, // Verificación de usuarios
+    activeCommunity: true // Comunidad activa y participativa
+  },
+  developerIncubator: {
+    hackathons: true, // Hackathons y eventos de desarrollo
+    demoDays: true // Días de demo para presentar proyectos
+  }
+};
 
       const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
       window.location.href = authUrl;
