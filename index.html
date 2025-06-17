@@ -30,12 +30,14 @@
   <h1 class="text-4xl font-bold mb-6 fade-in">Verifica tu identidad en World App</h1>
   <p class="mb-6 fade-in">Accede a tu cuenta de forma segura y privada.</p>
 
+  <p class="text-sm text-blue-200 px-6 mb-4 fade-in">
+    ⚠️ Al continuar, aceptas compartir tu <strong>dirección de billetera (World App)</strong> para conectarte al sistema.
+  </p>
+
   <button onclick="startAuth()"
     class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in mb-4">
     🔒 Autenticar con World App
   </button>
-
-  
 
   <div id="result" class="mt-8 text-sm text-green-300"></div>
 
@@ -44,16 +46,14 @@
     const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
     const redirectUri = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
     const state = Math.random().toString(36).substring(2);
-    const scope = "openid";
-    const responseType = "code";
     const nonce = Math.random().toString(36).substring(2);
 
-    const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${encodeURIComponent(responseType)}&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
+    const scope = "openid wallet"; // 🧠 Agregado para leer wallet address
 
+    const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
     window.location.href = authUrl;
   }
 
-  // Al volver con ?code=..., mostrar autenticación completada
   window.onload = function () {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -62,7 +62,7 @@
       document.getElementById("result").innerHTML = `
         ✅ Autenticado correctamente con World ID.<br>
         <strong>Code:</strong> ${code}<br><br>
-        🔐 Este código debe enviarse a tu servidor para intercambiarlo por tokens.
+        🔐 Este código debe enviarse a tu servidor para obtener el wallet address del usuario.
       `;
       console.log("Código de autenticación:", code);
     }
