@@ -1,70 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Verificación CHC</title>
+  <meta charset="UTF-8" />
+  <title>Verificación World ID - CharlyCoin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@1.2.0/dist/idkit.umd.min.js"></script>
   <style>
     body {
+      background: #0d1117;
+      color: #fff;
+      font-family: Arial, sans-serif;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: linear-gradient(135deg, #1f1c2c, #928dab);
-      margin: 0;
-      font-family: sans-serif;
     }
-
-    #verify-button {
-      padding: 15px 40px;
-      font-size: 1.2em;
-      border: none;
-      border-radius: 25px;
-      background-color: #00c2ff;
+    button {
+      background: linear-gradient(135deg, #00bcd4, #2196f3);
       color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      border-radius: 10px;
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: 0.3s ease;
+      transition: 0.3s;
     }
-
-    #verify-button:hover {
-      background-color: #007ba7;
-    }
-
-    #verify-button::before {
-      content: "";
-      position: absolute;
-      left: -75%;
-      top: 0;
-      width: 50%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.2);
-      transform: skewX(-20deg);
-      transition: left 0.5s ease;
-    }
-
-    #verify-button:hover::before {
-      left: 125%;
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #2196f3, #00bcd4);
     }
   </style>
 </head>
 <body>
-
-  <button id="verify-button">Verificar con World ID</button>
+  <h2>Verifica tu identidad con World ID</h2>
+  <div id="world-id-container"></div>
 
   <script>
-    document.getElementById('verify-button').addEventListener('click', () => {
-      // ✅ Redirige a tu backend en Vercel
-      window.location.href = "https://chun-drab.vercel.app";
+    // Tu app ID oficial de Worldcoin
+    const app_id = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const backend_url = "https://worldid-auth-fzky.onrender.com/api/verify"; 
+    const redirect_url = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
+
+    // Inicializa el widget IDKit
+    const idkit = new window.IDKitWidget({
+      app_id: app_id,
+      action: "my_action", // Puedes cambiar el nombre si quieres usar diferentes acciones
+      signal: "verify_user",
+      theme: "dark",
+      verification_level: "orb",
+      onSuccess: async (response) => {
+        console.log("Proof recibido:", response);
+
+        try {
+          const res = await fetch(backend_url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
+
+          const data = await res.json();
+          console.log("Respuesta del backend:", data);
+
+          if (res.ok && data.success) {
+            alert("✅ Verificación completada. Redirigiendo...");
+            window.location.href = redirect_url;
+          } else {
+            alert("❌ Verificación fallida: " + (data.error || "Error desconocido"));
+          }
+        } catch (err) {
+          console.error("Error al verificar:", err);
+          alert("❌ Error conectando con el backend.");
+        }
+      },
     });
 
-    // Si el usuario ya está verificado, redirígelo automáticamente
-    window.addEventListener('DOMContentLoaded', () => {
-      const verified = localStorage.getItem('charly_user_verified');
-      if (verified === 'true') {
-        window.location.href = "./buscador.html"; // Cambia si tienes otra ruta
-      }
-    });
+    // Renderiza el botón
+    const button = document.createElement("button");
+    button.textContent = "Verificar con World ID 🌐";
+    button.onclick = () => idkit.open();
+    document.getElementById("world-id-container").appendChild(button);
   </script>
 </body>
 </html>
