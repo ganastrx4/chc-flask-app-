@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WLD Precio Ligero</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f8ff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1, .btn-timeframe, #price {
+      text-align: center;
+    }
+    #price {
+      font-size: 1.5rem;
+      color: #28a745;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .btn-timeframe {
+      margin: 3px;
+      font-size: 0.85rem;
+    }
+    canvas {
+      margin-top: 15px;
+      width: 100% !important;
+      height: 250px !important;
+    }
+    .link-box {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      background-color: #e3f2fd;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .link-box a {
+      font-weight: bold;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .link-box a:hover {
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Precio de WLD/USDT</h1>
+    <div id="price">Cargando...</div>
+
+    <div class="text-center mb-2">
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('1m')">1 Min</button>
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('5m')">5 Min</button>
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('15m')">15 Min</button>
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('1h')">1 Hora</button>
+    </div>
+
+    <canvas id="lightChart"></canvas>
+
+    <div class="link-box">
+      GRAFICAS
+      <a href="./exchange.html" class="btn btn-outline-primary w-100 mb-2">🎲 exchange 📈</a>
+      <a href="./graficachcwld.html" class="btn btn-outline-primary w-100 mb-2">📈 CHC/WLD GRAFICA</a>      
+      <a href="./graficachoro.html" class="btn btn-outline-primary w-100 mb-2">🎡 GRAFICA CHORO</a>
+      EARN - GANAR
+      <a href="./ganarchun.html" class="btn btn-outline-primary w-100">🏆 Ganar CHUN y CHC</a>
+      COMPRAS TOKENS 
+      <a href="./compra_chcbtc.html" class="btn btn-outline-primary w-100">📦 Compra CHCBTC</a>
+       <a href="./compra_choro.html" class="btn btn-outline-primary w-100">📦 Compra CHORO</a>
+      BOT IA TAREAS
+      <a href="./glosario.html" class="btn btn-outline-primary w-100 mb-2">🎡 GLOSARIO</a>
+    </div>
+  </div>
+
+  <script>
+    let chart;
+    let currentInterval = '1m';
+
+    function fetchPrice() {
+      $.getJSON("https://api.binance.com/api/v3/ticker/price?symbol=WLDUSDT", function (data) {
+        let price = parseFloat(data.price).toFixed(4);
+        $("#price").text(`${price} USDT`);
+      });
+    }
+
+    function loadChart(interval) {
+      currentInterval = interval;
+      $.getJSON(`https://api.binance.com/api/v3/klines?symbol=WLDUSDT&interval=${interval}&limit=10`, function (data) {
+        const labels = data.map(c => new Date(c[0]).toLocaleTimeString());
+        const prices = data.map(c => parseFloat(c[4]));
+
+        const config = {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `WLD (${interval})`,
+              data: prices,
+              borderColor: '#007bff',
+              backgroundColor: 'rgba(0,123,255,0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: { display: false },
+              y: { beginAtZero: false }
+            }
+          }
+        };
+
+        if (!chart) {
+          chart = new Chart(document.getElementById("lightChart"), config);
+        } else {
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = prices;
+          chart.data.datasets[0].label = `WLD (${interval})`;
+          chart.update();
+        }
+      });
+    }
+
+    // Inicial
+    fetchPrice();
+    loadChart(currentInterval);
+    setInterval(() => {
+      fetchPrice();
+      loadChart(currentInterval);
+    }, 30000); // cada 30 segundos
+  </script>
+
+  </br> </br> </br>
+
+ <nav class="bottom-nav">
+    <a href="./enviarwld.html" class="nav-item">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-4 0h4" />
+        </svg>
+        <span>DONA</span>
+    </a>
+    <a href="./next_page.html" class="nav-item">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 8c-1.657 0-3 1.343-3 3a3 3 0 006 0c0-1.657-1.343-3-3-3zm0 9c-4.418 0-8-1.79-8-4v1c0 2.21 3.582 4 8 4s8-1.79 8-4v-1c0 2.21-3.582 4-8 4z" />
+        </svg>
+        <span>GRAFICA</span>
+    </a>
+    <a href="./chun.html" class="nav-item">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M5.121 17.804A9 9 0 0112 15a9 9 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>RECLAMA</span>
+    </a>
+</nav>
+
+<!-- ESTILOS PARA BARRA INFERIOR -->
+<style>
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #2c2c3e;
+        border-top: 1px solid #444;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        z-index: 9999;
+    }
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        text-decoration: none;
+        font-size: 12px;
+        transition: color 0.3s;
+    }
+    .nav-item:hover {
+        color: #f39c12;
+    }
+    .nav-icon {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 5px;
+    }
+</style>
+    
+</body>
+</html>
