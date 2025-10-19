@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Buscador de Criptomonedas</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --primary:#f39c12;
+            --primary-hover:#e67e22;
+            --bg-1:#1e1e2f;
+            --bg-2:#2c2c3e;
+            --bg-3:#3a3a55;
+            --border:#444;
+            --success:lime;
+            --danger:red;
+        }
+        *{box-sizing:border-box;}
+        html,body{margin:0;padding:0;height:100%;}
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg-1);
+            color: #ffffff;
+            text-align: center;
+            line-height:1.4;
+            padding-bottom:80px;/* espacio para que la barra inferior no tape el contenido */
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto 120px auto;/* deja aire por la barra */
+            padding: 20px;
+            background: var(--bg-2);
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+        }
+        input, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size:16px;
+        }
+        input{background:#fff;color:#000;}
+        button {
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: var(--primary-hover); }
+        #cryptoInfo {
+            display: none;
+            margin-top: 20px;
+            background: var(--bg-3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: var(--bg-3);
+            border-radius: 10px;
+            overflow: hidden;
+            font-size:14px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: var(--primary);
+            color: #000;
+        }
+        h1{margin-top:0;}
+        h3 { color: var(--primary); margin-top: 30px; margin-bottom:4px; }
+        .binance-link {
+            display: block;
+            margin-top: 20px;
+            color: var(--primary);
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .binance-link:hover { color: var(--primary-hover); }
+        .pair-link{color:#fff;text-decoration:none;font-weight:bold;}
+        .pair-link:hover{color:var(--primary);text-decoration:underline;}
+        .status-msg{opacity:0.8;font-size:12px;}
+
+        /* Barra Inferior */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-2);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 6px 0;
+            z-index: 9999;
+        }
+        .bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content:center;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 12px;
+            line-height:1.1;
+            transition: color 0.3s;
+            min-width:60px;
+        }
+        .bottom-nav .nav-item:hover {
+            color: var(--primary);
+        }
+        .bottom-nav .nav-icon {
+            width: 24px;
+            height: 24px;
+            display:block;
+            margin-bottom: 4px;
+        }
+        .bottom-nav svg{width:100%;height:100%;stroke:currentColor;fill:none;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buscador de Criptomonedas</h1>
+        <input type="text" id="cryptoInput" placeholder="Ejemplo: BTC, ETH, BNB" />
+        <button id="searchBtn">Buscar</button>
+        <div id="cryptoInfo">
+            <h2 id="cryptoName"></h2>
+            <p><strong>💲 Precio en USDT:</strong> $<span id="priceUSD"></span></p>
+        </div>
+
+        <h3>🏆 Ganadores</h3>
+        <table id="winners"></table>
+
+        <h3>🔥 Populares</h3>
+        <table id="popular"></table>
+
+        <h3>⭐ Favoritos</h3>
+        <table id="favorites"></table>
+
+        <h3>📉 Perdedores</h3>
+        <table id="losers"></table>
+
+        <h3>🆕 Nuevos</h3>
+        <table id="new"></table>
+
+        <h3>🔁 Pares WLD</h3>
+        <table id="wldpairs"></table>
+
+        <a href="https://www.binance.com/referral/earn-together/refertoearn2000usdc/claim?hl=en&ref=GRO_14352_RAE1T&utm_source=referralmode" class="binance-link" target="_blank">BINANCE</a>
+    </div>
+
+    <!-- Barra Inferior -->
+    <nav class="bottom-nav">
+        <a href="./enviarwld.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12l9-9 9 9" />
+                    <path d="M4 10v10a1 1 0 0 0 1 1h3" />
+                    <path d="M20 10v10a1 1 0 0 1-1 1h-3" />
+                    <path d="M10 21h4" />
+                </svg>
+            </span>
+            <span>DONA</span>
+        </a>
+        <a href="./next_page.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="11" r="3" />
+                    <path d="M12 17c-4.418 0-8-1.79-8-4v1c0 2.21 3.582 4 8 4s8-1.79 8-4v-1c0 2.21-3.582 4-8 4z" />
+                </svg>
+            </span>
+            <span>GRAFICA</span>
+        </a>
+        <a href="./chun.html" class="nav-item">
+            <span class="nav-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5.121 17.804A9 9 0 0 1 12 15a9 9 0 0 1 6.879 2.804" />
+                    <circle cx="12" cy="11" r="3" />
+                </svg>
+            </span>
+            <span>RECLAMA</span>
+        </a>
+    </nav>
+
+    <script>
+    $(document).ready(function() {
+        $('#searchBtn').click(async function() {
+            const symbol = $('#cryptoInput').val().toUpperCase().trim();
+            if (!symbol) {
+                alert('⚠️ Ingresa un símbolo de criptomoneda.');
+                return;
+            }
+
+            const price = await getCryptoPrice(symbol);
+            if (price) {
+                $('#cryptoName').text(symbol);
+                $('#priceUSD').text(price);
+                $('#cryptoInfo').show();
+            } else {
+                alert('❌ Criptomoneda no encontrada.');
+            }
+        });
+
+        loadCryptoLists();
+        loadWldPairs();
+    });
+
+    /* =====================
+       BINANCE LISTS
+    ====================== */
+    async function getCryptoPrice(symbol) {
+        try {
+            const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`);
+            const data = await response.json();
+            return data.price || null;
+        } catch (error) {
+            console.error('Error al obtener los datos:', error);
+            return null;
+        }
+    }
+
+    async function loadCryptoLists() {
+        try {
+            const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+            const data = await response.json();
+            
+            if (!data || !Array.isArray(data)) return;
+
+            const sortedByChange = [...data].sort((a, b) => parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent));
+            const sortedByVolume = [...data].sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+            const sortedByNew = [...data].reverse();
+
+            displayTable('#winners', sortedByChange.slice(0, 6));
+            displayTable('#losers', sortedByChange.slice(-6).reverse());
+            displayTable('#popular', sortedByVolume.slice(0, 6));
+            displayTable('#favorites', sortedByVolume.slice(6, 12));
+            displayTable('#new', sortedByNew.slice(0, 6));
+        } catch (error) {
+            console.error('Error al obtener listas de criptomonedas:', error);
+        }
+    }
+
+    function displayTable(id, data) {
+        const container = $(id);
+        container.empty();
+        container.append(`
+            <tr>
+                <th>Moneda</th>
+                <th>Último Precio</th>
+                <th>Cambio 24h (%)</th>
+            </tr>
+        `);
+        data.forEach(item => {
+            const symbol = item.symbol.replace('USDT', '');
+            const lastPrice = parseFloat(item.lastPrice).toFixed(6);
+            const changePercent = parseFloat(item.priceChangePercent).toFixed(2);
+            container.append(`
+                <tr>
+                    <td>${symbol}</td>
+                    <td>$${lastPrice}</td>
+                    <td style="color: ${changePercent >= 0 ? 'var(--success)' : 'var(--danger)'};">${changePercent}%</td>
+                </tr>
+            `);
+        });
+    }
+
+    /* =====================
+       PARES WLD (DEXSCREENER / APESPACE)
+       Mapea los enlaces que me diste.
+    ====================== */
+    const WLD_PAIRS = [
+        {
+            label: 'WorldChain Pair 1',
+            chain: 'bsc',
+            address: '0x62a962f3eaf9a652c47de933509e2d08fb31bc64',
+            href: 'https://www.geckoterminal.com/es/bsc/pools/0x62a962f3eaf9a652c47de933509e2d08fb31bc64',
+            source: 'dexscreener'
+        },
+        {
+            label: 'WorldChain Pair 2',
+            chain: 'worldchain',
+            address: '0x97d8285282c8392ceab2af2be5ab5b6803212ce7',
+            href: 'https://dexscreener.com/worldchain/0x97d8285282c8392ceab2af2be5ab5b6803212ce7',
+            source: 'dexscreener'
+        },
+        {
+            label: 'BSC ApeSpace',
+            chain: 'bsc',
+            // ApeSpace link es un token, no necesariamente un pair; probamos search.
+            address: '0x1e29549e92ac250f2d79d33cefe173935f6b5304',
+            href: 'https://www.geckoterminal.com/es/bsc/pools/0x1e29549e92ac250f2d79d33cefe173935f6b5304',
+            source: 'apespace'
+        },
+        {
+            label: 'BSC Pair 2',
+            chain: 'bsc',
+            address: '0xe946732ad8dd1acdb2340806f172b90bc9ceff73',
+            href: 'https://dexscreener.com/bsc/0xe946732ad8dd1acdb2340806f172b90bc9ceff73',
+            source: 'dexscreener'
+        }
+    ];
+
+    async function loadWldPairs(){
+        const $tbl = $('#wldpairs');
+        $tbl.empty().append(`
+            <tr>
+                <th>Moneda</th>
+                <th>Último Precio</th>
+                <th>Cambio 24h (%)</th>
+            </tr>
+        `);
+
+        for(const p of WLD_PAIRS){
+            const rowData = await fetchPairData(p);
+            const {symbolDisp,priceDisp,changeDisp,colorDisp} = rowData;
+            $tbl.append(`
+                <tr>
+                    <td><a class="pair-link" href="${p.href}" target="_blank" rel="noopener">${symbolDisp}</a></td>
+                    <td>${priceDisp}</td>
+                    <td style="color:${colorDisp};">${changeDisp}</td>
+                </tr>
+            `);
+        }
+    }
+
+    async function fetchPairData(p){
+        let data=null;
+        try{
+            if(p.source==='dexscreener'){
+                data = await fetchDexscreenerPair(p.chain,p.address);
+            }else if(p.source==='apespace'){
+                // ApeSpace: intentamos Dexscreener search por address para extraer datos de mercado.
+                data = await fetchDexscreenerSearch(p.address);
+            }
+        }catch(err){console.error('Error fetching pair',p,err);}        
+
+        if(!data){
+            return {
+                symbolDisp: p.label,
+                priceDisp: 'N/D',
+                changeDisp: 'N/D',
+                colorDisp: 'var(--danger)'
+            };
+        }
+
+        const symbolDisp = buildPairSymbol(data) || p.label;
+        const priceDisp = buildPairPrice(data);
+        const chg = getPairChange(data);
+        const changeDisp = (chg===null? 'N/D' : `${chg.toFixed(2)}%`);
+        const colorDisp = (chg!==null && chg>=0)?'var(--success)':'var(--danger)';
+        return {symbolDisp,priceDisp,changeDisp,colorDisp};
+    }
+
+    async function fetchDexscreenerPair(chain,address){
+        const url=`https://api.dexscreener.com/latest/dex/pairs/${chain}/${address}`;
+        const r = await fetch(url);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const j = await r.json();
+        return (j && j.pair)? j.pair : null;
+    }
+
+    async function fetchDexscreenerSearch(q){
+        const url=`https://api.dexscreener.com/latest/dex/search?q=${q}`;
+        const r = await fetch(url);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const j = await r.json();
+        if(j && Array.isArray(j.pairs) && j.pairs.length>0){
+            // Elegir el par con mayor liquidez
+            j.pairs.sort((a,b)=> (parseFloat(b.liquidity?.usd||0)-parseFloat(a.liquidity?.usd||0)) );
+            return j.pairs[0];
+        }
+        return null;
+    }
+
+    function buildPairSymbol(pair){
+        // pairSymbol viene ya formateado ej: TOKEN/WLD
+        if(pair?.pairSymbol) return pair.pairSymbol;
+        const b = pair?.baseToken?.symbol || '?';
+        const q = pair?.quoteToken?.symbol || '?';
+        return `${b}/${q}`;
+    }
+
+    function buildPairPrice(pair){
+        const pUsd = parseFloat(pair?.priceUsd);
+        if(!isNaN(pUsd)) return `$${formatNum(pUsd)}`;
+        const pNat = parseFloat(pair?.priceNative);
+        if(!isNaN(pNat)) return `${formatNum(pNat)} nativo`;
+        return 'N/D';
+    }
+
+    function getPairChange(pair){
+        // Dexscreener trae priceChange: {h24: "..", h4:"..."}
+        const ch = parseFloat(pair?.priceChange?.h24);
+        return isNaN(ch)? null : ch;
+    }
+
+    function formatNum(n){
+        if(n>=1) return n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:6});
+        // Para números pequeños mostramos hasta 8 decimales sin ceros extra
+        return n.toPrecision(8);
+    }
+    </script>
+</body>
+</html>
