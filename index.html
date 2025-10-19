@@ -1,110 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Autenticación World ID</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-  <script src="https://static.worldcoin.org/miniapp-sdk/miniKit.umd.js"></script>
+  <meta charset="UTF-8">
+  <title>CharlyCoin (CHC)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      background: linear-gradient(135deg, #000428, #004e92);
-      color: white;
-      text-align: center;
-      font-family: 'Arial', sans-serif;
-      overflow: hidden;
+      background: radial-gradient(circle at center, #0f0f1a, #000000);
+      font-family: 'Poppins', sans-serif;
     }
     .fade-in {
-      animation: fadeIn 1s ease-in-out forwards;
+      animation: fadeIn 2s ease-in-out;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: scale(0.95);}
+      to { opacity: 1; transform: scale(1);}
     }
   </style>
 </head>
-<body class="flex flex-col justify-center items-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen text-white">
 
-  <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp"
-       alt="Logo" class="w-64 mb-8 rounded-xl shadow-xl fade-in" />
+  <div class="text-center fade-in px-4">
+    <!-- Logo -->
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" 
+         alt="CharlyCoin Logo" 
+         class="mx-auto w-48 drop-shadow-lg mb-6 rounded-2xl">
 
-  <h1 class="text-4xl font-bold mb-6 fade-in">Verifica tu identidad en World App</h1>
-  <p class="mb-6 fade-in">Accede a tu cuenta de forma segura y privada.</p>
+    <!-- Título -->
+    <h1 class="text-4xl font-bold mb-4">
+      Bienvenido a <span class="text-cyan-400">CharlyCoin (CHC)</span>
+    </h1>
 
-  <p class="text-sm text-blue-200 px-6 mb-4 fade-in">
-    ⚠️ Al continuar, aceptas compartir tu <strong>dirección de billetera (World App)</strong> para conectarte al sistema.
-  </p>
+    <!-- Descripción -->
+    <p class="text-lg max-w-2xl mx-auto mb-6 text-gray-300">
+      <b>CharlyCoin (CHC)</b> es un token en la red 
+      <span class="text-purple-400">World Chain</span>, con liquidez gestionada en Dexscreener. 
+      Forma parte del nuevo ecosistema financiero digital, diseñado para 
+      impulsar transacciones rápidas, seguras y accesibles para todos.
+    </p>
 
-  <button onclick="startAuth()"
-    class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in mb-4">
-    🔒 Autenticar con World App
-  </button>
+    <!-- Botón Ingresar -->
+    <a href="https://ganastrx4.github.io/chc-flask-app-/buscador2.html" 
+       class="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-10 py-3 rounded-2xl shadow-lg hover:scale-105 transition transform duration-300 text-lg font-semibold inline-block">
+      🚀 Ingresar
+    </a>
 
-  <div id="result" class="mt-8 text-sm text-green-300"></div>
+    <!-- Links adicionales -->
+    <div class="mt-6 space-y-2">
+      <a href="https://dexscreener.com/worldchain/0x664fc02238c280aa52316895d34cff72274db756" 
+         target="_blank" class="block text-sm text-cyan-400 hover:underline">
+        📊 Ver estadísticas en Dexscreener CHUNWLD
+      </a>
 
-  <script>
-    async function usarMiniKit() {
-      try {
-        const result = await MiniKit.commandsAsync.getUserInfo();
-        const wallet = result?.wallet?.address || "Desconocida";
-
-        document.getElementById("result").innerHTML = `
-          ✅ Autenticado vía MiniKit<br>
-          <strong>Wallet:</strong> ${wallet}<br><br>
-          <pre style="color:#a0f2f1; text-align:left; max-width: 90%; margin: auto;">${JSON.stringify(result, null, 2)}</pre>
-        `;
-        return true;
-      } catch (e) {
-        console.warn("MiniKit no disponible o fallo:", e.message);
-        return false;
-      }
-    }
-
-    function startAuth() {
-      const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
-      const redirectUri = "https://ganastrx4.github.io/chc-flask-app/buscador.html";
-      const state = Math.random().toString(36).substring(2);
-      const nonce = Math.random().toString(36).substring(2);
-      const scope = "openid wallet";
-
-      const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
-      window.location.href = authUrl;
-    }
-
-    window.onload = async function () {
-      const mini = typeof MiniKit !== "undefined";
-      if (mini) {
-        const success = await usarMiniKit();
-        if (success) return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-
-      if (code) {
-        document.getElementById("result").innerHTML = "⌛ Verificando con backend...";
-
-        try {
-          const res = await fetch(`https://worldid-auth.onrender.com/callback?code=${encodeURIComponent(code)}`);
-          if (!res.ok) throw new Error("Error en el servidor");
-
-          const data = await res.json();
-
-          if (data.success) {
-            document.getElementById("result").innerHTML = `
-              ✅ Autenticado con World ID (backend)<br>
-              <strong>Wallet:</strong> ${data.wallet_address}<br><br>
-              <pre style="color:#a0f2f1; text-align:left; max-width: 90%; margin: auto;">${JSON.stringify(data.userinfo, null, 2)}</pre>
-            `;
-          } else {
-            document.getElementById("result").innerHTML = `❌ Error: ${data.error || "Desconocido"}`;
-          }
-        } catch (e) {
-          document.getElementById("result").innerHTML = `❌ Error inesperado: ${e.message}`;
-        }
-      }
-    };
-  </script>
+      <a href="https://dexscreener.com/worldchain/0xdbf525a25f255da693a1c17c7a07b628c021b871" 
+         target="_blank" class="block text-sm text-cyan-400 hover:underline">
+        📊 Ver estadísticas en Dexscreener CHCWLD.
+      </a>
+    </div>
+  </div>
 
 </body>
-</html>
+</html> 
