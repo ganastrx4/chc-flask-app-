@@ -2,133 +2,75 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Verificación World ID - CharlyCoin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@1.2.0/dist/idkit.umd.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a CharlyCoin</title>
   <style>
     body {
-      background: radial-gradient(circle at center, #111827, #000);
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0d1117, #000);
       color: #fff;
-      font-family: "Poppins", sans-serif;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
+      align-items: center;
+      font-family: "Poppins", sans-serif;
       overflow: hidden;
     }
 
     h1 {
-      font-size: 2em;
-      font-weight: 600;
-      margin-bottom: 10px;
+      font-size: 2.5em;
       color: #00bcd4;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h2 {
+      color: #aaa;
+      font-weight: 400;
       animation: fadeIn 2s ease-in-out;
     }
 
-    p {
-      color: #ccc;
-      font-size: 1em;
-      margin-bottom: 20px;
-      animation: fadeIn 2.5s ease-in-out;
-    }
-
-    button {
-      background: linear-gradient(135deg, #00bcd4, #2196f3);
-      color: white;
-      border: none;
-      padding: 14px 28px;
-      font-size: 16px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4);
-      animation: fadeIn 3s ease-in-out;
-    }
-
-    button:hover {
-      transform: scale(1.08);
-      background: linear-gradient(135deg, #2196f3, #00bcd4);
-      box-shadow: 0 6px 25px rgba(0, 188, 212, 0.6);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     .loader {
-      display: none;
-      border: 6px solid #ccc;
+      border: 6px solid #222;
       border-top: 6px solid #00bcd4;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin-top: 20px;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
+      margin-top: 25px;
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      position: absolute;
+      bottom: 20px;
+      color: #555;
+      font-size: 0.9em;
+      letter-spacing: 1px;
+      animation: fadeIn 3s ease-in-out;
     }
   </style>
 </head>
 <body>
-  <h1>Verificación con World ID 🌍</h1>
-  <p>Demuestra que eres humano para continuar con CharlyCoin</p>
-  <div id="world-id-container"></div>
-  <div class="loader" id="loader"></div>
+  <h1>Bienvenido a CharlyCoin 🌍</h1>
+  <h2>Preparando tu experiencia...</h2>
+  <div class="loader"></div>
+  <footer>© 2025 CharlyCoin. Todos los derechos reservados.</footer>
 
   <script>
-    const app_id = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const backend_url = "https://worldid-auth-fzky.onrender.com/";
-    const redirect_url = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
-
-    const idkit = new window.IDKitWidget({
-      app_id,
-      action: "charlycoin_verification",
-      signal: "verify_user",
-      theme: "dark",
-      verification_level: "orb",
-      onSuccess: async (response) => {
-        console.log("Proof recibido:", response);
-        document.getElementById("loader").style.display = "block";
-
-        try {
-          const res = await fetch(backend_url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response),
-          });
-
-          const data = await res.json();
-          console.log("Respuesta del backend:", data);
-
-          if (res.ok && data.success) {
-            document.body.innerHTML = `
-              <h1>✅ Verificación completada</h1>
-              <p>Serás redirigido automáticamente...</p>
-              <div class="loader"></div>
-            `;
-            setTimeout(() => {
-              window.location.href = redirect_url;
-            }, 3000);
-          } else {
-            alert("❌ Verificación fallida: " + (data.error || "Error desconocido"));
-            document.getElementById("loader").style.display = "none";
-          }
-        } catch (err) {
-          console.error("Error al verificar:", err);
-          alert("❌ Error conectando con el backend.");
-          document.getElementById("loader").style.display = "none";
-        }
-      },
-    });
-
-    // Renderizar el botón
-    const button = document.createElement("button");
-    button.textContent = "Verificar con World ID";
-    button.onclick = () => idkit.open();
-    document.getElementById("world-id-container").appendChild(button);
+    setTimeout(() => {
+      window.location.href = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
+    }, 3000);
   </script>
 </body>
 </html>
