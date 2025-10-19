@@ -6,50 +6,92 @@
   <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@1.2.0/dist/idkit.umd.min.js"></script>
   <style>
     body {
-      background: #0d1117;
+      background: radial-gradient(circle at center, #111827, #000);
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: "Poppins", sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden;
     }
+
+    h1 {
+      font-size: 2em;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #00bcd4;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    p {
+      color: #ccc;
+      font-size: 1em;
+      margin-bottom: 20px;
+      animation: fadeIn 2.5s ease-in-out;
+    }
+
     button {
       background: linear-gradient(135deg, #00bcd4, #2196f3);
       color: white;
       border: none;
       padding: 14px 28px;
       font-size: 16px;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       transition: 0.3s;
+      box-shadow: 0 4px 20px rgba(0, 188, 212, 0.4);
+      animation: fadeIn 3s ease-in-out;
     }
+
     button:hover {
-      transform: scale(1.05);
+      transform: scale(1.08);
       background: linear-gradient(135deg, #2196f3, #00bcd4);
+      box-shadow: 0 6px 25px rgba(0, 188, 212, 0.6);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loader {
+      display: none;
+      border: 6px solid #ccc;
+      border-top: 6px solid #00bcd4;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-top: 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <h2>Verifica tu identidad con World ID</h2>
+  <h1>Verificación con World ID 🌍</h1>
+  <p>Demuestra que eres humano para continuar con CharlyCoin</p>
   <div id="world-id-container"></div>
+  <div class="loader" id="loader"></div>
 
   <script>
-    // Tu app ID oficial de Worldcoin
     const app_id = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const backend_url = "https://worldid-auth-fzky.onrender.com/"; 
+    const backend_url = "https://worldid-auth-fzky.onrender.com/";
     const redirect_url = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
 
-    // Inicializa el widget IDKit
     const idkit = new window.IDKitWidget({
-      app_id: app_id,
-      action: "my_action", // Puedes cambiar el nombre si quieres usar diferentes acciones
+      app_id,
+      action: "charlycoin_verification",
       signal: "verify_user",
       theme: "dark",
       verification_level: "orb",
       onSuccess: async (response) => {
         console.log("Proof recibido:", response);
+        document.getElementById("loader").style.display = "block";
 
         try {
           const res = await fetch(backend_url, {
@@ -62,21 +104,29 @@
           console.log("Respuesta del backend:", data);
 
           if (res.ok && data.success) {
-            alert("✅ Verificación completada. Redirigiendo...");
-            window.location.href = redirect_url;
+            document.body.innerHTML = `
+              <h1>✅ Verificación completada</h1>
+              <p>Serás redirigido automáticamente...</p>
+              <div class="loader"></div>
+            `;
+            setTimeout(() => {
+              window.location.href = redirect_url;
+            }, 3000);
           } else {
             alert("❌ Verificación fallida: " + (data.error || "Error desconocido"));
+            document.getElementById("loader").style.display = "none";
           }
         } catch (err) {
           console.error("Error al verificar:", err);
           alert("❌ Error conectando con el backend.");
+          document.getElementById("loader").style.display = "none";
         }
       },
     });
 
-    // Renderiza el botón
+    // Renderizar el botón
     const button = document.createElement("button");
-    button.textContent = "Verificar con World ID 🌐";
+    button.textContent = "Verificar con World ID";
     button.onclick = () => idkit.open();
     document.getElementById("world-id-container").appendChild(button);
   </script>
