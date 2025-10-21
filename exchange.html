@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inicio de sesión - CharlyCoin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://static.worldcoin.org/miniapp-sdk/miniKit.umd.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #000428, #004e92);
+      color: white;
+      text-align: center;
+      font-family: 'Arial', sans-serif;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+    .fade-in {
+      animation: fadeIn 1s ease-in-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-center items-center min-h-screen">
+
+  <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp"
+       alt="Logo" class="w-64 mb-8 rounded-xl shadow-xl fade-in" />
+
+  <h1 class="text-4xl font-bold mb-6 fade-in">Bienvenido a CharlyCoin</h1>
+  <p class="mb-4 fade-in text-lg text-blue-100">Inicia sesión con tu identidad verificada de World App.</p>
+
+  <p class="text-sm text-blue-200 px-6 mb-6 fade-in max-w-xl">
+    ⚠️ Al iniciar sesión, CharlyCoin verá tu <strong>Nivel de verificación</strong> y la <strong>dirección de tu billetera (World App)</strong>.
+    Este acceso es estándar y requerido para realizar transacciones con tu consentimiento, como lo hacen otras apps de Worldcoin.
+  </p>
+
+  <button onclick="startAuth()"
+    class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in mb-4">
+    🔐 Iniciar sesión con World App
+  </button>
+
+  <div id="result" class="mt-8 text-sm text-green-300 max-w-xl break-words"></div>
+
+  <script>
+    const CLIENT_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const REDIRECT_URI = "https://ganastrx4.github.io/chc-flask-app/buscador.html"; // Cámbialo si usas otra ruta
+    const BACKEND_URL = "https://worldid-auth.onrender.com/callback"; // Endpoint de tu backend (si usas uno)
+
+    async function usarMiniKit() {
+      try {
+        const result = await MiniKit.commandsAsync.getUserInfo();
+        const wallet = result?.wallet?.address || "Desconocida";
+
+        document.getElementById("result").innerHTML = `
+          ✅ Autenticado vía MiniKit<br>
+          <strong>Wallet:</strong> <code>${wallet}</code><br><br>
+          <pre style="color:#a0f2f1; text-align:left; max-width: 90%; margin: auto;">${JSON.stringify(result, null, 2)}</pre>
+        `;
+        return true;
+      } catch (e) {
+        console.warn("MiniKit no disponible:", e.message);
+        return false;
+      }
+    }
+
+    function startAuth() {
+      const state = Math.random().toString(36).substring(2);
+      const nonce = Math.random().toString(36).substring(2);
+      const scope = "openid wallet";
+
+      const authUrl = `https://id.worldcoin.org/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
+      window.location.href = authUrl;
+    }
+
+    window.onload = async function () {
+      const mini = typeof MiniKit !== "undefined";
+      if (mini) {
+        const success = await usarMiniKit();
+        if (success) return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+
+      if (code) {
+        document.getElementById("result").innerText = "⌛ Verificando con el backend...";
+        try {
+          const res = await fetch(`${BACKEND_URL}?code=${encodeURIComponent(code)}`);
+          if (!res.ok) throw new Error("Error en la verificación");
+
+          const data = await res.json();
+
+          if (data.success) {
+            document.getElementById("result").innerHTML = `
+              ✅ Autenticado con World ID<br>
+              <strong>Wallet:</strong> <code>${data.wallet_address}</code><br><br>
+              <pre style="color:#a0f2f1; text-align:left; max-width: 90%; margin: auto;">${JSON.stringify(data.userinfo, null, 2)}</pre>
+            `;
+          } else {
+            document.getElementById("result").innerText = `❌ Error: ${data.error || "Desconocido"}`;
+          }
+        } catch (e) {
+          document.getElementById("result").innerText = `❌ Error inesperado: ${e.message}`;
+        }
+      }
+    };
+  </script>
+
+</body>
+</html>
