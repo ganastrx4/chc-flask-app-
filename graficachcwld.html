@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Fractal_BB_EMA8_RSI_MACD Vote - Signals (Binance Futures)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Inter, system-ui, Arial; background:#0b1220; color:#e6eef6; margin:0; padding:16px;}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    .card{background:#071022;padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+    label{display:block;font-size:13px;color:#9fb0c8;margin-bottom:6px}
+    select,input{background:#062033;border:1px solid #123044;color:#e6eef6;padding:8px;border-radius:6px}
+    button{background:#0b7adf;border:none;padding:8px 12px;border-radius:8px;color:white;cursor:pointer}
+    .cols{display:grid;grid-template-columns:320px 1fr;gap:14px}
+    .metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .metric{background:#081827;padding:8px;border-radius:8px;font-size:13px}
+    #chartWrap{height:520px;padding:10px}
+    .log{margin-top:10px;font-family:monospace;white-space:pre-wrap; background:#041422;padding:10px;border-radius:8px; max-height:240px; overflow:auto;}
+    small.cite{color:#6b8aa0; display:block; margin-top:8px}
+  </style>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h2 style="margin:0">Fractal_BB_EMA8_RSI_MACD (Binance Futures) — Señales por Votación</h2>
+    <div style="margin-left:auto;color:#9fb0c8;font-size:13px">Fuente: Binance Futures (public REST /fapi/v1/klines)</div>
+  </header>
+
+  <div class="cols">
+    <div class="card">
+      <label>Símbolo (ej. BTCUSDT, ETHUSDT)</label>
+      <input id="symbol" value="BTCUSDT" />
+
+      <label style="margin-top:10px">Intervalo (timeframe)</label>
+      <select id="interval">
+        <option value="1m">1m</option><option value="3m">3m</option><option value="5m" selected>5m</option>
+        <option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option>
+        <option value="4h">4h</option><option value="1d">1d</option>
+      </select>
+
+      <label style="margin-top:10px">Cantidad de velas a traer (max 1000)</label>
+      <input id="limit" type="number" value="500" min="50" max="1000" />
+
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <button id="btnFetch">Traer & Analizar</button>
+        <button id="btnAuto">Auto (cada 30s)</button>
+      </div>
+
+      <div class="metrics" id="metrics">
+        <div class="metric" id="voteBox">Votos: -</div>
+        <div class="metric" id="signalBox">Señal: -</div>
+        <div class="metric" id="entryBox">Entrada sugerida: -</div>
+        <div class="metric" id="srBox">S/R detectados: -</div>
+      </div>
+
+      <div class="log" id="log"></div>
+
+      <small class="cite">Docs API: GET /fapi/v1/klines (Binance Futures). Más info en la documentación oficial de Binance.</small>
+    </div>
+
+    <div>
+      <div class="card" id="chartWrap">
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h4 style="margin:4px 0 10px 0">Detalles de Indicadores</h4>
+        <div id="indDetails" style="font-size:13px; color:#cfe8ff"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ---------------------- UTIL: fetch klines (Binance Futures public) ----------------------
+// endpoint público (no API key necesario para klines)
+async function fetchKlinesFutures(symbol='BTCUSDT', interval='5m', limit=500){
+  const base = 'https://fapi.binance.com/fapi/v1/klines';
+  const url = `${base}?symbol=${encodeURIComponent(symbol)}&interval=${interval}&limit=${limit}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Error al traer klines: '+res.status);
+  return res.json(); // array de arrays: [ openTime, open, high, low, close, ... ]
+}
+
+// ---------------------- INDICADORES ---------------------------------------------
+function sma(values, period){
+  const out = [];
+  let sum=0;
+  for(let i=0;i<values.length;i++){
+    sum += values[i];
+    if(i>=period) sum -= values[i-period];
+    if(i>=period-1) out.push(sum/period);
+    else out.push(null);
+  }
+  return out;
+}
+function ema(values, period){
+  const out = [];
+  const k = 2/(period+1);
+  let prev = null;
+  for(let i=0;i<values.length;i++){
+    const v = values[i];
+    if(i===0){ prev = v; out.push(v); continue; }
+    prev = prev === null ? v : (v*k + prev*(1-k));
+    out.push(prev);
+  }
+  // fix initial nulls to lead with nulls for same indexing
+  return out.map((v,i)=> i < period-1 ? null : v);
+}
+function rsi(values, period){
+  const out = [];
+  let gains=0, losses=0;
+  for(let i=0;i<values.length;i++){
+    if(i===0){ out.push(null); continue; }
+    const change = values[i] - values[i-1];
+    const gain = Math.max(change,0), loss = Math.max(-change,0);
+    if(i <= period){
+      gains += gain; losses += loss;
+      if(i===period){
+        let avgGain = gains/period, avgLoss = losses/period;
+        let rs = avgLoss===0 ? 100 : avgGain/avgLoss;
+        out.push(100 - (100/(1+rs)));
+        prevAvgGain = avgGain; prevAvgLoss = avgLoss;
+      } else out.push(null);
+    } else {
+      prevAvgGain = (prevAvgGain*(period-1) + gain)/period;
+      prevAvgLoss = (prevAvgLoss*(period-1) + loss)/period;
+      let rs = prevAvgLoss===0 ? 100 : prevAvgGain/prevAvgLoss;
+      out.push(100 - (100/(1+rs)));
+    }
+  }
+  return out;
+}
+function macd(values, fast=12, slow=26, signal=9){
+  const emaFast = ema(values, fast);
+  const emaSlow = ema(values, slow);
+  const macdLine = values.map((_,i)=> (emaFast[i]!==null && emaSlow[i]!==null) ? (emaFast[i]-emaSlow[i]) : null);
+  const signalLine = [];
+  // compute signal as ema of macdLine (skip nulls)
+  let temp = macdLine.map(v=> v===null ? 0 : v);
+  const sig = ema(temp, signal);
+  for(let i=0;i<macdLine.length;i++){
+    if(macdLine[i]===null) signalLine.push(null); else signalLine.push(sig[i]);
+  }
+  const hist = macdLine.map((v,i)=> (v===null || signalLine[i]===null) ? null : v - signalLine[i]);
+  return {macdLine, signalLine, hist};
+}
+function bollinger(values, period=20, dev=2){
+  const ma = sma(values, period);
+  const out = [];
+  for(let i=0;i<values.length;i++){
+    if(i < period-1){ out.push({upper:null, middle:null, lower:null}); continue; }
+    let slice = values.slice(i-period+1, i+1);
+    let mean = ma[i];
+    let variance = slice.reduce((s,x)=> s + Math.pow(x-mean,2),0)/period;
+    let sd = Math.sqrt(variance);
+    out.push({upper: mean + dev*sd, middle: mean, lower: mean - dev*sd});
+  }
+  return out;
+}
+// fractales: detect local highs/lows (basic)
+function fractals(highs, lows, lookback=2){
+  const up = new Array(highs.length).fill(0);
+  const dn = new Array(lows.length).fill(0);
+  for(let i=lookback;i<highs.length-lookback;i++){
+    let isHigh = true, isLow = true;
+    for(let j=1;j<=lookback;j++){
+      if(highs[i] <= highs[i-j] || highs[i] <= highs[i+j]) isHigh=false;
+      if(lows[i] >= lows[i-j] || lows[i] >= lows[i+j]) isLow=false;
+    }
+    if(isHigh) up[i]=highs[i];
+    if(isLow) dn[i]=lows[i];
+  }
+  return {up, dn};
+}
+
+// support/resistance: find recent local pivots (top N)
+function findSR(levelsCount, highs, lows){
+  const pivots = [];
+  // simple method: find local maxima/minima with window 3..7 and cluster them
+  for(let i=2;i<highs.length-2;i++){
+    if(highs[i] > highs[i-1] && highs[i] > highs[i+1]) pivots.push({type:'R', price:highs[i], idx:i});
+    if(lows[i] < lows[i-1] && lows[i] < lows[i+1]) pivots.push({type:'S', price:lows[i], idx:i});
+  }
+  // sort by recency and price clustering
+  pivots.sort((a,b)=> b.idx - a.idx);
+  // cluster similar prices (within 0.5%) and pick top N
+  const clusters = [];
+  for(const p of pivots){
+    let found = false;
+    for(const c of clusters){
+      if(Math.abs((c.price - p.price)/c.price) < 0.005){
+        c.items.push(p); c.price = (c.price*(c.count) + p.price)/(c.count+1); c.count++;
+        found = true; break;
+      }
+    }
+    if(!found) clusters.push({price:p.price, type:p.type, items:[p], count:1});
+  }
+  // pick first levelsCount clusters
+  const out = clusters.slice(0, levelsCount).map(c=> ({type:c.type, price:c.price}));
+  return out;
+}
+
+// ---------------------- LÓGICA DE VOTACIÓN (similar al MQL) -----------------------
+function voteIndicators(dataObj, params){
+  // dataObj: {close, high, low, ema8, ema20, ema50, ema200, rsi14, rsi25, rsi75, macd, bb, fractUp, fractDn}
+  let votesBuy = 0, votesSell = 0;
+  const details = [];
+
+  // EMA 8 trend vs previous: if close > ema8 -> buy vote
+  const idx = dataObj.close.length - 1;
+  const close = dataObj.close[idx];
+
+  // EMA comparisons (we'll count EMA8 vs EMA20/50/200 slopes)
+  const e8 = dataObj.ema8[idx], e20 = dataObj.ema20[idx], e50 = dataObj.ema50[idx], e200 = dataObj.ema200[idx];
+  if(e8 !== null && e20 !== null){
+    if(e8 > e20){ votesBuy++; details.push('EMA8>EMA20'); } else { votesSell++; details.push('EMA8<EMA20'); }
+  }
+  if(e8 !== null && e50 !== null){
+    if(e8 > e50){ votesBuy++; details.push('EMA8>EMA50'); } else { votesSell++; details.push('EMA8<EMA50'); }
+  }
+  if(e20 !== null && e200 !== null){
+    if(e20 > e200){ votesBuy++; details.push('EMA20>EMA200'); } else { votesSell++; details.push('EMA20<EMA200'); }
+  }
+
+  // RSI votes: buy if RSI14>55 etc (customizable)
+  const r14 = dataObj.rsi14[idx], r25 = dataObj.rsi25[idx], r75 = dataObj.rsi75[idx];
+  if(r14 !== null){
+    if(r14 > 55){ votesBuy++; details.push('RSI14 high'); } else if(r14 < 45){ votesSell++; details.push('RSI14 low'); }
+  }
+  if(r25 !== null){
+    if(r25 > 55){ votesBuy++; details.push('RSI25 high'); } else if(r25 < 45){ votesSell++; details.push('RSI25 low'); }
+  }
+  if(r75 !== null){
+    if(r75 > 55){ votesBuy++; details.push('RSI75 high'); } else if(r75 < 45){ votesSell++; details.push('RSI75 low'); }
+  }
+
+  // MACD
+  const macdLine = dataObj.macd.macdLine[idx], macdSig = dataObj.macd.signalLine[idx];
+  if(macdLine !== null && macdSig !== null){
+    const diff = macdLine - macdSig;
+    if(diff > 0){ votesBuy++; details.push('MACD +'); } else { votesSell++; details.push('MACD -'); }
+  }
+
+  // Bollinger: buy near lower band, sell near upper band
+  const bb = dataObj.bb[idx];
+  if(bb && bb.middle !== null){
+    if(close <= bb.middle) { votesBuy++; details.push('Close <= BB middle'); }
+    else { votesSell++; details.push('Close > BB middle'); }
+  }
+
+  // Fractales: if latest fractal down exists -> buy, up -> sell
+  const fu = dataObj.fractUp[idx], fd = dataObj.fractDn[idx];
+  if(fu) { votesSell++; details.push('FractalUp'); }
+  if(fd) { votesBuy++; details.push('FractalDn'); }
+
+  return {votesBuy,votesSell,details};
+}
+
+// ---------------------- SUGERIR PRECIO DE ENTRADA (soportes/resistencias) -----------
+function suggestEntry(signal, close, srLevels){
+  // signal: 'BUY' or 'SELL'. If BUY -> buscar soporte más cercano por debajo del precio
+  const supports = srLevels.filter(s=> s.type==='S').map(s=>s.price).sort((a,b)=>b-a); // descending
+  const resistances = srLevels.filter(s=> s.type==='R').map(s=>s.price).sort((a,b)=>a-b); // ascending for nearest above
+  let suggestion = null;
+  if(signal==='BUY'){
+    // prefer a support within 2% below close
+    for(const s of supports){
+      if(s < close && (close-s)/close < 0.03){ suggestion = {type:'S', price:s}; break; }
+    }
+    if(!suggestion){
+      suggestion = {type:'MKT', price: close, note:'No soporte cercano (<3%), usar precio de mercado o esperar soporte.'};
+    }
+  } else if(signal==='SELL'){
+    for(const r of resistances){
+      if(r > close && (r-close)/close < 0.03){ suggestion = {type:'R', price:r}; break; }
+    }
+    if(!suggestion){
+      suggestion = {type:'MKT', price: close, note:'No resistencia cercana (<3%), usar precio de mercado o esperar resistencia.'};
+    }
+  }
+  return suggestion;
+}
+
+// ---------------------- UI / Orquestador -----------------------------------------
+let chart = null;
+let autoInterval = null;
+const logEl = document.getElementById('log');
+function log(t){ logEl.textContent = `${new Date().toLocaleTimeString()} - ${t}\n` + logEl.textContent; }
+
+async function analyzeAndRender(){
+  try{
+    const symbol = document.getElementById('symbol').value.trim().toUpperCase();
+    const interval = document.getElementById('interval').value;
+    const limit = Math.min(1000, Math.max(50, parseInt(document.getElementById('limit').value || 500)));
+    log(`Solicitando ${limit} velas ${symbol} ${interval} ...`);
+    const raw = await fetchKlinesFutures(symbol, interval, limit);
+    // raw: array of arrays: [openTime, open, high, low, close, ...]
+    const times = raw.map(r=> new Date(r[0]));
+    const opens = raw.map(r=> +r[1]);
+    const highs = raw.map(r=> +r[2]);
+    const lows = raw.map(r=> +r[3]);
+    const closes = raw.map(r=> +r[4]);
+    const vols = raw.map(r=> +r[5]);
+
+    // indicators
+    const ema8 = ema(closes, 8);
+    const ema20 = ema(closes, 20);
+    const ema50 = ema(closes, 50);
+    const ema200 = ema(closes, 200);
+    const rsi14 = rsi(closes, 14);
+    const rsi25 = rsi(closes, 25);
+    const rsi75 = rsi(closes, 75);
+    const mac = macd(closes,12,26,9);
+    const bb = bollinger(closes,20,2);
+    const fract = fractals(highs, lows, 2);
+
+    // votes
+    const vote = voteIndicators({
+      close: closes, high: highs, low: lows,
+      ema8, ema20, ema50, ema200,
+      rsi14, rsi25, rsi75,
+      macd: mac, bb, fractUp: fract.up, fractDn: fract.dn
+    });
+    const lastIdx = closes.length-1;
+    let signal = 'NONE';
+    if(vote.votesBuy >= 3 && vote.votesBuy > vote.votesSell) signal='BUY';
+    else if(vote.votesSell >= 3 && vote.votesSell > vote.votesBuy) signal='SELL';
+
+    // support/resistance
+    const sr = findSR(6, highs, lows);
+    const suggestion = (signal==='BUY' || signal==='SELL') ? suggestEntry(signal, closes[lastIdx], sr) : null;
+
+    // update UI squares
+    document.getElementById('voteBox').textContent = `Votes B:${vote.votesBuy} S:${vote.votesSell}`;
+    document.getElementById('signalBox').textContent = `Señal: ${signal}`;
+    document.getElementById('srBox').textContent = `S/R: ${sr.map(s=> s.type+':'+s.price.toFixed(4)).join(' | ')}`;
+    document.getElementById('entryBox').textContent = suggestion ? `${suggestion.type} @ ${suggestion.price.toFixed(4)} ${suggestion.note?'- '+suggestion.note:''}` : 'N/A';
+    document.getElementById('indDetails').innerHTML = `
+      <b>Última vela:</b> ${times[lastIdx].toLocaleString()} • <b>C:</b> ${closes[lastIdx].toFixed(6)} • 
+      <br><b>EMA8/20/50/200:</b> ${[ema8[lastIdx],ema20[lastIdx],ema50[lastIdx],ema200[lastIdx]].map(v=> v? v.toFixed(6):'-').join(' / ')}
+      <br><b>RSI14/25/75:</b> ${[rsi14[lastIdx],rsi25[lastIdx],rsi75[lastIdx]].map(v=> v? v.toFixed(2):'-').join(' / ')}
+      <br><b>MACD diff:</b> ${ (mac.macdLine[lastIdx]!==null && mac.signalLine[lastIdx]!==null) ? ( (mac.macdLine[lastIdx]-mac.signalLine[lastIdx]).toFixed(6) ) : '-' }
+      <br><b>Bollinger:</b> ${ (bb[lastIdx] && bb[lastIdx].middle)? bb[lastIdx].lower.toFixed(6)+' / '+bb[lastIdx].middle.toFixed(6)+' / '+bb[lastIdx].upper.toFixed(6) : '-' }
+      <br><b>Indicadores activos:</b> EMA8,EMA20,EMA50,EMA200 • RSI14/25/75 • MACD(12,26,9) • BB(20,2) • Fractals(look=2)
+      <br><b>Detalles votos:</b> ${vote.details.join(', ')}
+    `;
+
+    // draw chart using Chart.js
+    renderChart({times, opens, highs, lows, closes, volumes:vols, ema8, ema20, ema50, ema200, bb, fract});
+
+    log(`Analizado. Señal: ${signal}. Votos B:${vote.votesBuy} S:${vote.votesSell}`);
+
+  } catch(err){
+    log('ERROR: '+err.message);
+    console.error(err);
+  }
+}
+
+function renderChart(data){
+  const ctx = document.getElementById('chart').getContext('2d');
+
+  // prepare candle dataset (Chart.js financial plugin not included, so we'll emulate candles with bar + error bars via candlestick style)
+  // For simplicity: draw close as line + areas for BB + EMAs lines + scatter for fractals + vertical bars for high-low via pluginless approach.
+  const labels = data.times.map(t=> t.toLocaleString());
+  const closeData = data.closes;
+  const highLowBars = data.highs.map((h,i)=> ({x:labels[i], y:[data.lows[i], data.highs[i]]}));
+
+  const datasets = [
+    { type:'line', label:'Close', data: closeData, borderWidth:1, tension:0.15, pointRadius:0, parsing:{yAxisKey:null}, yAxisID:'y' },
+    { type:'line', label:'EMA8', data: data.ema8, borderDash:[], borderWidth:1.5, pointRadius:0, yAxisID:'y' },
+    { type:'line', label:'EMA20', data: data.ema20, borderDash:[4,4], borderWidth:1.2, pointRadius:0, yAxisID:'y' },
+    { type:'line', label:'EMA50', data: data.ema50, borderDash:[2,6], borderWidth:1.2, pointRadius:0, yAxisID:'y' },
+    { type:'line', label:'EMA200', data: data.ema200, borderDash:[6,4], borderWidth:1, pointRadius:0, yAxisID:'y' },
+    { type:'line', label:'BB upper', data: data.bb.map(b=> b? b.upper:null), borderWidth:0.8, pointRadius:0, yAxisID:'y' },
+    { type:'line', label:'BB middle', data: data.bb.map(b=> b? b.middle:null), borderWidth:0.6, pointRadius:0, yAxisID:'y' },
+    { type:'line', label:'BB lower', data: data.bb.map(b=> b? b.lower:null), borderWidth:0.8, pointRadius:0, yAxisID:'y' },
+    { type:'scatter', label:'Fractal Up', data: data.fractUp.map((v,i)=> v? {x:labels[i], y:v}:null).filter(x=>x), pointStyle:'triangle', radius:6 },
+    { type:'scatter', label:'Fractal Down', data: data.fractDn.map((v,i)=> v? {x:labels[i], y:v}:null).filter(x=>x), pointStyle:'circle', radius:4 }
+  ];
+
+  // normalize data arrays lengths for chart.js (use nulls where undefined)
+  const maxLen = labels.length;
+  datasets.forEach(ds=>{
+    if(Array.isArray(ds.data) && ds.data.length !== maxLen){
+      // transform numeric arrays mapped by index
+      if(ds.data.length < maxLen){
+        const mapped = new Array(maxLen).fill(null);
+        for(let i=0;i<Math.min(ds.data.length,maxLen);i++) mapped[i] = ds.data[i];
+        ds.data = mapped;
+      }
+    }
+  });
+
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'line',
+    data: { labels, datasets },
+    options: {
+      interaction:{mode:'index', intersect:false},
+      plugins:{legend:{labels:{color:'#bcd'}}},
+      scales:{
+        x:{ ticks:{color:'#9fb0c8'} },
+        y:{ position:'left', ticks:{color:'#9fb0c8'} }
+      },
+      maintainAspectRatio:false
+    }
+  });
+}
+
+// ---------------------- UI events
+document.getElementById('btnFetch').addEventListener('click', analyzeAndRender);
+document.getElementById('btnAuto').addEventListener('click', ()=>{
+  if(autoInterval){ clearInterval(autoInterval); autoInterval=null; document.getElementById('btnAuto').textContent='Auto (cada 30s)'; log('Auto detenido'); }
+  else { analyzeAndRender(); autoInterval = setInterval(analyzeAndRender, 30000); document.getElementById('btnAuto').textContent='Detener Auto'; log('Auto iniciado cada 30s'); }
+});
+
+// run once on load
+analyzeAndRender();
+</script>
+</body>
+</html>
