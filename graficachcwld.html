@@ -1,1 +1,997 @@
-1
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trading Analysis Tool v2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .btn-analyze {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-analyze:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        .eval-green { background-color: #e6ffed; color: #1e7e34; font-weight: bold; }
+        .eval-red { background-color: #ffebe6; color: #dc3545; font-weight: bold; }
+        .eval-yellow { background-color: #fff3cd; color: #856404; }
+        .panel {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+        .small {
+            font-size: 0.8em;
+            color: #6c757d;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Análisis Técnico de Criptomonedas</h1>
+    <div class="control-panel">
+        <div class="form-group">
+            <label for="pair">Par (Ej: BTCUSDT):</label>
+            <input type="text" id="pair" value="BTCUSDT">
+        </div>
+        <div class="form-group">
+            <label for="interval">Intervalo:</label>
+            <select id="interval">
+                <option value="1m">1m</option>
+                <option value="5m">5m</option>
+                <option value="15m" selected>15m</option>
+                <option value="30m">30m</option>
+                <option value="1h">1h</option>
+                <option value="4h">4h</option>
+                <option value="1d">1d</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="market">Mercado:</label>
+            <select id="market">
+                <option value="futures" selected>Futures</option>
+                <option value="spot">Spot</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="limit">Velas (Máx 1500):</label>
+            <input type="number" id="limit" value="500" min="50" max="1500">
+        </div>
+        <div class="form-group">
+            <label for="rsiPeriod">Período RSI:</label>
+            <input type="number" id="rsiPeriod" value="14" min="2" max="200">
+        </div>
+        <div class="form-group">
+            <label for="prPeriod">Período PercentRank:</label>
+            <input type="number" id="prPeriod" value="100" min="10" max="500">
+        </div>
+    </div>
+    
+    <button id="analyze" class="btn-analyze">Ejecutar Análisis Técnico</button>
+
+    <div id="output" class="panel">
+        Presiona "Ejecutar Análisis Técnico" para comenzar.
+    </div>
+</div>
+
+<script>
+(function(){
+    const out = document.getElementById('output');
+    const btn = document.getElementById('analyze');
+
+    function safeFmt(v, dp=2){
+        if(v === null || v === undefined || Number.isNaN(v)) return "N/A";
+        return Number(v).toFixed(dp);
+    }
+
+    // ---------- Indicadores clásicos ----------
+    function calculateEMA(values, period=20) {
+        const ema = Array(values.length).fill(null);
+        if(values.length < period) return ema;
+        const k = 2 / (period + 1);
+        let sum = 0;
+        for (let i = 0; i < period; i++) sum += values[i];
+        ema[period - 1] = sum / period;
+        for (let i = period; i < values.length; i++) {
+            ema[i] = values[i] * k + ema[i - 1] * (1 - k);
+        }
+        return ema;
+    }
+
+    function calculateRSI(values, period = 14) {
+        const rsi = Array(values.length).fill(null);
+        if(values.length <= period) return rsi;
+        let gains = 0, losses = 0;
+        for (let i = 1; i <= period; i++) {
+            const diff = values[i] - values[i-1];
+            if (diff >= 0) gains += diff; else losses -= diff;
+        }
+        let avgGain = gains / period, avgLoss = losses / period;
+        rsi[period] = 100 - (100 / (1 + avgGain / (avgLoss || 1e-9)));
+        for (let i = period + 1; i < values.length; i++) {
+            const diff = values[i] - values[i-1];
+            const gain = Math.max(diff, 0), loss = Math.max(-diff, 0);
+            avgGain = (avgGain * (period - 1) + gain) / period;
+            avgLoss = (avgLoss * (period - 1) + loss) / period;
+            rsi[i] = 100 - (100 / (1 + avgGain / (avgLoss || 1e-9)));
+        }
+        return rsi;
+    }
+
+    function calculateStreaks(values) {
+        const streaks = Array(values.length).fill(0);
+        for (let i = 1; i < values.length; i++) {
+            if (values[i] > values[i-1]) streaks[i] = streaks[i-1] > 0 ? streaks[i-1] + 1 : 1;
+            else if (values[i] < values[i-1]) streaks[i] = streaks[i-1] < 0 ? streaks[i-1] - 1 : -1;
+            else streaks[i] = 0;
+        }
+        return streaks;
+    }
+
+    function calculatePercentRank(values, period = 100) {
+        const pr = Array(values.length).fill(null);
+        if(values.length <= period) return pr;
+        const returns = Array(values.length).fill(null);
+        for(let i=1;i<values.length;i++) returns[i] = (values[i] - values[i-1]) / (values[i-1] || values[i]) * 100;
+        for (let i = period; i < values.length; i++) {
+            const window = returns.slice(i - period + 1, i + 1);
+            const v = returns[i];
+            if (v === null) continue;
+            const less = window.filter(x => x < v).length;
+            const equal = window.filter(x => x === v).length;
+            pr[i] = ((less + 0.5 * equal) / window.length) * 100;
+        }
+        return pr;
+    }
+
+    function calculateCRSI(values, rsiPeriod=3, streakRSIPeriod=2, prPeriod=100) {
+        const rsiShort = calculateRSI(values, rsiPeriod);
+        const streaks = calculateStreaks(values);
+        const rsiStreak = calculateRSI(streaks, streakRSIPeriod);
+        const pr = calculatePercentRank(values, prPeriod);
+        const crsi = Array(values.length).fill(null);
+        for(let i=0;i<values.length;i++){
+            if (rsiShort[i] === null || rsiStreak[i] === null || pr[i] === null) continue;
+            crsi[i] = (rsiShort[i] + rsiStreak[i] + pr[i]) / 3;
+        }
+        return { crsi, rsiShort, rsiStreak, pr };
+    }
+
+    function calculateStochRSI(values, rsiPeriod=14, stochPeriod=14) {
+        const rsi = calculateRSI(values, rsiPeriod);
+        const stoch = Array(values.length).fill(null);
+        if(values.length <= (rsiPeriod + stochPeriod)) return stoch;
+        for(let i = rsiPeriod + stochPeriod; i < values.length; i++){
+            const window = rsi.slice(i - stochPeriod + 1, i + 1);
+            if(window.some(v => v === null)) { stoch[i] = null; continue; }
+            const minR = Math.min(...window);
+            const maxR = Math.max(...window);
+            stoch[i] = (maxR !== minR) ? ((rsi[i] - minR) / (maxR - minR)) * 100 : 0;
+        }
+        return stoch;
+    }
+
+    // ---------- Indicadores del MACD y otros (incluidos antes) ----------
+
+    function calculateMACD(values, fast=12, slow=26, signal=9) {
+        const emaFast = calculateEMA(values, fast);
+        const emaSlow = calculateEMA(values, slow);
+        const macd = Array(values.length).fill(null);
+        const signalLine = Array(values.length).fill(null);
+        const histo = Array(values.length).fill(null);
+        for (let i = 0; i < values.length; i++) {
+            if (emaFast[i] !== null && emaSlow[i] !== null) {
+                macd[i] = emaFast[i] - emaSlow[i];
+            }
+        }
+        const macdFiltered = macd.map(v => (v === null ? 0 : v));
+        const signalEMA = calculateEMA(macdFiltered, signal);
+        for (let i = 0; i < values.length; i++) {
+            signalLine[i] = signalEMA[i];
+            if (macd[i] !== null && signalLine[i] !== null) {
+                histo[i] = macd[i] - signalLine[i];
+            }
+        }
+        return { macd, signalLine, histo };
+    }
+
+    function calculateCCI(values, period=20) {
+        const cci = Array(values.length).fill(null);
+        if (values.length < period) return cci;
+        for (let i = period - 1; i < values.length; i++) {
+            const slice = values.slice(i - (period - 1), i + 1);
+            const mean = slice.reduce((a, b) => a + b, 0) / period;
+            const dev = slice.reduce((sum, v) => sum + Math.abs(v - mean), 0) / period;
+            if (dev === 0) continue;
+            cci[i] = (values[i] - mean) / (0.015 * dev);
+        }
+        return cci;
+    }
+
+    function calculateWilliamsR(highs, lows, closes, period = 14) {
+        const wr = Array(closes.length).fill(null);
+        if (closes.length < period) return wr;
+        for (let i = period - 1; i < closes.length; i++) {
+            const hi = Math.max(...highs.slice(i - (period - 1), i + 1));
+            const lo = Math.min(...lows.slice(i - (period - 1), i + 1));
+            if (hi === lo) continue;
+            wr[i] = ((hi - closes[i]) / (hi - lo)) * -100;
+        }
+        return wr;
+    }
+
+    function calculateMomentum(values, period = 10) {
+        const m = Array(values.length).fill(null);
+        for (let i = period; i < values.length; i++) {
+            m[i] = values[i] - values[i - period];
+        }
+        return m;
+    }
+
+    function calculateBollinger(values, period = 20, mult = 2) {
+        // En un contexto real, se usaría un SMA (Simple Moving Average) para el medio.
+        // Aquí se usará la función EMA por la estructura base.
+        const middle = calculateEMA(values, period); 
+        const stds = Array(values.length).fill(null);
+        for (let i = period - 1; i < values.length; i++) {
+            const slice = values.slice(i - (period - 1), i + 1);
+            const mean = slice.reduce((a, b) => a + b, 0) / period;
+            const variance = slice.reduce((sum, v) => sum + (v - mean) ** 2, 0) / period;
+            stds[i] = Math.sqrt(variance);
+        }
+        const upper = stds.map((s, i) => s === null || middle[i] === null ? null : middle[i] + mult * s);
+        const lower = stds.map((s, i) => s === null || middle[i] === null ? null : middle[i] - mult * s);
+        return { middle, upper, lower };
+    }
+
+    function calculateADX(highs, lows, closes, period = 14) {
+        const tr = [], plusDM = [], minusDM = [];
+        for (let i = 1; i < closes.length; i++) {
+            const hl = highs[i] - lows[i];
+            const hc = Math.abs(highs[i] - closes[i - 1]);
+            const lc = Math.abs(lows[i] - closes[i - 1]);
+            tr[i] = Math.max(hl, hc, lc);
+            plusDM[i] = highs[i] - highs[i - 1] > lows[i - 1] - lows[i] ? Math.max(highs[i] - highs[i - 1], 0) : 0;
+            minusDM[i] = lows[i - 1] - lows[i] > highs[i] - highs[i - 1] ? Math.max(lows[i - 1] - lows[i], 0) : 0;
+        }
+        function smooth(arr, per) {
+            const result = Array(arr.length).fill(null);
+            let sum = 0;
+            for (let i = 1; i <= per; i++) sum += arr[i] || 0;
+            result[per] = sum;
+            for (let i = per + 1; i < arr.length; i++) {
+                result[i] = result[i - 1] - (result[i - 1] / per) + (arr[i] || 0);
+            }
+            return result;
+        }
+        const smTR = smooth(tr, period);
+        const smPlus = smooth(plusDM, period);
+        const smMinus = smooth(minusDM, period);
+        const plusDI = smPlus.map((v, i) => (smTR[i] ? (v / smTR[i]) * 100 : null));
+        const minusDI = smMinus.map((v, i) => (smTR[i] ? (v / smTR[i]) * 100 : null));
+        const dx = plusDI.map((v, i) => plusDI[i] !== null && minusDI[i] !== null
+                                     ? (Math.abs(plusDI[i] - minusDI[i]) / (plusDI[i] + minusDI[i])) * 100
+                                     : null);
+        const adx = smooth(dx, period);
+        return { plusDI, minusDI, adx };
+    }
+
+    function calculateOBV(closes, volumes) {
+        const obv = Array(closes.length).fill(null);
+        if(closes.length === 0) return obv;
+        obv[0] = volumes[0];
+        for(let i = 1; i < closes.length; i++) {
+            if(closes[i] > closes[i-1]) {
+                obv[i] = obv[i-1] + volumes[i];
+            } else if (closes[i] < closes[i-1]) {
+                obv[i] = obv[i-1] - volumes[i];
+            } else {
+                obv[i] = obv[i-1];
+            }
+        }
+        return obv;
+    }
+    
+    // --- Lógica de Liquidez Adaptada a JS ---
+    function calculateLiquiditySignal(highs, lows, closes, volumes, obv, ema, zoneWidthFactor=0.001, lookback=50, volLookback=10) {
+        const lastIdx = closes.length - 1;
+        if (lastIdx < lookback) return null;
+
+        let buySignal = false;
+        let sellSignal = false;
+
+        const currentPrice = closes[lastIdx];
+        const maNow = ema[lastIdx];
+
+        let avgVolume = 0;
+        for (let i = lastIdx; i > lastIdx - volLookback && i >= 0; i--) {
+            avgVolume += volumes[i];
+        }
+        avgVolume /= volLookback;
+
+        for (let i = lastIdx - 1; i > lastIdx - lookback && i >= 2; i--) {
+            const currentHigh = highs[i];
+            const prevHigh = highs[i - 1];
+            const currentLow = lows[i];
+            const prevLow = lows[i - 1];
+
+            const priceDifference = currentPrice * zoneWidthFactor; 
+
+            // --- Zona superior (Resistencia de liquidez)
+            if (Math.abs(currentHigh - prevHigh) < priceDifference * 0.5) { 
+                const zoneUpper = currentHigh + priceDifference;
+                const zoneLower = currentHigh - priceDifference;
+                
+                if (currentPrice <= zoneUpper && currentPrice >= zoneLower) {
+                    if (currentPrice < maNow && volumes[lastIdx] > avgVolume && obv[lastIdx] < obv[lastIdx - 1]) {
+                        sellSignal = true;
+                        break;
+                    }
+                }
+            }
+
+            // --- Zona inferior (Soporte de liquidez)
+            if (Math.abs(currentLow - prevLow) < priceDifference * 0.5) { 
+                const zoneUpper = currentLow + priceDifference;
+                const zoneLower = currentLow - priceDifference;
+
+                if (currentPrice <= zoneUpper && currentPrice >= zoneLower) {
+                    if (currentPrice > maNow && volumes[lastIdx] > avgVolume && obv[lastIdx] > obv[lastIdx - 1]) {
+                        buySignal = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (buySignal) return 1;
+        if (sellSignal) return -1;
+        return 0;
+    }
+
+    // --- Cálculo de Retrocesos de Fibonacci ---
+    function calculateFibRetracement(high, low, currentPrice) {
+        const diff = high - low;
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+        const fib = {};
+
+        const isBullish = currentPrice >= low; 
+        
+        if (isBullish) { 
+            levels.forEach(level => {
+                fib[level] = high - (diff * level); 
+            });
+        } else { 
+            levels.forEach(level => {
+                fib[level] = low + (diff * level); 
+            });
+        }
+        
+        return fib;
+    }
+        
+    // --- NUEVO: Cálculo de Stochastic Oscillator (%K y %D) ---
+    function calculateStochastic(highs, lows, closes, Kperiod = 14, Dperiod = 3) {
+        const percentK = Array(closes.length).fill(null);
+        if (closes.length < Kperiod) return { percentK: percentK, percentD: percentK };
+        
+        for (let i = Kperiod - 1; i < closes.length; i++) {
+            const windowCloses = closes.slice(i - Kperiod + 1, i + 1);
+            const windowHighs = highs.slice(i - Kperiod + 1, i + 1);
+            const windowLows = lows.slice(i - Kperiod + 1, i + 1);
+
+            const highestHigh = Math.max(...windowHighs);
+            const lowestLow = Math.min(...windowLows);
+
+            if (highestHigh !== lowestLow) {
+                percentK[i] = ((closes[i] - lowestLow) / (highestHigh - lowestLow)) * 100;
+            } else {
+                percentK[i] = percentK[i - 1] || 50; 
+            }
+        }
+
+        // %D es el SMA de %K
+        const percentD = calculateSMA(percentK.map(v => v === null ? 0 : v), Dperiod); // SMA para %D
+        for(let i=0; i < Dperiod - 1; i++) percentD[i] = null; // Quitar los ceros iniciales
+
+        return { percentK, percentD };
+    }
+    
+    // --- Función SMA auxiliar (Simple Moving Average) ---
+    function calculateSMA(values, period) {
+        const sma = Array(values.length).fill(null);
+        if (values.length < period) return sma;
+        for (let i = period - 1; i < values.length; i++) {
+            let sum = 0;
+            for (let j = 0; j < period; j++) {
+                sum += values[i - j];
+            }
+            sma[i] = sum / period;
+        }
+        return sma;
+    }
+    
+    // --- NUEVO: Cálculo de Average True Range (ATR) ---
+    function calculateATR(highs, lows, closes, period = 14) {
+        const trs = [];
+        for (let i = 1; i < closes.length; i++) {
+            const hl = highs[i] - lows[i];
+            const hpc = Math.abs(highs[i] - closes[i - 1]);
+            const lpc = Math.abs(lows[i] - closes[i - 1]);
+            trs.push(Math.max(hl, hpc, lpc));
+        }
+
+        const atr = Array(closes.length).fill(null);
+        if (trs.length < period) return atr;
+
+        // Primer ATR (SMA de TRs)
+        let sumTR = trs.slice(0, period).reduce((a, b) => a + b, 0);
+        atr[period] = sumTR / period;
+
+        // ATR subsiguientes (Wilder's smoothing)
+        for (let i = period + 1; i < closes.length; i++) {
+            atr[i] = (atr[i - 1] * (period - 1) + trs[i-1]) / period;
+        }
+        
+        return atr;
+    }
+
+    // --- NUEVO: Cálculo de Accumulation/Distribution (A/D) ---
+    function calculateAD(highs, lows, closes, volumes) {
+        const ad = Array(closes.length).fill(null);
+        ad[0] = 0; // Se empieza en 0 o se usa el volumen inicial. Aquí empezamos en 0.
+
+        for (let i = 1; i < closes.length; i++) {
+            const high = highs[i];
+            const low = lows[i];
+            const close = closes[i];
+            const prevAD = ad[i-1];
+            
+            if (high === low) {
+                ad[i] = prevAD;
+            } else {
+                const MFMultiplier = ((close - low) - (high - close)) / (high - low);
+                const MFVolume = MFMultiplier * volumes[i];
+                ad[i] = prevAD + MFVolume;
+            }
+        }
+        return ad;
+    }
+    
+    // --- NUEVO: Cálculo de Ichimoku Cloud ---
+    function calculateIchimoku(highs, lows, periodTenkan=9, periodKijun=26, periodSenkou=52) {
+        const ichimoku = {
+            tenkanSen: Array(highs.length).fill(null),
+            kijunSen: Array(highs.length).fill(null),
+            senkouSpanA: Array(highs.length).fill(null),
+            senkouSpanB: Array(highs.length).fill(null),
+            chikouSpan: Array(highs.length).fill(null),
+        };
+        
+        const lastIdx = highs.length - 1;
+
+        // Tenkan-Sen (Conversion Line): (Highest High + Lowest Low) / 2 over the last 'periodTenkan' periods
+        for (let i = periodTenkan - 1; i <= lastIdx; i++) {
+            const windowHighs = highs.slice(i - periodTenkan + 1, i + 1);
+            const windowLows = lows.slice(i - periodTenkan + 1, i + 1);
+            const highestHigh = Math.max(...windowHighs);
+            const lowestLow = Math.min(...windowLows);
+            ichimoku.tenkanSen[i] = (highestHigh + lowestLow) / 2;
+        }
+
+        // Kijun-Sen (Base Line): (Highest High + Lowest Low) / 2 over the last 'periodKijun' periods
+        for (let i = periodKijun - 1; i <= lastIdx; i++) {
+            const windowHighs = highs.slice(i - periodKijun + 1, i + 1);
+            const windowLows = lows.slice(i - periodKijun + 1, i + 1);
+            const highestHigh = Math.max(...windowHighs);
+            const lowestLow = Math.min(...windowLows);
+            ichimoku.kijunSen[i] = (highestHigh + lowestLow) / 2;
+        }
+
+        // Senkou Span A (Leading Span A): (Tenkan-Sen + Kijun-Sen) / 2, plotted 'periodKijun' periods ahead
+        for (let i = periodKijun - 1; i <= lastIdx; i++) {
+            if(ichimoku.tenkanSen[i] !== null && ichimoku.kijunSen[i] !== null) {
+                const senkouA = (ichimoku.tenkanSen[i] + ichimoku.kijunSen[i]) / 2;
+                const futureIdx = i + periodKijun;
+                if(futureIdx <= lastIdx) ichimoku.senkouSpanA[futureIdx] = senkouA;
+            }
+        }
+        
+        // Senkou Span B (Leading Span B): (Highest High + Lowest Low) / 2 over the last 'periodSenkou' periods, plotted 'periodKijun' periods ahead
+        for (let i = periodSenkou - 1; i <= lastIdx; i++) {
+            const windowHighs = highs.slice(i - periodSenkou + 1, i + 1);
+            const windowLows = lows.slice(i - periodSenkou + 1, i + 1);
+            const highestHigh = Math.max(...windowHighs);
+            const lowestLow = Math.min(...windowLows);
+            
+            const senkouB = (highestHigh + lowestLow) / 2;
+            const futureIdx = i + periodKijun;
+            if(futureIdx <= lastIdx) ichimoku.senkouSpanB[futureIdx] = senkouB;
+        }
+
+        // Chikou Span (Lagging Span): Current closing price plotted 'periodKijun' periods behind
+        for (let i = periodKijun; i <= lastIdx; i++) {
+            ichimoku.chikouSpan[i] = highs[i - periodKijun]; // Usamos Highs para la simplicidad de la lista
+        }
+
+        return ichimoku;
+    }
+
+
+    async function fetchLongShortRatio(symbol) {
+        const url = `https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=1h&limit=1`;
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("No se pudo obtener el ratio Long/Short.");
+            const data = await res.json();
+            return data.length ? parseFloat(data[0].longShortRatio) : null;
+        } catch (err) {
+            console.warn("⚠️ Long/Short ratio no disponible:", err.message);
+            return null;
+        }
+    }
+
+    // ---------- Clasificaciones para cada indicador ----------
+
+    function classifyRSI(rsi) {
+        if (rsi === null) return {eval:'N/A', className:''};
+        if (rsi > 70) return {eval:'🔴 Sobrecomprado (Venta)', className:'eval-red'};
+        if (rsi < 30) return {eval:'🟢 Sobrevendido (Compra)', className:'eval-green'};
+        return {eval:'🟡 Neutro', className:'eval-yellow'};
+    }
+
+    function classifyCRSI(crsi) {
+        if (crsi === null) return {eval:'N/A', className:''};
+        if (crsi > 65) return {eval:'🔴 Sobrecomprado (Venta)', className:'eval-red'};
+        if (crsi < 35) return {eval:'🟢 Sobrevendido (Compra)', className:'eval-green'};
+        return {eval:'🟡 Neutro', className:'eval-yellow'};
+    }
+
+    function classifyStochRSI(stoch) {
+        if (stoch === null) return {eval:'N/A', className:''};
+        if (stoch > 80) return {eval:'🔴 Muy sobrecomprado (Venta)', className:'eval-red'};
+        if (stoch < 20) return {eval:'🟢 Muy sobrevendido (Compra)', className:'eval-green'};
+        return {eval:'🟡 Neutro', className:'eval-yellow'};
+    }
+    
+    // --- NUEVO: Clasificación de Stochastic Oscillator ---
+    function classifyStochastic(K, D) {
+        if (K === null || D === null) return {eval:'N/A', className:''};
+        if (K > 80 && D > 80) return {eval:'🔴 Sobrevendido (Venta)', className:'eval-red'};
+        if (K < 20 && D < 20) return {eval:'🟢 Sobrecomprado (Compra)', className:'eval-green'};
+        if (K > D && K < 80 && K > 20) return {eval:'🟡 Cruce Alcista (Compra)', className:'eval-yellow'};
+        if (K < D && K < 80 && K > 20) return {eval:'🟡 Cruce Bajista (Venta)', className:'eval-yellow'};
+        return {eval:'🟡 Neutro', className:'eval-yellow'};
+    }
+
+
+    function classifyEMATrend(close, ema) {
+        if (ema === null) return {eval:'N/A', className:''};
+        return (close > ema) ? {eval:'🟢 Alcista (Compra)', className:'eval-green'} : {eval:'🔴 Bajista (Venta)', className:'eval-red'};
+    }
+
+    function classifyVolume(vol, avgVol) {
+        if (vol === null || avgVol === null) return {eval:'N/A', className:''};
+        return (vol > avgVol * 1.5) ? {eval:'🟢 Alto (Impulso)', className:'eval-green'} : {eval:'🟡 Bajo', className:'eval-yellow'};
+    }
+
+    function classifyFractal(latestLowIdx, latestHighIdx) {
+        if (latestLowIdx === null && latestHighIdx === null) return {eval:'🟡 N/A', className:'eval-yellow'};
+        if (latestLowIdx > latestHighIdx) return {eval:'🟢 Último fractal: Low (Compra)', className:'eval-green'};
+        if (latestHighIdx > latestLowIdx) return {eval:'🔴 Último fractal: High (Venta)', className:'eval-red'};
+        return {eval:'🟡 Sin activación reciente', className:'eval-yellow'};
+    }
+
+    function classifyLSRatio(lsr) {
+        if (lsr === null) return {eval:'N/A', className:''};
+        if (lsr > 1.05) return {eval:'🟢 Más cortos (Contrarian: Compra)', className:'eval-green'}; // Muchos largos, posible squeeze/corrección
+        if (lsr < 0.95) return {eval:'🔴 Más largos (Contrarian: Venta)', className:'eval-red'}; // Muchos cortos, posible squeeze/corrección
+        return {eval:'🟡 Neutral', className:'eval-yellow'};
+    }
+
+    function classifyMACD(macd, signal) {
+        if (macd === null || signal === null) return {eval:'N/A', className:''};
+        return (macd > signal) ? {eval:'🟢 MACD alcista (Compra)', className:'eval-green'} : {eval:'🔴 MACD bajista (Venta)', className:'eval-red'};
+    }
+
+    function classifyCCI(cci) {
+        if (cci === null) return {eval:'N/A', className:''};
+        if (cci < -100) return {eval:'🟢 CCI sobrevendido (Compra)', className:'eval-green'};
+        if (cci > 100) return {eval:'🔴 CCI sobrecomprado (Venta)', className:'eval-red'};
+        return {eval:'🟡 CCI neutro', className:'eval-yellow'};
+    }
+
+    function classifyWilliamsR(wr) {
+        if (wr === null) return {eval:'N/A', className:''};
+        if (wr < -80) return {eval:'🟢 %R sobrevendido (Compra)', className:'eval-green'};
+        if (wr > -20) return {eval:'🔴 %R sobrecomprado (Venta)', className:'eval-red'};
+        return {eval:'🟡 %R neutro', className:'eval-yellow'};
+    }
+
+    function classifyMomentum(m) {
+        if (m === null) return {eval:'N/A', className:''};
+        return (m > 0) ? {eval:'🟢 Momentum positivo (Compra)', className:'eval-green'} : {eval:'🔴 Momentum negativo (Venta)', className:'eval-red'};
+    }
+
+    function classifyBollinger(close, lower, upper) {
+        if (close === null || lower === null || upper === null) return {eval:'N/A', className:''};
+        if (close <= lower) return {eval:'🟢 Toca banda inferior (Compra)', className:'eval-green'};
+        if (close >= upper) return {eval:'🔴 Toca banda superior (Venta)', className:'eval-red'};
+        return {eval:'🟡 Precio entre bandas', className:'eval-yellow'};
+    }
+
+    function classifyADX(adx, plusDI, minusDI) {
+        if (adx === null || plusDI === null || minusDI === null) return {eval:'N/A', className:''};
+        if (adx > 25) {
+            return (plusDI > minusDI) ? {eval:'🟢 ADX tendencia alcista (Compra)', className:'eval-green'}
+                                     : {eval:'🔴 ADX tendencia bajista (Venta)', className:'eval-red'};
+        }
+        return {eval:'🟡 ADX débil tendencia', className:'eval-yellow'};
+    }
+
+    function classifyLiquidity(signal) {
+        if (signal === null) return {eval:'🟡 N/A (Pocos datos)', className:'eval-yellow'};
+        if (signal === 1) return {eval:'🟢 Zona de Soporte/Giro (Compra)', className:'eval-green'};
+        if (signal === -1) return {eval:'🔴 Zona de Resistencia/Giro (Venta)', className:'eval-red'};
+        return {eval:'🟡 Fuera de Zona de Liquidez', className:'eval-yellow'};
+    }
+    
+    // --- NUEVO: Clasificación de ATR ---
+    function classifyATR(currentATR, avgATR) {
+        if (currentATR === null || avgATR === null) return {eval:'N/A', className:''};
+        // Un ATR más alto que el promedio indica alta volatilidad, lo que favorece el rompimiento de tendencias o movimientos rápidos.
+        if (currentATR > avgATR * 1.2) return {eval:'🔴 Alta Volatilidad', className:'eval-red'}; 
+        if (currentATR < avgATR * 0.8) return {eval:'🟢 Baja Volatilidad', className:'eval-green'};
+        return {eval:'🟡 Volatilidad Media', className:'eval-yellow'};
+    }
+    
+    // --- NUEVO: Clasificación de A/D ---
+    function classifyAD(currentAD, prevAD) {
+        if (currentAD === null || prevAD === null) return {eval:'N/A', className:''};
+        if (currentAD > prevAD) return {eval:'🟢 Distribución/Acumulación (Compra)', className:'eval-green'};
+        if (currentAD < prevAD) return {eval:'🔴 Distribución/Acumulación (Venta)', className:'eval-red'};
+        return {eval:'🟡 Sin cambio de flujo', className:'eval-yellow'};
+    }
+
+    // --- NUEVO: Clasificación de Ichimoku Cloud (simplificada) ---
+    function classifyIchimoku(close, tenkan, kijun, senkouA, senkouB, chikou) {
+        if (close === null || tenkan === null || kijun === null || senkouA === null || senkouB === null || chikou === null) {
+             return {eval:'N/A', className:''};
+        }
+
+        const cloudTop = Math.max(senkouA, senkouB);
+        const cloudBottom = Math.min(senkouA, senkouB);
+        
+        let buy = 0, sell = 0;
+
+        // 1. Cruce Tenkan/Kijun (Más fuerte)
+        if (tenkan > kijun) buy++; else sell++;
+
+        // 2. Posición del Precio respecto a la Nube
+        if (close > cloudTop) buy++;
+        else if (close < cloudBottom) sell++;
+        // else neutro (dentro de la nube)
+
+        // 3. Posición de Chikou Span respecto al precio
+        if (chikou > close) buy++;
+        else if (chikou < close) sell++;
+        
+        if(buy >= 2) return {eval:'🟢 Alcista (Compra)', className:'eval-green'};
+        if(sell >= 2) return {eval:'🔴 Bajista (Venta)', className:'eval-red'};
+        return {eval:'🟡 Consolidación / Nube', className:'eval-yellow'};
+    }
+
+    // --- Clasificación y sugerencia de Fibonacci ---
+    function classifyFib(fibLevels, currentPrice, closeOverEMA) {
+        if (!fibLevels) return {eval:'N/A', className:'', suggestion:'No hay niveles de Fibonacci disponibles.'};
+        
+        const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1].map(l => ({ level: l, price: fibLevels[l] })).sort((a, b) => b.price - a.price); 
+        
+        let nextSupport = null;
+        let nextResistance = null;
+
+        for (const level of levels) {
+            if (level.price < currentPrice && (nextSupport === null || level.price > nextSupport.price)) {
+                nextSupport = level;
+            }
+            if (level.price > currentPrice && (nextResistance === null || level.price < nextResistance.price)) {
+                nextResistance = level;
+            }
+        }
+
+        let evalClass = 'eval-yellow';
+        let evalText = '🟡 Precio entre niveles clave';
+        let suggestion = 'Esperando confirmación de la tendencia para un objetivo claro.';
+
+        if (closeOverEMA) { 
+            if (nextResistance) {
+                evalClass = 'eval-green';
+                evalText = '🟢 Precio por debajo de Resistencia Fib';
+                suggestion = `Objetivo Alcista (Resistencia): ${nextResistance.price.toFixed(2)} (${(nextResistance.level * 100).toFixed(1)}% Fib).`;
+            }
+        } else { 
+            if (nextSupport) {
+                evalClass = 'eval-red';
+                evalText = '🔴 Precio por encima de Soporte Fib';
+                suggestion = `Objetivo Bajista (Soporte): ${nextSupport.price.toFixed(2)} (${(nextSupport.level * 100).toFixed(1)}% Fib).`;
+            }
+        }
+
+        return { eval: evalText, className: evalClass, suggestion: suggestion, fibLevels };
+    }
+
+
+    function checkBuySell(evals) {
+        let buyCount = 0, sellCount = 0;
+        const totalIndicators = 19; // Actualizado a 19
+
+        for (const e of evals) {
+            if (e.className === 'eval-green') buyCount++;
+            if (e.className === 'eval-red') sellCount++;
+        }
+        
+        const threshold = Math.ceil(totalIndicators * 0.5); // 10/19 para mayoría simple
+        const aggressiveThreshold = 10; // 10/19 para agresivo (aprox 53%)
+
+        if (buyCount >= aggressiveThreshold) return `🟢 Señal de COMPRA AGRESIVA (${buyCount} / ${totalIndicators})`; 
+        if (sellCount >= aggressiveThreshold) return `🔴 Señal de VENTA AGRESIVA (${sellCount} / ${totalIndicators})`;
+
+        if (buyCount >= threshold) return `🟡 Sesgo Alcista. Sin señal agresiva (${buyCount} vs ${sellCount})`;
+        if (sellCount >= threshold) return `🟡 Sesgo Bajista. Sin señal agresiva (${sellCount} vs ${buyCount})`;
+
+        return '🟡 Sin señal clara';
+    }
+
+    btn.onclick = async function(){
+        out.textContent = "Analizando... espera por favor ⏳";
+
+        const pair = document.getElementById('pair').value.trim().toUpperCase();
+        const interval = document.getElementById('interval').value;
+        const market = document.getElementById('market').value;
+        const limit = Math.min(Math.max(parseInt(document.getElementById('limit').value), 50), 1500);
+        const rsiPeriod = Math.min(Math.max(parseInt(document.getElementById('rsiPeriod').value), 2), 200);
+        const prPeriod = Math.min(Math.max(parseInt(document.getElementById('prPeriod').value), 10), 500);
+
+        try {
+            let baseUrl;
+            if (market === 'spot') baseUrl = 'https://api.binance.com/api/v3/klines';
+            else baseUrl = 'https://fapi.binance.com/fapi/v1/klines';
+
+            const url = `${baseUrl}?symbol=${pair}&interval=${interval}&limit=${limit}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Error al obtener datos: ${response.statusText}`);
+            const data = await response.json();
+
+            // Extraer arrays
+            const closes = data.map(c => parseFloat(c[4]));
+            const highs = data.map(c => parseFloat(c[2]));
+            const lows = data.map(c => parseFloat(c[3]));
+            const volumes = data.map(c => parseFloat(c[5]));
+            const lastIdx = closes.length - 1;
+
+            if (closes.length < 200) throw new Error("Datos insuficientes para el análisis. Necesitas al menos 200 velas.");
+
+            // Cálculos indicadores existentes
+            const rsi = calculateRSI(closes, rsiPeriod);
+            const { crsi } = calculateCRSI(closes, 3, 2, prPeriod);
+            const stochrsi = calculateStochRSI(closes, rsiPeriod, 14);
+            const ema20 = calculateEMA(closes, 20); 
+            const avgVol = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+            const obv = calculateOBV(closes, volumes); 
+
+            // Fractales
+            const fractalHighs = findFractalHighs(highs); 
+            const fractalLows = findFractalLows(lows); 
+            const lastLowIdx = fractalLows.length ? fractalLows[fractalLows.length - 1] : null;
+            const lastHighIdx = fractalHighs.length ? fractalHighs[fractalHighs.length - 1] : null;
+            
+            // Fibonacci
+            const swingHigh = Math.max(...highs);
+            const swingLow = Math.min(...lows);
+            const fibLevels = calculateFibRetracement(swingHigh, swingLow, closes[lastIdx]);
+
+            // Long/Short ratio si aplica
+            let lsr = null;
+            if (market === 'futures') {
+                lsr = await fetchLongShortRatio(pair);
+            }
+
+            // Cálculo nuevos indicadores (incluyendo los solicitados)
+            const { macd, signalLine } = calculateMACD(closes);
+            const typicalPrice = closes.map((c, i) => (highs[i] + lows[i] + c) / 3);
+            const cciArr = calculateCCI(typicalPrice); 
+            const wrArr = calculateWilliamsR(highs, lows, closes);
+            const momArr = calculateMomentum(closes);
+            const bb = calculateBollinger(closes);
+            const { plusDI, minusDI, adx } = calculateADX(highs, lows, closes);
+            const liqSignal = calculateLiquiditySignal(highs, lows, closes, volumes, obv, ema20);
+            
+            // NUEVOS CÁLCULOS
+            const { percentK, percentD } = calculateStochastic(highs, lows, closes); 
+            const atrArr = calculateATR(highs, lows, closes);
+            const avgATR = atrArr.slice(1).reduce((a, b) => a + b, 0) / (atrArr.length - 1);
+            const adArr = calculateAD(highs, lows, closes, volumes); 
+            const ichi = calculateIchimoku(highs, lows, 9, 26, 52); 
+
+            // Clasificaciones (últimos valores)
+            const closeOverEMA = (closes[lastIdx] > ema20[lastIdx]);
+
+            const evalRSI = classifyRSI(rsi[lastIdx]);
+            const evalCRSI = classifyCRSI(crsi[lastIdx]);
+            const evalStochRSI = classifyStochRSI(stochrsi[lastIdx]);
+            const evalEMA = classifyEMATrend(closes[lastIdx], ema20[lastIdx]);
+            const evalVol = classifyVolume(volumes[lastIdx], avgVol);
+            const evalFractal = classifyFractal(lastLowIdx, lastHighIdx);
+            const evalLSR = classifyLSRatio(lsr);
+            const evalMACD = classifyMACD(macd[lastIdx], signalLine[lastIdx]);
+            const evalCCI = classifyCCI(cciArr[lastIdx]);
+            const evalWR = classifyWilliamsR(wrArr[lastIdx]);
+            const evalMom = classifyMomentum(momArr[lastIdx]);
+            const evalBB = classifyBollinger(closes[lastIdx], bb.lower[lastIdx], bb.upper[lastIdx]);
+            const evalADX = classifyADX(adx[lastIdx], plusDI[lastIdx], minusDI[lastIdx]);
+            const evalLiq = classifyLiquidity(liqSignal);
+            const evalFib = classifyFib(fibLevels, closes[lastIdx], closeOverEMA); 
+            
+            // NUEVAS CLASIFICACIONES
+            const evalStoch = classifyStochastic(percentK[lastIdx], percentD[lastIdx]);
+            const evalATR = classifyATR(atrArr[lastIdx], avgATR);
+            const evalAD = classifyAD(adArr[lastIdx], adArr[lastIdx - 1]);
+            const evalIchi = classifyIchimoku(closes[lastIdx], ichi.tenkanSen[lastIdx], ichi.kijunSen[lastIdx], 
+                                              ichi.senkouSpanA[lastIdx], ichi.senkouSpanB[lastIdx], 
+                                              ichi.chikouSpan[lastIdx]);
+
+            const evaluations = [
+                evalRSI, evalCRSI, evalStochRSI, evalEMA, evalVol, evalFractal, evalLSR,
+                evalMACD, evalCCI, evalWR, evalMom, evalBB, evalADX, evalLiq, evalFib,
+                evalStoch, evalATR, evalAD, evalIchi // 19 indicadores
+            ];
+
+            const signal = checkBuySell(evaluations);
+
+            // Construir tabla HTML de resultados
+            let rows = '';
+            const labels = [
+                'RSI','CRSI','StochRSI','Stochastic Osc.','EMA Trend (20)','Volumen','Fractales','Long/Short Ratio',
+                'MACD','CCI','Williams %R','Momentum','Bollinger','ADX', 'Liquidez / OBV', 'Fibonacci',
+                'ATR','A/D Line', 'Ichimoku Cloud' // 19
+            ];
+            const values = [
+                safeFmt(rsi[lastIdx]), safeFmt(crsi[lastIdx]), safeFmt(stochrsi[lastIdx]),
+                `%K: ${safeFmt(percentK[lastIdx])}, %D: ${safeFmt(percentD[lastIdx])}`,
+                closes[lastIdx].toFixed(5) + ' / ' + safeFmt(ema20[lastIdx]),
+                safeFmt(volumes[lastIdx]) + ' (media: ' + safeFmt(avgVol) + ')',
+                `Low idx: ${lastLowIdx}, High idx: ${lastHighIdx}`,
+                lsr !== null ? safeFmt(lsr) : 'N/A',
+                safeFmt(macd[lastIdx]), safeFmt(cciArr[lastIdx]), safeFmt(wrArr[lastIdx]),
+                safeFmt(momArr[lastIdx]),
+                `Inf: ${safeFmt(bb.lower[lastIdx])}, Sup: ${safeFmt(bb.upper[lastIdx])}`,
+                safeFmt(adx[lastIdx]),
+                liqSignal !== null ? (liqSignal === 1 ? 'BUY' : liqSignal === -1 ? 'SELL' : 'NEUTRO') : 'N/A',
+                evalFib.fibLevels ? `23.6%: ${safeFmt(evalFib.fibLevels['0.236'])}, 61.8%: ${safeFmt(evalFib.fibLevels['0.618'])}` : 'N/A', 
+                safeFmt(atrArr[lastIdx]) + ` (Avg: ${safeFmt(avgATR)})`,
+                safeFmt(adArr[lastIdx]),
+                `T: ${safeFmt(ichi.tenkanSen[lastIdx])}, K: ${safeFmt(ichi.kijunSen[lastIdx])}`
+            ];
+            const evals = evaluations;
+
+            for (let i = 0; i < labels.length; i++) {
+                rows += `<tr><td>${labels[i]}</td><td>${values[i]}</td><td class="${evals[i].className}">${evals[i].eval}</td></tr>`;
+            }
+
+            const htmlTable = `
+            <table>
+                <thead><tr><th>Indicador</th><th>Valor</th><th>Evaluación</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+            
+            const currentPriceFmt = closes[lastIdx].toFixed(5);
+
+            out.innerHTML = `
+            <div class="panel" style="max-width:920px; margin:auto;">
+                <h3>📊 Resultados para <strong>${pair}</strong> en temporalidad <strong>${interval}</strong> (${market})</h3>
+                
+                <h2>Precio actual: <span class="eval-green">${currentPriceFmt}</span></h2>
+                <h3>🎯 Sugerencia de Precio/Objetivo de Fibonacci: <span class="${evalFib.className}">${evalFib.suggestion}</span></h3>
+                
+                ${htmlTable}
+                
+                <h2>${signal}</h2>
+                <div class="small">🔍 La señal agresiva se genera si al menos <strong>10 de los 19 indicadores</strong> están alineados.</div>
+            </div>`;
+
+        } catch (e) {
+            out.textContent = "❌ Error: " + e.message;
+        }
+    };
+
+    // Funciones auxiliares para fractales
+    function findFractalHighs(arr) {
+        const res = [];
+        for (let i = 2; i < arr.length - 2; i++) {
+            if (arr[i] > arr[i-1] && arr[i] > arr[i-2] && arr[i] > arr[i+1] && arr[i] > arr[i+2]) res.push(i);
+        }
+        return res;
+    }
+    function findFractalLows(arr) {
+        const res = [];
+        for (let i = 2; i < arr.length - 2; i++) {
+            if (arr[i] < arr[i-1] && arr[i] < arr[i-2] && arr[i] < arr[i+1] && arr[i] < arr[i+2]) res.push(i);
+        }
+        return res;
+    }
+
+})();
+</script>
+
+</body>
+</html>
