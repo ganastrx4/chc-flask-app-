@@ -2,117 +2,124 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Inicio de sesión - CharlyCoin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-  <script src="https://static.worldcoin.org/miniapp-sdk/miniKit.umd.js"></script>
+  <title>Compra el Token Futurista</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
-      background: linear-gradient(135deg, #000428, #004e92);
-      color: white;
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: radial-gradient(circle at top, #0a0a0f, #020204);
+      color: #00eaff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
-      font-family: 'Arial', sans-serif;
+      min-height: 100vh;
       overflow-x: hidden;
-      padding: 20px;
     }
-    .fade-in {
-      animation: fadeIn 1s ease-in-out forwards;
+
+    header {
+      padding: 2rem;
+      font-size: 2rem;
+      font-weight: bold;
+      text-shadow: 0 0 10px #00eaff;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+
+    .card {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #00eaff;
+      border-radius: 15px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 20px #00eaff;
+      margin-bottom: 2rem;
     }
-    code {
-      background: rgba(255,255,255,0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
+
+    a.button {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.8rem 1.5rem;
+      border: 1px solid #00eaff;
+      border-radius: 10px;
+      color: #00eaff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    a.button:hover {
+      background: #00eaff;
+      color: #000;
+      box-shadow: 0 0 20px #00eaff;
+    }
+
+    .token {
+      color: #fff;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 1rem;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    .glow {
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px #00eaff; }
+      to { text-shadow: 0 0 25px #00eaff; }
     }
   </style>
 </head>
-<body class="flex flex-col justify-center items-center min-h-screen">
+<body>
 
-  <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp"
-       alt="Logo" class="w-64 mb-8 rounded-xl shadow-xl fade-in" />
+  <header class="glow">🚀 Bienvenido al Futuro: Token CHC & CHUN 🚀</header>
 
-  <h1 class="text-4xl font-bold mb-6 fade-in">Bienvenido a CharlyCoin</h1>
-  <p class="mb-4 fade-in text-lg text-blue-100">Inicia sesión con tu identidad verificada de World App.</p>
+  <div class="card">
+    <h2>Compra en PancakeSwap</h2>
+    <p>Adquiere nuestro token oficial en la red BNB Smart Chain.</p>
+    <a class="button" href="https://pancakeswap.finance/swap?outputCurrency=0x15681A8E9a8dF14946A4F852822B709e37b70c4E" target="_blank">Comprar en PancakeSwap</a>
 
-  <p class="text-sm text-blue-200 px-6 mb-6 fade-in max-w-xl">
-    ⚠️ Al iniciar sesión, CharlyCoin verá tu <strong>Nivel de verificación</strong> y la <strong>dirección de tu billetera (World App)</strong>.
-    Este acceso es estándar y requerido para realizar transacciones con tu consentimiento, como lo hacen otras apps de Worldcoin.
-  </p>
+    <div class="token">
+      <p><strong>Dirección del Token:</strong><br>
+      0x15681A8E9a8dF14946A4F852822B709e37b70c4E</p>
+      <p><strong>Red:</strong> BNB Smart Chain (BSC)</p>
+    </div>
+  </div>
 
-  <button onclick="startAuth()"
-    class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in mb-4">
-    🔐 Iniciar sesión con World App
-  </button>
+  <div class="card">
+    <h2>Agrega el Token a MetaMask</h2>
+    <p>Sigue estos pasos para añadirlo manualmente:</p>
+    <ol style="text-align:left;">
+      <li>Abre MetaMask y selecciona <strong>Importar token</strong>.</li>
+      <li>Selecciona la red BNB Smart Chain.</li>
+      <li>Pega la dirección del token arriba indicada.</li>
+      <li>Confirma para añadirlo.</li>
+    </ol>
+  </div>
 
-  <div id="result" class="mt-8 text-sm text-green-300 max-w-xl break-words"></div>
+  <div class="card">
+    <h2>Tokens en World Chain</h2>
+    <p>También disponibles en la red de World Chain:</p>
+    <ul style="list-style:none; padding:0;">
+      <li><a class="button" href="https://www.geckoterminal.com/world-chain/pools/0xeeea0646bc9693434f645be593e3b847a914c556" target="_blank">CHC Token</a> <br>0xde8239aeb9730d74548d65dd2fd3ce3f42517395</li>
+      <li><a class="button" href="https://www.geckoterminal.com/world-chain/pools/0x97d8285282c8392ceab2af2be5ab5b6803212ce7?embed=1" target="_blank">CHUN Token</a> <br>0x6b2ba4159916017267c39a3b70b507f7c1af5edb</li>
+    </ul>
+  </div>
 
-  <script>
-    const CLIENT_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const REDIRECT_URI = "https://ganastrx4.github.io/chc-flask-app/buscador.html"; // Cámbialo si usas otra ruta
-    const BACKEND_URL = "https://worldid-auth.onrender.com/callback"; // Endpoint de tu backend (si usas uno)
+  <div class="card">
+    <h2>Únete a Nuestra Comunidad</h2>
+    <p>Comparte tu dirección en nuestro canal de Telegram para participar en sorteos y recibir tokens promocionales.</p>
+    <a class="button" href="https://t.me/TuCanalDeTelegram" target="_blank">Entrar al Telegram</a>
+  </div>
 
-    async function usarMiniKit() {
-      try {
-        const result = await MiniKit.commandsAsync.getUserInfo();
-        const wallet = result?.wallet?.address || "Desconocida";
-
-        document.getElementById("result").innerHTML = `
-          ✅ Autenticado vía MiniKit<br>
-          <strong>Wallet:</strong> <code>${wallet}</code><br><br>
-          <pre style="color:#a0f2f1; text-align:left; max-width: 90%; margin: auto;">${JSON.stringify(result, null, 2)}</pre>
-        `;
-        return true;
-      } catch (e) {
-        console.warn("MiniKit no disponible:", e.message);
-        return false;
-      }
-    }
-
-    function startAuth() {
-      const state = Math.random().toString(36).substring(2);
-      const nonce = Math.random().toString(36).substring(2);
-      const scope = "openid wallet";
-
-      const authUrl = `https://id.worldcoin.org/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
-      window.location.href = authUrl;
-    }
-
-    window.onload = async function () {
-      const mini = typeof MiniKit !== "undefined";
-      if (mini) {
-        const success = await usarMiniKit();
-        if (success) return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-
-      if (code) {
-        document.getElementById("result").innerText = "⌛ Verificando con el backend...";
-        try {
-          const res = await fetch(`${BACKEND_URL}?code=${encodeURIComponent(code)}`);
-          if (!res.ok) throw new Error("Error en la verificación");
-
-          const data = await res.json();
-
-          if (data.success) {
-            document.getElementById("result").innerHTML = `
-              ✅ Autenticado con World ID<br>
-              <strong>Wallet:</strong> <code>${data.wallet_address}</code><br><br>
-              <pre style="color:#a0f2f1; text-align:left; max-width: 90%; margin: auto;">${JSON.stringify(data.userinfo, null, 2)}</pre>
-            `;
-          } else {
-            document.getElementById("result").innerText = `❌ Error: ${data.error || "Desconocido"}`;
-          }
-        } catch (e) {
-          document.getElementById("result").innerText = `❌ Error inesperado: ${e.message}`;
-        }
-      }
-    };
-  </script>
+  <footer>© 2025 Token Futurista. Todos los derechos reservados.</footer>
 
 </body>
 </html>
