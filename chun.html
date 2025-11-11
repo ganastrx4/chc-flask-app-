@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registrar correo y Wallet — Envío a Telegram</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2;--glass: rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#071028 0%, #071932 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+    .card{width:100%;max-width:920px;background:var(--card);border-radius:16px;padding:28px;box-shadow:0 8px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03);display:grid;grid-template-columns:1fr 360px;gap:20px}
+    h1{margin:0 0 8px;font-size:20px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+    form{display:flex;flex-direction:column;gap:12px}
+    label{font-size:13px;color:var(--muted)}
+    input[type=text], input[type=email]{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit}
+    .row{display:flex;gap:10px}
+    button{background:linear-gradient(90deg,var(--accent),#5b21b6);border:0;padding:12px 14px;border-radius:10px;color:white;font-weight:600;cursor:pointer}
+    .small{font-size:13px;color:var(--muted)}
+    .right{padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.02)}
+    .note{font-size:13px;color:#ffd9b3;background:rgba(255,218,185,0.06);padding:10px;border-radius:8px}
+    .list{margin:10px 0;padding-left:18px;color:var(--muted)}
+    .success{color:#b7f0c3}
+    .error{color:#ffb4b4}
+    .entry{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+    .muted{color:var(--muted)}
+    footer{grid-column:1/-1;padding-top:12px;color:var(--muted);font-size:13px}
+    @media (max-width:880px){.card{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div>
+      <h1>Registra tu correo y wallet (Metamask)</h1>
+      <p class="lead">Ingresa tu correo y la dirección de tu wallet de Metamask para que podamos enviarte tokens. Puedes solicitar tokens una vez cada 24 horas.</p>
+
+      <form id="form">
+        <div>
+          <label for="email">Correo electrónico</label>
+          <input id="email" type="email" placeholder="tu@correo.com" required />
+        </div>
+        <div>
+          <label for="wallet">Dirección de wallet (Metamask)</label>
+          <input id="wallet" type="text" placeholder="0x... (42 caracteres)" required />
+        </div>
+
+        <div class="row">
+          <button id="submit">Solicitar tokens</button>
+          <div style="flex:1"></div>
+        </div>
+
+        <div id="msg" class="small"></div>
+      </form>
+
+      <div style="margin-top:14px" class="note">
+        <strong>⚠️ Seguridad:</strong> El ejemplo incluido envía los datos desde el navegador al bot de Telegram usando un token embebido. <strong>No</strong> es seguro exponer tokens/bot keys públicamente en producción. Recomendada: crear un endpoint servidor (Node/Cloud Function) que reciba los datos y los envíe a Telegram.
+      </div>
+
+      <h3 style="margin-top:18px">Cómo añadir tokens en Metamask (BSC / Worldchain)</h3>
+      <ol class="list small">
+        <li>Abre Metamask y asegúrate de estar en la red correcta (BSC o Worldchain).</li>
+        <li>Haz clic en <em>Import tokens</em> (Importar tokens).</li>
+        <li>Selecciona <em>Custom Token</em> y pega la dirección del contrato (Contract Address).</li>
+        <li>Los campos Token Symbol y Decimals deberían autocompletarse. Si no, pide al emisor esos datos.</li>
+        <li>Haz clic en <em>Add Custom Token</em> y luego en <em>Add Tokens</em>.</li>
+        <li>Si usas BscScan: busca el contrato en bscscan.com para verificar el token antes de importarlo.</li>
+        <li>Si usas Worldchain: añade la red (si aún no la tienes) en Metamask con los datos oficiales de la red World Chain y repite el proceso de importar token.</li>
+      </ol>
+
+      <div style="margin-top:10px" class="small muted">Nota: Siempre verifica la dirección del contrato y fuentes oficiales antes de importar un token. No compartas tu clave privada ni tu seed phrase.</div>
+
+    </div>
+
+    <aside class="right">
+      <h2 style="margin-top:0">Estado & envíos</h2>
+      <div style="margin-top:8px">
+        <div class="small muted">Email registrado</div>
+        <div id="savedList" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small muted">Próxima solicitud disponible (por email)</div>
+        <div id="countdown" style="font-size:18px;margin-top:8px">—</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="small muted">Detalles técnicos</div>
+        <div class="small" style="margin-top:8px">Los datos se guardan localmente (localStorage) para mostrar el contador. También se envían por Telegram al bot configurado.</div>
+      </div>
+
+      <div style="margin-top:14px">
+        <button id="clearLocal">Borrar datos locales</button>
+      </div>
+
+      <div style="margin-top:14px" class="small muted">
+        ¿Quieres que haga el endpoint servidor seguro para enviar a Telegram sin exponer el token? Puedo generarlo.
+      </div>
+    </aside>
+
+    <footer>
+      Página de demostración — el envío directo a Telegram desde el cliente expone el token. Use solo para pruebas.
+    </footer>
+  </div>
+
+  <script>
+    // === CONFIG (CAMBIA con cuidado) ===
+    // El usuario pide explícitamente que se envíe a este bot/chat. Para producción, use un servidor.
+    const telegramToken = '8010490851:AAGXRC8_OlcfCeL53VgJ_ALqmbRuT691Wlk';
+    const chatId = '7613604212';
+
+    // === LÓGICA ===
+    const STORAGE_KEY = 'user_submissions_v1'; // guarda { email: {wallet, lastSent} }
+    const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+    const form = document.getElementById('form');
+    const emailInput = document.getElementById('email');
+    const walletInput = document.getElementById('wallet');
+    const msg = document.getElementById('msg');
+    const savedList = document.getElementById('savedList');
+    const countdownEl = document.getElementById('countdown');
+    const clearBtn = document.getElementById('clearLocal');
+
+    function loadStorage(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      }catch(e){return {}}
+    }
+    function saveStorage(obj){ localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); }
+
+    function isValidEthAddress(addr){ return /^0x[a-fA-F0-9]{40}$/.test(addr); }
+
+    function renderSaved(){
+      const data = loadStorage();
+      savedList.innerHTML = '';
+      const emails = Object.keys(data);
+      if(emails.length===0){ savedList.innerHTML='<div class="small muted">No hay registros locales</div>'; return }
+      emails.forEach(e=>{
+        const item = document.createElement('div'); item.className='entry';
+        const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:600">${e}</div><div class='small muted'>${data[e].wallet}</div>`;
+        const right = document.createElement('div');
+        const when = data[e].lastSent ? new Date(data[e].lastSent).toLocaleString() : 'Nunca';
+        right.innerHTML = `<div class='small muted'>Última: ${when}</div>`;
+        item.appendChild(left); item.appendChild(right);
+        savedList.appendChild(item);
+      })
+    }
+
+    function timeLeftFor(email){
+      const data = loadStorage();
+      if(!data[email] || !data[email].lastSent) return 0;
+      const elapsed = Date.now() - data[email].lastSent;
+      return Math.max(0, COOLDOWN_MS - elapsed);
+    }
+
+    function formatMs(ms){
+      if(ms<=0) return 'Disponible ahora';
+      const s = Math.floor(ms/1000)%60;
+      const m = Math.floor(ms/60000)%60;
+      const h = Math.floor(ms/3600000)%24;
+      const d = Math.floor(ms/86400000);
+      return (d>0? d+'d ':'') + String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    }
+
+    // Countdown loop
+    setInterval(()=>{
+      const email = emailInput.value.trim().toLowerCase();
+      if(email){
+        const left = timeLeftFor(email);
+        countdownEl.textContent = formatMs(left);
+      } else {
+        // if no email in input, show soonest available or dash
+        const data = loadStorage();
+        const times = Object.values(data).map(x=>x.lastSent||0).filter(Boolean);
+        if(times.length===0){ countdownEl.textContent = '—'; return }
+        const next = Math.min(...times) ? Math.min(...times) + COOLDOWN_MS : 0;
+        const left = Math.max(0, next - Date.now());
+        countdownEl.textContent = formatMs(left);
+      }
+    }, 1000);
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      msg.textContent='';
+      const email = emailInput.value.trim().toLowerCase();
+      const wallet = walletInput.value.trim();
+      if(!email || !wallet){ msg.innerHTML = '<span class="error">Rellena ambos campos.</span>'; return }
+      if(!isValidEthAddress(wallet)){ msg.innerHTML = '<span class="error">Dirección inválida. Asegúrate que empiece con 0x y tenga 42 caracteres.</span>'; return }
+
+      const data = loadStorage();
+      const existing = data[email];
+      const left = timeLeftFor(email);
+      if(left>0){ msg.innerHTML = `<span class="error">Aún no puedes solicitar. Falta: ${formatMs(left)}</span>`; return }
+
+      // guardamos localmente
+      data[email] = { wallet, lastSent: Date.now() };
+      saveStorage(data);
+      renderSaved();
+
+      // enviamos al Telegram (demo). Atención: exponer token en cliente es inseguro.
+      try{
+        await sendToTelegram(email, wallet);
+        msg.innerHTML = '<span class="success">Enviado correctamente. Revisa el canal de Telegram.</span>';
+      }catch(err){
+        console.error(err);
+        msg.innerHTML = '<span class="error">Error al enviar a Telegram (ver consola). Revisa que el token/chatID sean correctos o usa un servidor.</span>';
+      }
+    });
+
+    clearBtn.addEventListener('click', ()=>{ if(confirm('Borrar datos locales?')){ localStorage.removeItem(STORAGE_KEY); renderSaved(); alert('Datos locales borrados.'); }});
+
+    async function sendToTelegram(email,wallet){
+      const text = `Nuevo registro de tokens:\nCorreo: ${email}\nWallet: ${wallet}`;
+      const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+      const resp = await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: chatId, text })
+      });
+      const j = await resp.json();
+      if(!j.ok) throw new Error('Telegram API error: '+JSON.stringify(j));
+      return j;
+    }
+
+    // render inicial
+    renderSaved();
+
+    // Si quieres, pre-llenar con un correo guardado al cargar
+    (function prefillFirst(){
+      const data = loadStorage();
+      const keys = Object.keys(data);
+      if(keys.length>0){ emailInput.value = keys[0]; walletInput.value = data[keys[0]].wallet || '' }
+    })();
+
+  </script>
+</body>
+</html>
