@@ -1,0 +1,149 @@
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8"></meta>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"></meta>
+    <title>Glosario de Psicología</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2f;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #2c2c3e;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+        }
+        input, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background: #f39c12;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #e67e22; }
+        #definition {
+            display: none;
+            margin-top: 20px;
+            background: #3a3a55;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        h3 { color: #f39c12; margin-top: 20px; }
+        .charly-link {
+            display: block;
+            margin-top: 20px;
+            color: #f39c12;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .charly-link:hover { color: #e67e22; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Glosario de Psicología</h1>
+        <input id="termInput" placeholder="Ingresa un término psicológico" type="text" />
+        <button id="searchBtn">Buscar</button>
+        <div id="definition">
+            <h2 id="term"></h2>
+            <p id="description"></p>
+        </div>
+
+        <h3>Temas Populares</h3>
+        <ul id="popularTopics"></ul>
+
+        <a class="charly-link" href="https://tareasunamyunadm.blogspot.com/" target="_blank">CharlyUNAM</a>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#searchBtn').click(async function() {
+    let term = $('#termInput').val().trim();
+    if (!term) {
+        alert('⚠️ Ingresa un término de psicología.');
+        return;
+    }
+
+    const variants = [
+        term,
+        term.replace(/ /g, "_"),
+        term.replace(/ /g, "-"),
+        encodeURIComponent(term) // Esto convierte espacios en %20
+    ];
+
+    let definition = null;
+
+    // Intenta con varias variantes del término completo
+    for (let variant of variants) {
+        definition = await getDefinition(variant);
+        if (definition) {
+            $('#term').text(term);
+            $('#description').text(definition);
+            $('#definition').show();
+            return;
+        }
+    }
+
+    // Si no se encontró nada, entonces sí busca palabra por palabra (último recurso)
+    const words = term.split(" ");
+    for (let word of words) {
+        definition = await getDefinition(word);
+        if (definition) {
+            $('#term').text(word);
+            $('#description').text(definition);
+            $('#definition').show();
+            return;
+        }
+    }
+
+    alert('❌ Término no encontrado.');
+});
+
+
+            loadPopularTopics();
+        });
+
+        async function getDefinition(term) {
+            try {
+                const response = await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`);
+                const data = await response.json();
+                return data.extract ? data.extract : null;
+            } catch (error) {
+                console.error('Error al obtener la definición:', error);
+                return null;
+            }
+        }
+
+        function loadPopularTopics() {
+            const topics = [
+                { term: 'Psicoanálisis', description: 'Teoría y método terapéutico fundado por Sigmund Freud que se centra en el inconsciente.' },
+                { term: 'Conductismo', description: 'Enfoque psicológico que estudia el comportamiento observable y su relación con el ambiente.' },
+                { term: 'Cognitivismo', description: 'Corriente que analiza los procesos mentales internos como el pensamiento, la memoria y la percepción.' },
+                { term: 'Psicología Humanista', description: 'Perspectiva que enfatiza el potencial humano y la autoactualización.' }
+            ];
+
+            const container = $('#popularTopics');
+            container.empty();
+            topics.forEach(topic => {
+                container.append(`<li><strong>${topic.term}:</strong> ${topic.description}</li>`);
+            });
+        }
+    </script>
+</body>
+</html>
+<div class="separator" style="clear: both; text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi0LG6C49Mck4KHL3iS_6yrnf0M6h36bM4fa4Hx5xL9zYG3meoIWrjn1hyphenhyphenncA4-yGCHvhryLtIj9iw5uxeU8XD1_-VgrvQDejoDclDmR_hqXRBUe6vmDNbzQ5dpHf7NNv5UxKIB2xuAD2qEoNkpzDW2R5v5WpOyfDrMCekb4ljDXV11wNDRL8AKrBWJfd6x/s367/tecno3.JPG" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="365" data-original-width="367" height="318" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi0LG6C49Mck4KHL3iS_6yrnf0M6h36bM4fa4Hx5xL9zYG3meoIWrjn1hyphenhyphenncA4-yGCHvhryLtIj9iw5uxeU8XD1_-VgrvQDejoDclDmR_hqXRBUe6vmDNbzQ5dpHf7NNv5UxKIB2xuAD2qEoNkpzDW2R5v5WpOyfDrMCekb4ljDXV11wNDRL8AKrBWJfd6x/s320/tecno3.JPG" width="320" /></a></div><br />
