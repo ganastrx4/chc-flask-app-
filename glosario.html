@@ -1,149 +1,296 @@
-
+html
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"></meta>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"></meta>
-    <title>Glosario de Psicología</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #1e1e2f;
-            color: #ffffff;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #2c2c3e;
-            border-radius: 10px;
-            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
-        }
-        input, button {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-        }
-        button {
-            background: #f39c12;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover { background: #e67e22; }
-        #definition {
-            display: none;
-            margin-top: 20px;
-            background: #3a3a55;
-            padding: 15px;
-            border-radius: 10px;
-        }
-        h3 { color: #f39c12; margin-top: 20px; }
-        .charly-link {
-            display: block;
-            margin-top: 20px;
-            color: #f39c12;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        .charly-link:hover { color: #e67e22; }
-    </style>
+<meta charset="UTF-8">
+<title>Trading Bot EMA/ADX (HTML/JS)</title>
+<style>
+body { font-family: Arial; background:#f4f4f4; padding:20px; }
+#log { background:white; padding:15px; border-radius:10px; height:400px; overflow-y:auto; }
+input { padding:10px; width:200px; }
+button { padding:10px 15px; }
+#parameters { display: flex; flex-direction: column; margin-bottom: 10px; }
+#parameters label { margin-bottom: 5px; }
+#parameters input[type="number"] { width: 100px; padding: 5px; }
+#current-analysis { font-weight: bold; margin-bottom: 10px; } /* Estilo para el análisis actual */
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Glosario de Psicología</h1>
-        <input id="termInput" placeholder="Ingresa un término psicológico" type="text" />
-        <button id="searchBtn">Buscar</button>
-        <div id="definition">
-            <h2 id="term"></h2>
-            <p id="description"></p>
-        </div>
 
-        <h3>Temas Populares</h3>
-        <ul id="popularTopics"></ul>
+<h2>📊 Estrategia EMA50 (1m) + EMA20 (5m) + ADX(5m)</h2>
 
-        <a class="charly-link" href="https://tareasunamyunadm.blogspot.com/" target="_blank">CharlyUNAM</a>
-    </div>
+<input id="symbol" placeholder="BTCUSDT">
+<button onclick="startBot()">Iniciar</button>
 
-    <script>
-        $(document).ready(function() {
-            $('#searchBtn').click(async function() {
-    let term = $('#termInput').val().trim();
-    if (!term) {
-        alert('⚠️ Ingresa un término de psicología.');
-        return;
-    }
+<div id="parameters">
+<label for="stopLossPct">Stop Loss (%)</label>
+<input type="number" id="stopLossPct" value="2" step="0.1">
 
-    const variants = [
-        term,
-        term.replace(/ /g, "_"),
-        term.replace(/ /g, "-"),
-        encodeURIComponent(term) // Esto convierte espacios en %20
-    ];
+<label for="takeProfitPct">Take Profit (%)</label>
+<input type="number" id="takeProfitPct" value="4" step="0.1">
 
-    let definition = null;
+<label for="minAdx">ADX Mínimo</label>
+<input type="number" id="minAdx" value="20" step="1">
 
-    // Intenta con varias variantes del término completo
-    for (let variant of variants) {
-        definition = await getDefinition(variant);
-        if (definition) {
-            $('#term').text(term);
-            $('#description').text(definition);
-            $('#definition').show();
-            return;
-        }
-    }
+<label for="confirmationCandles">Velas de confirmación</label>
+<input type="number" id="confirmationCandles" value="3" step="1">
 
-    // Si no se encontró nada, entonces sí busca palabra por palabra (último recurso)
-    const words = term.split(" ");
-    for (let word of words) {
-        definition = await getDefinition(word);
-        if (definition) {
-            $('#term').text(word);
-            $('#description').text(definition);
-            $('#definition').show();
-            return;
-        }
-    }
+<label for="positionSize">Tamaño de la Posición (USDT)</label>
+<input type="number" id="positionSize" value="0.06" step="0.01">
 
-    alert('❌ Término no encontrado.');
-});
+<label for="leverage">Apalancamiento (X)</label>
+<input type="number" id="leverage" value="100" step="1">
+</div>
+
+<div id="current-analysis"></div> <!-- Elemento para mostrar el análisis actual -->
+<div id="log"></div>
+
+<script>
+// ==================================================
+// LOG EN PANTALLA (SOBRESCRIBE EL ANÁLISIS)
+// ==================================================
+function log(text) {
+const box = document.getElementById("log");
+box.innerHTML += text + "<br>";
+box.scrollTop = box.scrollHeight;
+}
+
+function updateAnalysis(text) {
+const analysisDiv = document.getElementById("current-analysis");
+analysisDiv.textContent = text;
+}
+
+// ==================================================
+// DESCARGA DE VELAS BINANCE
+// ==================================================
+async function getKlines(symbol, interval, limit=200) {
+const url = `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+const r = await fetch(url);
+const data = await r.json();
+
+return data.map(k => ({
+time: k[0],
+open: parseFloat(k[1]),
+high: parseFloat(k[2]),
+low: parseFloat(k[3]),
+close: parseFloat(k[4])
+}));
+}
+
+// ==================================================
+// EMA
+// ==================================================
+function ema(values, length) {
+let k = 2 / (length + 1);
+let emaArray = [];
+let emaPrev = values[0];
+
+for (let i = 0; i < values.length; i++) {
+emaPrev = values[i] * k + emaPrev * (1 - k);
+emaArray.push(emaPrev);
+}
+return emaArray;
+}
+
+// ==================================================
+// ADX
+// ==================================================
+function calcADX(candles, length=14) {
+let plusDM = [];
+let minusDM = [];
+let TR = [];
+
+for (let i = 1; i < candles.length; i++) {
+let high = candles[i].high;
+let low = candles[i].low;
+let prevHigh = candles[i-1].high;
+let prevLow = candles[i-1].low;
+let prevClose = candles[i-1].close;
+
+let upMove = high - prevHigh;
+let downMove = prevLow - low;
+
+plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
+minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
+
+let tr = Math.max(
+high - low,
+Math.abs(high - prevClose),
+Math.abs(low - prevClose),
+Math.abs(low - prevClose)
+);
+TR.push(tr);
+}
+
+function rma(values, length) {
+let r = [];
+let sum = values.slice(0, length).reduce((a,b) => a+b);
+r[length-1] = sum / length;
+
+for (let i = length; i < values.length; i++) {
+r[i] = (r[i-1] * (length - 1) + values[i]) / length;
+}
+return r;
+}
+
+let ATR = rma(TR, length);
+let PDI = rma(plusDM, length).map((v,i)=>100*(v/ATR[i]));
+let MDI = rma(minusDM, length).map((v,i)=>100*(v/ATR[i]));
+let DX = PDI.map((v,i)=>100*Math.abs((v - MDI[i]) / (v + MDI[i])));
+
+let ADX = rma(DX, length);
+return ADX[ADX.length - 1]; // último valor
+}
+
+// ==================================================
+// CONFIRMACIÓN ADICIONAL (Velas de Confirmación)
+// ==================================================
+function confirmarSenal(df1m, signal, confirmationCandles) {
+if (signal === "📈 ENTRADA EN COMPRA") {
+for (let i = df1m.length - 1; i > df1m.length - 1 - confirmationCandles; i--) {
+if (df1m[i].close <= df1m[i].open) {
+return false;
+}
+}
+return true;
+} else if (signal === "📉 ENTRADA EN VENTA") {
+for (let i = df1m.length - 1; i > df1m.length - 1 - confirmationCandles; i--) {
+if (df1m[i].close >= df1m[i].open) {
+return false;
+}
+}
+return true;
+}
+return false;
+}
+
+// ==================================================
+// GENERAR SEÑAL
+// ==================================================
+function generarSenal(df1m, df5m, minAdx, confirmationCandles) {
+let closes1m = df1m.map(c=>c.close);
+let closes5m = df5m.map(c=>c.close);
+
+let ema50_arr = ema(closes1m, 50);
+let ema20_arr = ema(closes5m, 20);
+
+let ema50 = ema50_arr[ema50_arr.length - 1];
+let ema20 = ema20_arr[ema20_arr.length - 1];
+let ema20_prev = ema20_arr[ema20_arr.length - 2];
+
+let adx5m = calcADX(df5m);
+
+let precio = df1m[df1m.length - 1].close;
+
+let analysisText = `Precio: ${precio.toFixed(5)} | EMA50: ${ema50.toFixed(5)} | EMA20: ${ema20.toFixed(5)} | ADX: ${adx5m.toFixed(2)}`;
+
+updateAnalysis(analysisText);
+
+if (precio > ema50 && ema20 > ema20_prev && adx5m > minAdx) {
+let senal = "📈 ENTRADA EN COMPRA";
+if (confirmarSenal(df1m, senal, confirmationCandles)) return senal + " (CONFIRMADA)";
+else return "⏳ Esperando confirmación compra...";
+}
+
+if (precio < ema50 && ema20 < ema20_prev && adx5m > minAdx){
+let senal = "📉 ENTRADA EN VENTA";
+if (confirmarSenal(df1m, senal, confirmationCandles)) return senal + " (CONFIRMADA)";
+else return "⏳ Esperando confirmación venta...";
+}
+
+return "⏳ Esperando señal…";
+}
+
+// ==================================================
+// SIMULACIÓN DE GESTIÓN DE RIESGO Y PNL
+// ==================================================
+async function ejecutarOrden(symbol, side, price, stopLossPct, takeProfitPct, positionSize, leverage) {
+const stopLoss = side === "BUY" ? price * (1 - stopLossPct/100) : price * (1 + stopLossPct/100);
+const takeProfit = side === "BUY" ? price * (1 + takeProfitPct/100) : price * (1 - takeProfitPct/100);
+
+let pnl;
+let tradeResult;
+
+if (side === "BUY") {
+// Simulando que el precio alcanza el take profit
+pnl = (takeProfit - price) * (positionSize * leverage / price);
+tradeResult = `COMPRA a ${price.toFixed(5)}, TP a ${takeProfit.toFixed(5)}, SL a ${stopLoss.toFixed(5)}. PNL = ${pnl.toFixed(5)} USDT`;
+} else {
+// Simulando que el precio alcanza el take profit
+pnl = (price - takeProfit) * (positionSize * leverage / price);
+tradeResult = `VENTA a ${price.toFixed(5)}, TP a ${takeProfit.toFixed(5)}, SL a ${stopLoss.toFixed(5)}. PNL = ${pnl.toFixed(5)} USDT`;
+}
+
+// Simulación de comisiones (ejemplo: 0.1% por orden)
+const comision = positionSize * 0.001; // 0.1% de la posición
+pnl -= comision;
+tradeResult += ` (Comisión: ${comision.toFixed(5)} USDT, PNL Neto: ${pnl.toFixed(5)} USDT)`;
 
 
-            loadPopularTopics();
-        });
+log(`Simulando orden ${side} para ${symbol} a ${price.toFixed(5)}. ${tradeResult}`);
+}
 
-        async function getDefinition(term) {
-            try {
-                const response = await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(term)}`);
-                const data = await response.json();
-                return data.extract ? data.extract : null;
-            } catch (error) {
-                console.error('Error al obtener la definición:', error);
-                return null;
-            }
-        }
+// ==================================================
+// LOOP PRINCIPAL
+// ==================================================
+let running = false;
 
-        function loadPopularTopics() {
-            const topics = [
-                { term: 'Psicoanálisis', description: 'Teoría y método terapéutico fundado por Sigmund Freud que se centra en el inconsciente.' },
-                { term: 'Conductismo', description: 'Enfoque psicológico que estudia el comportamiento observable y su relación con el ambiente.' },
-                { term: 'Cognitivismo', description: 'Corriente que analiza los procesos mentales internos como el pensamiento, la memoria y la percepción.' },
-                { term: 'Psicología Humanista', description: 'Perspectiva que enfatiza el potencial humano y la autoactualización.' }
-            ];
+async function startBot() {
+if (running) return;
+running = true;
 
-            const container = $('#popularTopics');
-            container.empty();
-            topics.forEach(topic => {
-                container.append(`<li><strong>${topic.term}:</strong> ${topic.description}</li>`);
-            });
-        }
-    </script>
+const symbol = document.getElementById("symbol").value.toUpperCase();
+const stopLossPct = parseFloat(document.getElementById("stopLossPct").value);
+const takeProfitPct = parseFloat(document.getElementById("takeProfitPct").value);
+const minAdx = parseFloat(document.getElementById("minAdx").value);
+const confirmationCandles = parseInt(document.getElementById("confirmationCandles").value);
+const positionSize = parseFloat(document.getElementById("positionSize").value);
+const leverage = parseInt(document.getElementById("leverage").value);
+
+log("=== BOT INICIADO PARA " + symbol + " ===");
+log(`SL: ${stopLossPct}%, TP: ${takeProfitPct}%, Min ADX: ${minAdx}, Velas Confirmación: ${confirmationCandles}, Posición: ${positionSize} USDT, Apalancamiento: ${leverage}x`);
+
+let inTrade = false;
+
+while (running) {
+try {
+let df1m = await getKlines(symbol, "1m");
+let df5m = await getKlines(symbol, "5m");
+
+let senal = generarSenal(df1m, df5m, minAdx, confirmationCandles);
+
+if (senal.includes("COMPRA (CONFIRMADA)") && !inTrade) {
+let precioEntrada = df1m[df1m.length - 1].close;
+ejecutarOrden(symbol, "BUY", precioEntrada, stopLossPct, takeProfitPct, positionSize, leverage);
+inTrade = true; // Marcamos que estamos en operación
+
+} else if (senal.includes("VENTA (CONFIRMADA)") && !inTrade) {
+let precioEntrada = df1m[df1m.length - 1].close;
+ejecutarOrden(symbol, "SELL", precioEntrada, stopLossPct, takeProfitPct, positionSize, leverage);
+inTrade = true; // Marcamos que estamos en operación
+}
+
+
+log("→ Señal: " + senal);
+
+// Simulación de salida (temporal - para testear)
+if(inTrade) {
+setTimeout(() => {
+inTrade = false; //Fuerza la salida tras X segundos.
+log("Operación cerrada (simulación).");
+}, 5000);
+}
+
+
+} catch (e) {
+log("❌ Error: " + e);
+}
+
+await new Promise(r => setTimeout(r, 2000));
+}
+}
+</script>
+
 </body>
 </html>
-<div class="separator" style="clear: both; text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi0LG6C49Mck4KHL3iS_6yrnf0M6h36bM4fa4Hx5xL9zYG3meoIWrjn1hyphenhyphenncA4-yGCHvhryLtIj9iw5uxeU8XD1_-VgrvQDejoDclDmR_hqXRBUe6vmDNbzQ5dpHf7NNv5UxKIB2xuAD2qEoNkpzDW2R5v5WpOyfDrMCekb4ljDXV11wNDRL8AKrBWJfd6x/s367/tecno3.JPG" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="365" data-original-width="367" height="318" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi0LG6C49Mck4KHL3iS_6yrnf0M6h36bM4fa4Hx5xL9zYG3meoIWrjn1hyphenhyphenncA4-yGCHvhryLtIj9iw5uxeU8XD1_-VgrvQDejoDclDmR_hqXRBUe6vmDNbzQ5dpHf7NNv5UxKIB2xuAD2qEoNkpzDW2R5v5WpOyfDrMCekb4ljDXV11wNDRL8AKrBWJfd6x/s320/tecno3.JPG" width="320" /></a></div><br />
