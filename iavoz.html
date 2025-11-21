@@ -127,34 +127,38 @@ function startSpeechRecognition() {
     recognition = new webkitSpeechRecognition();
     recognition.lang = 'es-ES';
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;   // ← IMPORTANTE PARA QUE NO SE APAGUE
+    let finalText = "";
 
     recognition.onresult = function(event) {
 
-        // Si la IA está hablando → NO escuchar
         if (iaSpeaking) return;
 
-        const text = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-        console.log("Escuchado:", text);
+        let result = event.results[event.results.length - 1];
+        let text = result[0].transcript.toLowerCase();
 
-        document.getElementById("inputBox").value = text;
+        if (result.isFinal) {
+            finalText = text.trim();
+            document.getElementById("inputBox").value = finalText;
 
-        // ACTIVADOR
-        if (text === "fin enter") {
+            if (finalText === "fin enter") {
+                stopSpeechRecognition(); 
+                document.getElementById("btn").click();
+                return;
+            }
+        }
+    };
 
-            stopSpeechRecognition();   // 1) DEJAR DE OÍR
-
-            // 2) DAR CLICK AUTOMÁTICO PARA ENVIAR
-            document.getElementById("btn").click();
+    // 🔥 SI EL MIC SE APAGA → SE REACTIVA SOLO
+    recognition.onend = () => {
+        if (!iaSpeaking && autoMode) {
+            setTimeout(() => recognition.start(), 300);
         }
     };
 
     recognition.start();
 }
 
-function stopSpeechRecognition() {
-    if (recognition) recognition.stop();
-}
 </script>
 
 </body>
