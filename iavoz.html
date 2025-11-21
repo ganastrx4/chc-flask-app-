@@ -1,21 +1,58 @@
+html
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 <meta charset="UTF-8">
 <title>Chat con Gemini</title>
 <style>
-body { font-family: Arial; background: #f0f0f0; padding: 20px; }
-#chat { background: white; padding: 10px; border-radius: 10px; height: 400px; overflow-y: auto; }
-.msg-user { color: blue; margin: 5px 0; }
-.msg-ai { color: green; margin: 5px 0; }
-#inputBox { width: 60%; padding: 10px; }
-#btn, #btnAuto, #btnManual { padding: 10px 15px; }
-#btnAuto, #btnManual { margin-left: 5px; }
-.active { background-color: #4CAF50; color: white; }
+body {
+font-family: Arial;
+background: #f0f0f0;
+padding: 20px;
+}
+
+#chat {
+background: white;
+padding: 10px;
+border-radius: 10px;
+height: 400px;
+overflow-y: auto;
+}
+
+.msg-user {
+color: blue;
+margin: 5px 0;
+}
+
+.msg-ai {
+color: green;
+margin: 5px 0;
+}
+
+#inputBox {
+width: 60%;
+padding: 10px;
+}
+
+#btn {
+padding: 10px 15px;
+}
+
+#btnAuto,
+#btnManual {
+padding: 10px 15px;
+margin-left: 5px;
+}
+
+.active {
+background-color: #4CAF50;
+color: white;
+}
 </style>
 </head>
-<body>
 
+<body>
 <h2>💬 Chat con Gemini (HTML/JS)</h2>
 <div id="chat"></div>
 
@@ -26,140 +63,147 @@ body { font-family: Arial; background: #f0f0f0; padding: 20px; }
 <button id="btnManual">Manual</button>
 
 <script>
-const API_KEY = "AIzaSyD_gB4MPg6-75QjuYRIKDEvaFIcMw7-uZ8";
+const API_KEY = "AIzaSyD_gB4MPg6-75QjuYRIKDEvaFIcMw7-uZ8"; // <-- pon tu nueva API key
 const MODEL = "gemini-2.0-flash";
 const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
 
-let history = [];
+let history = []; // memoria del chat
 let autoMode = false;
-let recognition;
-let iaSpeaking = false;   // ← para evitar que la IA active reconocimiento
 
 document.getElementById("btn").onclick = sendMessage;
-
-// ENTER
 document.getElementById("inputBox").addEventListener("keydown", e => {
-    if (e.key === "Enter") sendMessage();
+if (e.key === "Enter") sendMessage();
 });
 
-// BOTÓN AUTO
+// Auto mode button functionality
 const btnAuto = document.getElementById("btnAuto");
 btnAuto.addEventListener("click", () => {
-    autoMode = !autoMode;
-    btnAuto.classList.toggle("active", autoMode);
-
-    if (autoMode) startSpeechRecognition();
-    else stopSpeechRecognition();
+autoMode = !autoMode;
+btnAuto.classList.toggle("active", autoMode);
+if (autoMode) {
+startSpeechRecognition();
+} else {
+stopSpeechRecognition();
+}
 });
 
-// MANUAL: leer última respuesta
+// Manual mode button functionality
 document.getElementById("btnManual").onclick = () => {
-    const lastMessage = document.querySelector("#chat > div:last-child.msg-ai");
-    if (lastMessage) speak(lastMessage.innerText.replace("Gemini: ", ""));
+const lastMessage = document.querySelector("#chat > div:last-child.msg-ai");
+if (lastMessage) {
+speak(lastMessage.innerText.replace("Gemini: ", ""));
+}
 };
 
-// Añadir mensaje al chat
 function addMessage(text, cls) {
-    const chat = document.getElementById("chat");
-    const div = document.createElement("div");
-    div.className = cls;
-    div.innerText = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+const chat = document.getElementById("chat");
+const div = document.createElement("div");
+div.className = cls;
+div.innerText = text;
+chat.appendChild(div);
+chat.scrollTop = chat.scrollHeight;
 
-    // SI ES RESPUESTA DE IA → HABLA, PERO NO RELLENA INPUT
-    if (cls === "msg-ai" && autoMode) {
-        iaSpeaking = true;
-        speak(text.replace("Gemini: ", ""));
-
-        // Esperar a que termine de hablar antes de permitir más reconocimiento
-        const duration = text.length * 60; // aproximación
-        setTimeout(() => { iaSpeaking = false; }, duration);
-    }
+if (cls === "msg-ai" && autoMode) {
+speak(text.replace("Gemini: ", ""));
+}
 }
 
-// Enviar mensaje
 async function sendMessage() {
-    const userText = document.getElementById("inputBox").value.trim();
-    if (userText === "") return;
+const userText = document.getElementById("inputBox").value.trim();
+if (userText === "") return;
 
-    addMessage("Tú: " + userText, "msg-user");
-    document.getElementById("inputBox").value = "";
+addMessage("Tú: " + userText, "msg-user");
+document.getElementById("inputBox").value = "";
 
-    history.push({ role: "user", parts: [{ text: userText }] });
+history.push({
+role: "user",
+parts: [{
+text: userText
+}]
+});
 
-    try {
-        const body = { contents: history };
+try {
+const body = {
+contents: history
+};
 
-        const response = await fetch(URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
+const response = await fetch(URL, {
+method: "POST",
+headers: {
+"Content-Type": "application/json"
+},
+body: JSON.stringify(body)
+});
 
-        const data = await response.json();
-        const output = data.candidates[0].content.parts[0].text;
+const data = await response.json();
+const output = data.candidates[0].content.parts[0].text;
 
-        addMessage("Gemini: " + output, "msg-ai");
+addMessage("Gemini: " + output, "msg-ai");
+history.push({
+role: "model",
+parts: [{
+text: output
+}]
+});
 
-        history.push({ role: "model", parts: [{ text: output }] });
-
-    } catch (error) {
-        addMessage("⚠️ Error: " + error, "msg-ai");
-    }
+} catch (error) {
+addMessage("⚠️ Error: " + error, "msg-ai");
+}
 }
 
-// IA HABLA
+// Text-to-Speech Function
 function speak(text) {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'es-ES';
-    window.speechSynthesis.speak(u);
+const utterance = new SpeechSynthesisUtterance(text);
+utterance.lang = 'es-ES'; // Set the language to Spanish
+window.speechSynthesis.speak(utterance);
 }
 
-// RECONOCIMIENTO DE VOZ
+
+// Speech Recognition Functionality
+let recognition;
+
 function startSpeechRecognition() {
+if ('webkitSpeechRecognition' in window) {
+recognition = new webkitSpeechRecognition();
+recognition.lang = 'es-ES'; // set the language
+recognition.continuous = true;
+recognition.interimResults = false;
 
-    if (!('webkitSpeechRecognition' in window)) {
-        alert("Este navegador no soporta reconocimiento de voz.");
-        return;
-    }
+recognition.onstart = function () {
+console.log("Speech recognition started.");
+};
 
-    recognition = new webkitSpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = true;
-    recognition.interimResults = true;   // ← IMPORTANTE PARA QUE NO SE APAGUE
-    let finalText = "";
+recognition.onresult = function (event) {
+const transcript = event.results[event.results.length - 1][0].transcript;
+document.getElementById("inputBox").value = transcript;
+sendMessage();
+};
 
-    recognition.onresult = function(event) {
+recognition.onerror = function (event) {
+console.error("Speech recognition error:", event.error);
+};
 
-        if (iaSpeaking) return;
+recognition.onend = function () {
+console.log("Speech recognition ended.");
+if (autoMode) {
+startSpeechRecognition(); // Restart if in auto mode
+}
+};
 
-        let result = event.results[event.results.length - 1];
-        let text = result[0].transcript.toLowerCase();
-
-        if (result.isFinal) {
-            finalText = text.trim();
-            document.getElementById("inputBox").value = finalText;
-
-            if (finalText === "fin enter") {
-                stopSpeechRecognition(); 
-                document.getElementById("btn").click();
-                return;
-            }
-        }
-    };
-
-    // 🔥 SI EL MIC SE APAGA → SE REACTIVA SOLO
-    recognition.onend = () => {
-        if (!iaSpeaking && autoMode) {
-            setTimeout(() => recognition.start(), 300);
-        }
-    };
-
-    recognition.start();
+recognition.start();
+} else {
+alert("Speech recognition is not supported in this browser.");
+}
 }
 
+function stopSpeechRecognition() {
+if (recognition) {
+recognition.stop();
+console.log("Speech recognition stopped.");
+}
+}
 </script>
 
 </body>
+
 </html>
