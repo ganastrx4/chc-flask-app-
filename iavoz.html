@@ -32,7 +32,8 @@ const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:ge
 
 let history = [];
 let autoMode = false;
-let ignoreRecognition = false;   // ← evita que la IA se escuche a sí misma
+let recognition;
+let iaSpeaking = false;   // ← para evitar que la IA active reconocimiento
 
 document.getElementById("btn").onclick = sendMessage;
 
@@ -51,7 +52,7 @@ btnAuto.addEventListener("click", () => {
     else stopSpeechRecognition();
 });
 
-// BOTÓN MANUAL → lee la última respuesta
+// MANUAL: leer última respuesta
 document.getElementById("btnManual").onclick = () => {
     const lastMessage = document.querySelector("#chat > div:last-child.msg-ai");
     if (lastMessage) speak(lastMessage.innerText.replace("Gemini: ", ""));
@@ -66,11 +67,14 @@ function addMessage(text, cls) {
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
 
-    // Si es la IA, hablar (pero activar silencio para que no se escuche a sí misma)
+    // SI ES RESPUESTA DE IA → HABLA, PERO NO RELLENA INPUT
     if (cls === "msg-ai" && autoMode) {
-        ignoreRecognition = true;        // ← activar silencio temporal
+        iaSpeaking = true;
         speak(text.replace("Gemini: ", ""));
-        setTimeout(() => { ignoreRecognition = false; }, 2000);  // ← después de hablar, vuelve a escuchar
+
+        // Esperar a que termine de hablar antes de permitir más reconocimiento
+        const duration = text.length * 60; // aproximación
+        setTimeout(() => { iaSpeaking = false; }, duration);
     }
 }
 
@@ -105,18 +109,16 @@ async function sendMessage() {
     }
 }
 
-// Text-to-Speech
+// IA HABLA
 function speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-ES';
-
-    window.speechSynthesis.speak(utterance);
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES';
+    window.speechSynthesis.speak(u);
 }
 
-// Speech Recognition
-let recognition;
-
+// RECONOCIMIENTO DE VOZ
 function startSpeechRecognition() {
+
     if (!('webkitSpeechRecognition' in window)) {
         alert("Este navegador no soporta reconocimiento de voz.");
         return;
@@ -127,16 +129,23 @@ function startSpeechRecognition() {
     recognition.continuous = true;
     recognition.interimResults = false;
 
-    recognition.onresult = function (event) {
-        if (ignoreRecognition) return;   // ← ignorar mientras la IA habla
+    recognition.onresult = function(event) {
+
+        // Si la IA está hablando → NO escuchar
+        if (iaSpeaking) return;
 
         const text = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
         console.log("Escuchado:", text);
 
-        if (text === "fin") {            // ← ACTIVADOR DE ENVÍO
-            sendMessage();
-        } else {
-            document.getElementById("inputBox").value = text;
+        document.getElementById("inputBox").value = text;
+
+        // ACTIVADOR
+        if (text === "fin enter") {
+
+            stopSpeechRecognition();   // 1) DEJAR DE OÍR
+
+            // 2) DAR CLICK AUTOMÁTICO PARA ENVIAR
+            document.getElementById("btn").click();
         }
     };
 
