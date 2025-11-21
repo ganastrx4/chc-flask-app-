@@ -1,0 +1,226 @@
+html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Indicadores Binance Futures</title>
+<style>
+body {
+font-family: sans-serif;
+margin: 20px;
+}
+.container {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+.indicator-buttons {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+margin-bottom: 20px;
+}
+.indicator-button {
+padding: 10px 20px;
+margin: 5px;
+border: 1px solid #ccc;
+border-radius: 5px;
+background-color: #f0f0f0;
+cursor: pointer;
+}
+.indicator-button:hover {
+background-color: #ddd;
+}
+.indicator-info {
+position: relative; /* Para posicionar el signo de interrogación */
+}
+.help-icon {
+position: absolute;
+top: -5px;
+right: -15px;
+font-size: 14px;
+color: #888;
+cursor: pointer;
+}
+.help-icon:hover {
+color: #333;
+}
+#rsi-result {
+font-weight: bold;
+margin-top: 10px;
+}
+.hidden {
+display: none;
+}
+
+/* Estilo para las modales de ayuda */
+.modal {
+display: none; /* Hidden by default */
+position: fixed; /* Stay in place */
+z-index: 1; /* Sit on top */
+left: 0;
+top: 0;
+width: 100%; /* Full width */
+height: 100%; /* Full height */
+overflow: auto; /* Enable scroll if needed */
+background-color: rgb(0,0,0); /* Fallback color */
+background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+background-color: #fefefe;
+margin: 15% auto; /* 15% from the top and centered */
+padding: 20px;
+border: 1px solid #888;
+width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+color: #aaa;
+float: right;
+font-size: 28px;
+font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+color: black;
+text-decoration: none;
+cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Panel de Indicadores Binance Futures</h1>
+<div class="indicator-buttons">
+<div class="indicator-button indicator-info">
+RSI <span class="help-icon" onclick="openModal('rsi-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+MACD <span class="help-icon" onclick="openModal('macd-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+EMA <span class="help-icon" onclick="openModal('ema-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+ADX <span class="help-icon" onclick="openModal('adx-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+BB <span class="help-icon" onclick="openModal('bb-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+STO <span class="help-icon" onclick="openModal('sto-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+OBV <span class="help-icon" onclick="openModal('obv-help')">?</span>
+</div>
+<div class="indicator-button indicator-info">
+Fib <span class="help-icon" onclick="openModal('fib-help')">?</span>
+</div>
+</div>
+<button onclick="calculateRSI()">Calcular RSI</button>
+<p id="rsi-result"></p>
+
+<!-- Modales de ayuda -->
+<div id="rsi-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('rsi-help')">&times;</span>
+<p>El RSI (Índice de Fuerza Relativa) mide la magnitud de los cambios de precio recientes para evaluar condiciones de sobrecompra o sobreventa en el precio de un activo.</p>
+</div>
+</div>
+
+<div id="macd-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('macd-help')">&times;</span>
+<p>El MACD (Moving Average Convergence Divergence) es un indicador de impulso que muestra la relación entre dos medias móviles exponenciales de precios.</p>
+</div>
+</div>
+
+<!-- Modales de ayuda para los demás indicadores (añade más según sea necesario) -->
+<div id="ema-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('ema-help')">&times;</span>
+<p>La EMA (Exponential Moving Average) es una media móvil que da más peso a los precios recientes, haciéndola más sensible a los nuevos datos.</p>
+</div>
+</div>
+<div id="adx-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('adx-help')">&times;</span>
+<p>El ADX (Average Directional Index) es un indicador que mide la fuerza de una tendencia, independientemente de su dirección.</p>
+</div>
+</div>
+<div id="bb-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('bb-help')">&times;</span>
+<p>Las Bandas de Bollinger son un indicador de volatilidad que muestra un rango de precios esperado en torno a una media móvil.</p>
+</div>
+</div>
+<div id="sto-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('sto-help')">&times;</span>
+<p>El Oscilador Estocástico es un indicador que compara el precio de cierre actual con el rango de precios durante un período determinado.</p>
+</div>
+</div>
+<div id="obv-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('obv-help')">&times;</span>
+<p>El OBV (On Balance Volume) es un indicador que relaciona el volumen de negociación con los cambios en el precio.</p>
+</div>
+</div>
+<div id="fib-help" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal('fib-help')">&times;</span>
+<p>Los retrocesos de Fibonacci son niveles de soporte y resistencia basados en la secuencia de Fibonacci, utilizados para identificar posibles áreas de reversión de precios.</p>
+</div>
+</div>
+</div>
+
+<script>
+// URL del archivo RSI en GitHub (¡CAMBIAR!)
+const rsiUrl = 'https://github.com/ganastrx4/chc-flask-app-/blob/main/rsi.js';
+
+function calculateRSI() {
+fetch(rsiUrl)
+.then(response => response.text())
+.then(rsiCode => {
+// ¡Advertencia! eval() puede ser peligroso. Asegúrate de confiar en el código de GitHub.
+try {
+eval(rsiCode); // Ejecuta el código descargado
+// Aquí debes definir tus datos de precios (reemplaza esto con tus datos reales de Binance)
+const precios = [10, 12, 15, 14, 16, 18, 20, 19, 22, 24]; // Ejemplo
+const period = 14; // Periodo del RSI
+const rsiValue = rsi(precios, period); // Llama a la función rsi() del código descargado
+document.getElementById('rsi-result').textContent = `RSI(${period}): ${rsiValue.toFixed(2)}`;
+} catch (error) {
+console.error('Error al calcular el RSI:', error);
+document.getElementById('rsi-result').textContent = 'Error al calcular el RSI. Revisa la consola.';
+}
+})
+.catch(error => {
+console.error('Error al descargar el RSI:', error);
+document.getElementById('rsi-result').textContent = 'Error al descargar el RSI. Revisa la consola.';
+});
+}
+
+// Funciones para abrir y cerrar las modales de ayuda
+function openModal(modalId) {
+document.getElementById(modalId).style.display = "block";
+}
+
+function closeModal(modalId) {
+document.getElementById(modalId).style.display = "none";
+}
+
+// Cerrar la modal si el usuario hace clic fuera de ella
+window.onclick = function(event) {
+if (event.target.classList.contains('modal')) {
+event.target.style.display = "none";
+}
+}
+</script>
+</body>
+</html>
