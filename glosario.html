@@ -1,296 +1,208 @@
-html
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Trading Bot EMA/ADX (HTML/JS)</title>
-<style>
-body { font-family: Arial; background:#f4f4f4; padding:20px; }
-#log { background:white; padding:15px; border-radius:10px; height:400px; overflow-y:auto; }
-input { padding:10px; width:200px; }
-button { padding:10px 15px; }
-#parameters { display: flex; flex-direction: column; margin-bottom: 10px; }
-#parameters label { margin-bottom: 5px; }
-#parameters input[type="number"] { width: 100px; padding: 5px; }
-#current-analysis { font-weight: bold; margin-bottom: 10px; } /* Estilo para el análisis actual */
-</style>
+  <meta charset="UTF-8">
+  <title>Scanner Binance - SOLO FUTUROS GLOBAL</title>
+  <style>
+    body { background:#0d0d0d; color:#eee; font-family:Arial, sans-serif; margin:0; padding: 20px; }
+    .dashboard { display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .stats-panel, .analysis-panel { 
+      background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #333; min-width: 300px; 
+    }
+    .analysis-panel { border-color: #f39c12; }
+    .stat-box { font-size: 0.9em; color: #888; text-align: center; }
+    .stat-box span { display: block; font-weight: bold; font-size: 1.4em; color: #f39c12; }
+    
+    table { width:100%; border-collapse: collapse; font-size: 0.8em; background: #151515; }
+    th { background:#252525; color: #f39c12; padding: 10px; position: sticky; top: 0; z-index: 10; }
+    td { border-bottom: 1px solid #222; padding: 8px; text-align: center; }
+    .up { color: #2ecc71; font-weight: bold; }
+    .down { color: #e74c3c; font-weight: bold; }
+    .price-val { font-family: monospace; color: #aaa; }
+    
+    #loading-status { color: #f1c40f; margin-bottom: 10px; font-weight: bold; }
+    .badge-fut { background: #f39c12; color: #000; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 0.8em; }
+  </style>
 </head>
-
 <body>
 
-<h2>📊 Estrategia EMA50 (1m) + EMA20 (5m) + ADX(5m)</h2>
+  <h2>Scanner Global: <span style="color: #f39c12;">Solo Futuros USDT</span></h2>
+  <div id="loading-status">Buscando pares de futuros disponibles...</div>
 
-<input id="symbol" placeholder="BTCUSDT">
-<button onclick="startBot()">Iniciar</button>
+  <div class="dashboard">
+    <div class="stats-panel">
+      <div class="stat-box">Señales Futuros <span id="total-signals">0</span></div>
+      <div class="stat-box">Pnl Promedio <span id="avg-perf">0.00%</span></div>
+    </div>
+    <div class="analysis-panel">
+      <div class="stat-box">Sentimiento Mercado <span id="market-sent">ESPERANDO</span></div>
+      <div class="stat-box">Estrategia Short/Long <span id="market-action" style="color:white">--</span></div>
+    </div>
+  </div>
 
-<div id="parameters">
-<label for="stopLossPct">Stop Loss (%)</label>
-<input type="number" id="stopLossPct" value="2" step="0.1">
-
-<label for="takeProfitPct">Take Profit (%)</label>
-<input type="number" id="takeProfitPct" value="4" step="0.1">
-
-<label for="minAdx">ADX Mínimo</label>
-<input type="number" id="minAdx" value="20" step="1">
-
-<label for="confirmationCandles">Velas de confirmación</label>
-<input type="number" id="confirmationCandles" value="3" step="1">
-
-<label for="positionSize">Tamaño de la Posición (USDT)</label>
-<input type="number" id="positionSize" value="0.06" step="0.01">
-
-<label for="leverage">Apalancamiento (X)</label>
-<input type="number" id="leverage" value="100" step="1">
-</div>
-
-<div id="current-analysis"></div> <!-- Elemento para mostrar el análisis actual -->
-<div id="log"></div>
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>Hora</th>
+        <th>Tipo</th>
+        <th>Par</th>
+        <th>TF</th>
+        <th>Entrada</th>
+        <th>Actual</th>
+        <th>Mínimo (Para Short)</th>
+        <th>Máximo (Para Long)</th>
+        <th>Estado Actual %</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
 
 <script>
-// ==================================================
-// LOG EN PANTALLA (SOBRESCRIBE EL ANÁLISIS)
-// ==================================================
-function log(text) {
-const box = document.getElementById("log");
-box.innerHTML += text + "<br>";
-box.scrollTop = box.scrollHeight;
+// --- CONFIGURACIÓN TOTAL ---
+const timeframes = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d"];
+const futWsBaseUrl = "wss://fstream.binance.com/ws/";
+let activeSignals = {};
+let allFutPairs = [];
+
+// --- OBTENER PARES DE FUTUROS ---
+async function getAllFutPairs() {
+    try {
+        const futRes = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+        const futData = await futRes.json();
+        allFutPairs = futData.symbols
+            .filter(s => s.symbol.endsWith('USDT') && s.status === 'TRADING')
+            .map(s => s.symbol);
+
+        document.getElementById('loading-status').textContent = `Escaneando ${allFutPairs.length} pares en ${timeframes.length} temporalidades (FUTUROS)...`;
+    } catch (e) {
+        console.error("Error cargando pares de futuros:", e);
+    }
 }
 
-function updateAnalysis(text) {
-const analysisDiv = document.getElementById("current-analysis");
-analysisDiv.textContent = text;
+// --- INDICADORES ---
+function EMA(values, period) {
+    if (values.length < period) return [];
+    let k = 2 / (period + 1);
+    let emaArray = [values[0]];
+    for (let i = 1; i < values.length; i++) {
+        emaArray.push(values[i] * k + emaArray[i - 1] * (1 - k));
+    }
+    return emaArray;
 }
 
-// ==================================================
-// DESCARGA DE VELAS BINANCE
-// ==================================================
-async function getKlines(symbol, interval, limit=200) {
-const url = `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-const r = await fetch(url);
-const data = await r.json();
-
-return data.map(k => ({
-time: k[0],
-open: parseFloat(k[1]),
-high: parseFloat(k[2]),
-low: parseFloat(k[3]),
-close: parseFloat(k[4])
-}));
+function getMACD(closes) {
+    const ema12 = EMA(closes, 12);
+    const ema26 = EMA(closes, 26);
+    if (ema26.length < 26) return { lastHist: 0, prevHist: 0 };
+    const macdLine = ema12.map((v, i) => v - ema26[i]);
+    const signalLine = EMA(macdLine.slice(26), 9);
+    const lastHist = macdLine.at(-1) - (signalLine.at(-1) || 0);
+    const prevHist = macdLine.at(-2) - (signalLine.at(-2) || 0);
+    return { lastHist, prevHist };
 }
 
-// ==================================================
-// EMA
-// ==================================================
-function ema(values, length) {
-let k = 2 / (length + 1);
-let emaArray = [];
-let emaPrev = values[0];
+// --- TRACKING EN VIVO ---
+function startTracking(symbol, entryPrice, tf) {
+    const id = `${symbol}-FUT-${tf}`;
+    if (activeSignals[id]) return;
 
-for (let i = 0; i < values.length; i++) {
-emaPrev = values[i] * k + emaPrev * (1 - k);
-emaArray.push(emaPrev);
-}
-return emaArray;
-}
+    activeSignals[id] = { entryPrice, currentPrice: entryPrice, minPrice: entryPrice, maxPrice: entryPrice, currentPct: 0 };
 
-// ==================================================
-// ADX
-// ==================================================
-function calcADX(candles, length=14) {
-let plusDM = [];
-let minusDM = [];
-let TR = [];
+    const tbody = document.getElementById('table-body');
+    const row = tbody.insertRow(0);
+    row.id = `row-${id}`;
+    row.innerHTML = `
+        <td>${new Date().toLocaleTimeString()}</td>
+        <td><span class="badge-fut">FUT</span></td>
+        <td><strong>${symbol}</strong></td>
+        <td>${tf}</td>
+        <td class="price-val">${entryPrice}</td>
+        <td id="price-${id}">${entryPrice}</td>
+        <td class="down"><span id="minP-${id}">${entryPrice}</span><br><small id="minPct-${id}">0%</small></td>
+        <td class="up"><span id="maxP-${id}">${entryPrice}</span><br><small id="maxPct-${id}">0%</small></td>
+        <td id="curPct-${id}" style="font-size:1.1em">0%</td>
+    `;
 
-for (let i = 1; i < candles.length; i++) {
-let high = candles[i].high;
-let low = candles[i].low;
-let prevHigh = candles[i-1].high;
-let prevLow = candles[i-1].low;
-let prevClose = candles[i-1].close;
+    const ws = new WebSocket(`${futWsBaseUrl}${symbol.toLowerCase()}@ticker`);
 
-let upMove = high - prevHigh;
-let downMove = prevLow - low;
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const price = parseFloat(data.c);
+        const s = activeSignals[id];
+        s.currentPrice = price;
+        if (price < s.minPrice) s.minPrice = price;
+        if (price > s.maxPrice) s.maxPrice = price;
+        s.currentPct = ((price - s.entryPrice) / s.entryPrice) * 100;
 
-plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
-minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
-
-let tr = Math.max(
-high - low,
-Math.abs(high - prevClose),
-Math.abs(low - prevClose),
-Math.abs(low - prevClose)
-);
-TR.push(tr);
-}
-
-function rma(values, length) {
-let r = [];
-let sum = values.slice(0, length).reduce((a,b) => a+b);
-r[length-1] = sum / length;
-
-for (let i = length; i < values.length; i++) {
-r[i] = (r[i-1] * (length - 1) + values[i]) / length;
-}
-return r;
+        document.getElementById(`price-${id}`).textContent = price.toFixed(4);
+        document.getElementById(`curPct-${id}`).textContent = s.currentPct.toFixed(2) + "%";
+        document.getElementById(`curPct-${id}`).className = s.currentPct >= 0 ? 'up' : 'down';
+        
+        document.getElementById(`minP-${id}`).textContent = s.minPrice.toFixed(4);
+        document.getElementById(`minPct-${id}`).textContent = ((s.minPrice-s.entryPrice)/s.entryPrice*100).toFixed(2) + "%";
+        
+        document.getElementById(`maxP-${id}`).textContent = s.maxPrice.toFixed(4);
+        document.getElementById(`maxPct-${id}`).textContent = ((s.maxPrice-s.entryPrice)/s.entryPrice*100).toFixed(2) + "%";
+        updateStats();
+    };
 }
 
-let ATR = rma(TR, length);
-let PDI = rma(plusDM, length).map((v,i)=>100*(v/ATR[i]));
-let MDI = rma(minusDM, length).map((v,i)=>100*(v/ATR[i]));
-let DX = PDI.map((v,i)=>100*Math.abs((v - MDI[i]) / (v + MDI[i])));
-
-let ADX = rma(DX, length);
-return ADX[ADX.length - 1]; // último valor
+function updateStats() {
+    const keys = Object.keys(activeSignals);
+    if (keys.length === 0) return;
+    let total = 0;
+    keys.forEach(k => total += activeSignals[k].currentPct);
+    const avg = total / keys.length;
+    
+    document.getElementById('total-signals').textContent = keys.length;
+    document.getElementById('avg-perf').textContent = avg.toFixed(2) + "%";
+    
+    const sent = document.getElementById('market-sent');
+    const act = document.getElementById('market-action');
+    
+    if(avg < -0.10) {
+        sent.textContent = "CORRECCIÓN EN CURSO"; sent.style.color = "#e74c3c";
+        act.textContent = "BUSCAR ENTRADAS SHORT";
+    } else if(avg > 0.10) {
+        sent.textContent = "IMPULSO ALCISTA"; sent.style.color = "#2ecc71";
+        act.textContent = "MANTENER O LONG";
+    } else {
+        sent.textContent = "RANGO LATERAL"; sent.style.color = "#f1c40f";
+        act.textContent = "ESPERAR CONFIRMACIÓN";
+    }
 }
 
-// ==================================================
-// CONFIRMACIÓN ADICIONAL (Velas de Confirmación)
-// ==================================================
-function confirmarSenal(df1m, signal, confirmationCandles) {
-if (signal === "📈 ENTRADA EN COMPRA") {
-for (let i = df1m.length - 1; i > df1m.length - 1 - confirmationCandles; i--) {
-if (df1m[i].close <= df1m[i].open) {
-return false;
-}
-}
-return true;
-} else if (signal === "📉 ENTRADA EN VENTA") {
-for (let i = df1m.length - 1; i > df1m.length - 1 - confirmationCandles; i--) {
-if (df1m[i].close >= df1m[i].open) {
-return false;
-}
-}
-return true;
-}
-return false;
-}
+// --- ESCÁNER DE MERCADO ---
+async function scanFuturos() {
+    for (const sym of allFutPairs) {
+        for (const tf of timeframes) {
+            try {
+                const res = await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${tf}&limit=50`);
+                const data = await res.json();
+                if (!data || data.length < 35) continue;
+                
+                const closes = data.map(d => parseFloat(d[4]));
+                const { lastHist, prevHist } = getMACD(closes);
 
-// ==================================================
-// GENERAR SEÑAL
-// ==================================================
-function generarSenal(df1m, df5m, minAdx, confirmationCandles) {
-let closes1m = df1m.map(c=>c.close);
-let closes5m = df5m.map(c=>c.close);
-
-let ema50_arr = ema(closes1m, 50);
-let ema20_arr = ema(closes5m, 20);
-
-let ema50 = ema50_arr[ema50_arr.length - 1];
-let ema20 = ema20_arr[ema20_arr.length - 1];
-let ema20_prev = ema20_arr[ema20_arr.length - 2];
-
-let adx5m = calcADX(df5m);
-
-let precio = df1m[df1m.length - 1].close;
-
-let analysisText = `Precio: ${precio.toFixed(5)} | EMA50: ${ema50.toFixed(5)} | EMA20: ${ema20.toFixed(5)} | ADX: ${adx5m.toFixed(2)}`;
-
-updateAnalysis(analysisText);
-
-if (precio > ema50 && ema20 > ema20_prev && adx5m > minAdx) {
-let senal = "📈 ENTRADA EN COMPRA";
-if (confirmarSenal(df1m, senal, confirmationCandles)) return senal + " (CONFIRMADA)";
-else return "⏳ Esperando confirmación compra...";
+                // Lógica MACD: Cruce alcista (Golden Cross en histograma)
+                if (prevHist < 0 && lastHist > 0) {
+                    startTracking(sym, closes.at(-1), tf);
+                }
+            } catch (e) {}
+            // Pausa mínima para evitar baneo de IP
+            await new Promise(r => setTimeout(r, 40));
+        }
+    }
 }
 
-if (precio < ema50 && ema20 < ema20_prev && adx5m > minAdx){
-let senal = "📉 ENTRADA EN VENTA";
-if (confirmarSenal(df1m, senal, confirmationCandles)) return senal + " (CONFIRMADA)";
-else return "⏳ Esperando confirmación venta...";
+async function startApp() {
+    await getAllFutPairs();
+    scanFuturos();
 }
 
-return "⏳ Esperando señal…";
-}
-
-// ==================================================
-// SIMULACIÓN DE GESTIÓN DE RIESGO Y PNL
-// ==================================================
-async function ejecutarOrden(symbol, side, price, stopLossPct, takeProfitPct, positionSize, leverage) {
-const stopLoss = side === "BUY" ? price * (1 - stopLossPct/100) : price * (1 + stopLossPct/100);
-const takeProfit = side === "BUY" ? price * (1 + takeProfitPct/100) : price * (1 - takeProfitPct/100);
-
-let pnl;
-let tradeResult;
-
-if (side === "BUY") {
-// Simulando que el precio alcanza el take profit
-pnl = (takeProfit - price) * (positionSize * leverage / price);
-tradeResult = `COMPRA a ${price.toFixed(5)}, TP a ${takeProfit.toFixed(5)}, SL a ${stopLoss.toFixed(5)}. PNL = ${pnl.toFixed(5)} USDT`;
-} else {
-// Simulando que el precio alcanza el take profit
-pnl = (price - takeProfit) * (positionSize * leverage / price);
-tradeResult = `VENTA a ${price.toFixed(5)}, TP a ${takeProfit.toFixed(5)}, SL a ${stopLoss.toFixed(5)}. PNL = ${pnl.toFixed(5)} USDT`;
-}
-
-// Simulación de comisiones (ejemplo: 0.1% por orden)
-const comision = positionSize * 0.001; // 0.1% de la posición
-pnl -= comision;
-tradeResult += ` (Comisión: ${comision.toFixed(5)} USDT, PNL Neto: ${pnl.toFixed(5)} USDT)`;
-
-
-log(`Simulando orden ${side} para ${symbol} a ${price.toFixed(5)}. ${tradeResult}`);
-}
-
-// ==================================================
-// LOOP PRINCIPAL
-// ==================================================
-let running = false;
-
-async function startBot() {
-if (running) return;
-running = true;
-
-const symbol = document.getElementById("symbol").value.toUpperCase();
-const stopLossPct = parseFloat(document.getElementById("stopLossPct").value);
-const takeProfitPct = parseFloat(document.getElementById("takeProfitPct").value);
-const minAdx = parseFloat(document.getElementById("minAdx").value);
-const confirmationCandles = parseInt(document.getElementById("confirmationCandles").value);
-const positionSize = parseFloat(document.getElementById("positionSize").value);
-const leverage = parseInt(document.getElementById("leverage").value);
-
-log("=== BOT INICIADO PARA " + symbol + " ===");
-log(`SL: ${stopLossPct}%, TP: ${takeProfitPct}%, Min ADX: ${minAdx}, Velas Confirmación: ${confirmationCandles}, Posición: ${positionSize} USDT, Apalancamiento: ${leverage}x`);
-
-let inTrade = false;
-
-while (running) {
-try {
-let df1m = await getKlines(symbol, "1m");
-let df5m = await getKlines(symbol, "5m");
-
-let senal = generarSenal(df1m, df5m, minAdx, confirmationCandles);
-
-if (senal.includes("COMPRA (CONFIRMADA)") && !inTrade) {
-let precioEntrada = df1m[df1m.length - 1].close;
-ejecutarOrden(symbol, "BUY", precioEntrada, stopLossPct, takeProfitPct, positionSize, leverage);
-inTrade = true; // Marcamos que estamos en operación
-
-} else if (senal.includes("VENTA (CONFIRMADA)") && !inTrade) {
-let precioEntrada = df1m[df1m.length - 1].close;
-ejecutarOrden(symbol, "SELL", precioEntrada, stopLossPct, takeProfitPct, positionSize, leverage);
-inTrade = true; // Marcamos que estamos en operación
-}
-
-
-log("→ Señal: " + senal);
-
-// Simulación de salida (temporal - para testear)
-if(inTrade) {
-setTimeout(() => {
-inTrade = false; //Fuerza la salida tras X segundos.
-log("Operación cerrada (simulación).");
-}, 5000);
-}
-
-
-} catch (e) {
-log("❌ Error: " + e);
-}
-
-await new Promise(r => setTimeout(r, 2000));
-}
-}
+startApp();
+// Re-escanea cada 5 minutos para buscar nuevas señales de cruce
+setInterval(scanFuturos, 300000);
 </script>
-
 </body>
 </html>
