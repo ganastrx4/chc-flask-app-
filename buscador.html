@@ -3,76 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - Autenticación Segura</title>
-    <script src="https://cdn.jsdelivr.net/npm/@web3modal/standalone@2.4.3/dist/index.js"></script>
+    <title>CharlyCoin - Multi-Wallet Access</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { margin: 0; height: 100vh; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
-        .box { border: 2px solid #00bcd4; padding: 40px; border-radius: 15px; text-align: center; background: #0d1117; }
-        button { background: #00bcd4; color: #000; border: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
-        button:hover { background: #fff; }
-        #log { margin-top: 20px; color: #888; font-size: 0.9em; }
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0d1117, #000);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #00bcd4;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+        }
+        .wallet-option {
+            background: rgba(255, 255, 255, 0.08);
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 188, 212, 0.3);
+        }
+        .wallet-option:hover {
+            background: rgba(0, 188, 212, 0.2);
+            transform: translateY(-3px);
+            border-color: #00bcd4;
+        }
+        .wallet-option img { width: 35px; height: 35px; }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 20px; }
+        h1 { margin-top: 0; color: #00bcd4; text-shadow: 0 0 10px rgba(0, 188, 212, 0.5); }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <h1>CHARLYCOIN SYSTEM</h1>
-        <p>Se requiere firma digital para acceder</p>
-        <button id="btnConnect">CONECTAR BILLETERA</button>
-        <div id="log">Estado: Esperando interacción...</div>
+    <div class="card">
+        <h1>CharlyCoin 🌍</h1>
+        <p>Selecciona tu billetera para firmar acceso</p>
+        
+        <div class="wallet-option" onclick="handleWallet('metamask')">
+            <span>MetaMask</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg">
+        </div>
+
+        <div class="wallet-option" onclick="handleWallet('trust')">
+            <span>Trust Wallet</span>
+            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg">
+        </div>
+
+        <div class="wallet-option" onclick="handleWallet('binance')">
+            <span>Binance Wallet</span>
+            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico">
+        </div>
+
+        <p id="status"></p>
     </div>
 
     <script>
-        const btn = document.getElementById('btnConnect');
-        const log = document.getElementById('log');
+        const statusText = document.getElementById('status');
 
-        async function conectar() {
-            if (typeof window.ethereum === 'undefined') {
-                alert("No detectamos billetera. Si estás en celular, abre este link dentro de la App de MetaMask/Trust.");
+        async function handleWallet(type) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const currentUrl = window.location.href.replace("http://", "").replace("https://", "");
+
+            // SI ES CELULAR Y NO ESTÁ EN EL NAVEGADOR DE LA WALLET
+            if (isMobile && typeof window.ethereum === 'undefined') {
+                statusText.innerText = "Redirigiendo a la App...";
+                if (type === 'metamask') {
+                    window.location.href = "https://metamask.app.link/dapp/" + currentUrl;
+                } else if (type === 'trust') {
+                    window.location.href = "https://link.trustwallet.com/open_url?url=" + window.location.href;
+                }
                 return;
             }
 
-            try {
-                log.innerText = "Abriendo billetera...";
-                
-                // FORZAR la apertura de la cuenta y pedir firma
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                
-                // Esto obliga a MetaMask a saltar a la pantalla
-                await provider.send("eth_requestAccounts", []);
-                
-                const signer = provider.getSigner();
-                const address = await signer.getAddress();
-                
-                // CREAR UN MENSAJE DE FIRMA (Para que no se salte solo)
-                // Esto hace que el usuario TENGA que darle a "Firmar" en su celular/pc
-                const mensaje = "Accediendo a CharlyCoin Core: " + Date.now();
-                const firma = await signer.signMessage(mensaje);
+            // SI ESTÁ EN PC O YA ESTÁ DENTRO DE LA APP DE LA WALLET
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    statusText.innerText = "Conectando...";
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+                    const signer = provider.getSigner();
+                    const address = await signer.getAddress();
 
-                log.innerText = "Verificando credenciales...";
+                    // FIRMA OBLIGATORIA (Para que la wallet salte sí o sí)
+                    statusText.innerText = "Por favor, firma el mensaje";
+                    const mensaje = "Acceso seguro a CharlyCoin buscador2\nID: " + Math.floor(Math.random() * 1000000);
+                    const firma = await signer.signMessage(mensaje);
 
-                // Enviar firma y dirección al backend
-                const res = await fetch('/api/validar_billetera', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ address, firma, mensaje })
-                });
+                    statusText.innerText = "Validando...";
+                    const res = await fetch('/api/validar_billetera', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ address, firma, mensaje })
+                    });
 
-                const data = await res.json();
-                if (data.success) {
-                    window.location.href = "buscador.html";
-                } else {
-                    log.innerText = "Error: Firma inválida.";
+                    const data = await res.json();
+                    if (data.success) {
+                        statusText.innerText = "¡Éxito! Entrando...";
+                        setTimeout(() => { window.location.href = "buscador2.html"; }, 1000);
+                    }
+                } catch (err) {
+                    statusText.innerText = "Error o conexión cancelada.";
+                    console.error(err);
                 }
-
-            } catch (err) {
-                log.innerText = "Conexión cancelada.";
-                console.error(err);
+            } else {
+                statusText.innerText = "Instala la extensión o usa el celular.";
             }
         }
-
-        btn.onclick = conectar;
     </script>
 </body>
 </html>
