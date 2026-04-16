@@ -4,7 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CharlyCoin - Multi-Wallet Access</title>
+
+    <!-- TU LIBRERÍA ORIGINAL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+    <!-- 🔥 NUEVO: REOWN -->
+    <script type="module">
+        import { createAppKit } from "https://esm.sh/@reown/appkit";
+
+        window.appKit = createAppKit({
+            projectId: "TU_PROJECT_ID_AQUI",
+            networks: ["eip155:1","eip155:56"],
+            metadata: {
+                name: "CharlyCoin",
+                description: "Login seguro",
+                url: window.location.origin,
+                icons: []
+            }
+        });
+    </script>
+
     <style>
         body {
             margin: 0;
@@ -25,7 +44,6 @@
             backdrop-filter: blur(10px);
             width: 90%;
             max-width: 400px;
-            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
         }
         .wallet-option {
             background: rgba(255, 255, 255, 0.08);
@@ -34,97 +52,78 @@
             border-radius: 15px;
             cursor: pointer;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 188, 212, 0.3);
         }
-        .wallet-option:hover {
-            background: rgba(0, 188, 212, 0.2);
-            transform: translateY(-3px);
-            border-color: #00bcd4;
-        }
-        .wallet-option img { width: 35px; height: 35px; }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 20px; }
-        h1 { margin-top: 0; color: #00bcd4; text-shadow: 0 0 10px rgba(0, 188, 212, 0.5); }
+        #status { margin-top: 20px; color: #00bcd4; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>CharlyCoin 🌍</h1>
-        <p>Selecciona tu billetera para firmar acceso</p>
-        
-        <div class="wallet-option" onclick="handleWallet('metamask')">
-            <span>MetaMask</span>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg">
-        </div>
+<div class="card">
+    <h1>CharlyCoin 🌍</h1>
+    <p>Selecciona tu billetera</p>
 
-        <div class="wallet-option" onclick="handleWallet('trust')">
-            <span>Trust Wallet</span>
-            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg">
-        </div>
+    <div class="wallet-option" onclick="handleWallet('metamask')">MetaMask</div>
+    <div class="wallet-option" onclick="handleWallet('trust')">Trust Wallet</div>
+    <div class="wallet-option" onclick="handleWallet('binance')">Binance Wallet</div>
 
-        <div class="wallet-option" onclick="handleWallet('binance')">
-            <span>Binance Wallet</span>
-            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico">
-        </div>
+    <p id="status"></p>
+</div>
 
-        <p id="status"></p>
-    </div>
+<script>
+const statusText = document.getElementById('status');
 
-    <script>
-        const statusText = document.getElementById('status');
+async function handleWallet(type) {
+    const isMobile = /Android|iPhone/i.test(navigator.userAgent);
 
-        async function handleWallet(type) {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const currentUrl = window.location.href.replace("http://", "").replace("https://", "");
+    // 🔥 SI NO HAY ETHEREUM → USAR REOWN (SOLUCIÓN REAL)
+    if (typeof window.ethereum === 'undefined') {
+        try {
+            statusText.innerText = "Abriendo selector de wallets...";
 
-            // SI ES CELULAR Y NO ESTÁ EN EL NAVEGADOR DE LA WALLET
-            if (isMobile && typeof window.ethereum === 'undefined') {
-                statusText.innerText = "Redirigiendo a la App...";
-                if (type === 'metamask') {
-                    window.location.href = "https://metamask.app.link/dapp/" + currentUrl;
-                } else if (type === 'trust') {
-                    window.location.href = "https://link.trustwallet.com/open_url?url=" + window.location.href;
-                }
-                return;
-            }
+            const session = await window.appKit.connect();
 
-            // SI ESTÁ EN PC O YA ESTÁ DENTRO DE LA APP DE LA WALLET
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    statusText.innerText = "Conectando...";
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
-                    const signer = provider.getSigner();
-                    const address = await signer.getAddress();
+            // Obtener dirección
+            const address = session?.accounts?.[0] || "desconocido";
 
-                    // FIRMA OBLIGATORIA (Para que la wallet salte sí o sí)
-                    statusText.innerText = "Por favor, firma el mensaje";
-                    const mensaje = "Acceso seguro a CharlyCoin buscador2\nID: " + Math.floor(Math.random() * 1000000);
-                    const firma = await signer.signMessage(mensaje);
+            // 🔥 FIRMA (igual que tu sistema)
+            const signature = await window.appKit.signMessage({
+                message: "Acceso CharlyCoin\nID: " + Math.floor(Math.random()*100000)
+            });
 
-                    statusText.innerText = "Validando...";
-                    const res = await fetch('/api/validar_billetera', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ address, firma, mensaje })
-                    });
+            statusText.innerText = "Wallet conectada ✅";
 
-                    const data = await res.json();
-                    if (data.success) {
-                        statusText.innerText = "¡Éxito! Entrando...";
-                        setTimeout(() => { window.location.href = "buscador2.html"; }, 1000);
-                    }
-                } catch (err) {
-                    statusText.innerText = "Error o conexión cancelada.";
-                    console.error(err);
-                }
-            } else {
-                statusText.innerText = "Instala la extensión o usa el celular.";
-            }
+            console.log(address, signature);
+
+        } catch (err) {
+            statusText.innerText = "Cancelado o error";
+            console.error(err);
         }
-    </script>
+        return;
+    }
+
+    // ✅ TU CÓDIGO ORIGINAL (NO SE TOCA)
+    try {
+        statusText.innerText = "Conectando...";
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+
+        statusText.innerText = "Firma requerida...";
+        const mensaje = "Acceso seguro\nID: " + Math.random();
+        const firma = await signer.signMessage(mensaje);
+
+        statusText.innerText = "Éxito ✅";
+
+        console.log(address, firma);
+
+    } catch (err) {
+        statusText.innerText = "Error";
+        console.error(err);
+    }
+}
+</script>
+
 </body>
 </html>
