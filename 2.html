@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenido a CharlyCoin</title>
+  <title>Acceso CharlyCoin</title>
   
   <script src="https://developer.worldcoin.org/idkit.js"></script>
 
@@ -33,26 +33,29 @@
       color: #aaa;
       font-weight: 400;
       animation: fadeIn 2s ease-in-out;
+      text-align: center;
+      padding: 0 20px;
     }
 
-    /* Botón de World ID */
+    /* Botón de World ID mejorado */
     .btn-verify {
       background: linear-gradient(90deg, #00bcd4, #9c27b0);
       border: none;
       color: white;
-      padding: 15px 30px;
+      padding: 15px 35px;
       border-radius: 50px;
       font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 20px;
-      display: none; /* Se oculta al inicio */
-      transition: transform 0.3s ease;
+      margin-top: 30px;
+      display: none; /* Se muestra después de la carga */
+      transition: all 0.3s ease;
       box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
     }
 
     .btn-verify:hover {
       transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
     }
 
     .loader {
@@ -65,10 +68,7 @@
       margin-top: 25px;
     }
 
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
-    }
-
+    @keyframes spin { 100% { transform: rotate(360deg); } }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -79,63 +79,73 @@
       bottom: 20px;
       color: #555;
       font-size: 0.9em;
-      letter-spacing: 1px;
     }
   </style>
 </head>
 <body>
+
   <h1>CharlyCoin 🌍</h1>
-  <h2 id="status-text">Iniciando sistema...</h2>
+  <h2 id="status-text">Iniciando sistema de seguridad...</h2>
   
   <div id="loader" class="loader"></div>
 
   <button id="world-id-button" class="btn-verify">
-    🚀 Verificar con World ID
+    🚀 Verificar Identidad Humana
   </button>
 
-  <footer>© 2026 CharlyCoin. World Chain Ecosystem.</footer>
+  <footer>© 2026 CharlyCoin - World Chain Ecosystem</footer>
 
   <script>
-    // 1. Simular carga y mostrar botón
+    // 1. Simulación de carga inicial
     setTimeout(() => {
       document.getElementById('loader').style.display = 'none';
-      document.getElementById('status-text').innerText = 'Verifica tu identidad para continuar';
+      document.getElementById('status-text').innerText = 'Identidad requerida para ingresar';
       document.getElementById('world-id-button').style.display = 'block';
-    }, 2500);
+    }, 2000);
 
-    // 2. Configurar World ID
-    if (typeof IDKit !== 'undefined') {
-      IDKit.init({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
-        action: "login",
-        onSuccess: (result) => {
-          console.log("Verificación exitosa:", result);
-          
-          // 3. Notificar a tu Flask local
-          fetch('http://127.0.0.1:5000/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(result)
-          })
-          .then(() => {
-            // Redirigir al buscador interno después del éxito
-            window.location.href = "buscador.html"; 
-          })
-          .catch(err => {
-            console.error("Error conectando a Flask, redirigiendo de todos modos...", err);
-            window.location.href = "buscador.html";
-          });
-        },
-      });
+    // 2. Configuración de IDKit (World ID)
+    window.onload = function() {
+      if (typeof IDKit !== 'undefined') {
+        console.log("IDKit cargado correctamente.");
 
-      // 4. Abrir modal al dar clic
-      document.getElementById("world-id-button").onclick = () => {
-        IDKit.open();
-      };
-    } else {
-      console.error("Error: IDKit no se cargó correctamente.");
-      document.getElementById('status-text').innerText = 'Error al cargar World ID';
-    }
+        IDKit.init({
+          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
+          action: "login",
+          onSuccess: (result) => {
+            console.log("¡Verificación exitosa!", result);
+            
+            // 3. Notificar a tu servidor Flask local
+            fetch('http://127.0.0.1:5000/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(result)
+            })
+            .then(response => {
+              // Una vez que Flask responde, vamos al buscador
+              window.location.href = "buscador.html"; 
+            })
+            .catch(err => {
+              console.error("Flask no respondió, pero la verificación fue real:", err);
+              window.location.href = "buscador.html";
+            });
+          },
+          onError: (error) => {
+            console.error("Error de World ID:", error);
+          }
+        });
+
+        // 4. Activar el botón
+        document.getElementById("world-id-button").onclick = () => {
+          IDKit.open();
+        };
+
+      } else {
+        console.error("Error crítico: No se pudo cargar IDKit de los servidores de Worldcoin.");
+        document.getElementById('status-text').innerText = 'Error de conexión con World ID';
+        document.getElementById('status-text').style.color = '#ff4444';
+      }
+    };
   </script>
+
 </body>
 </html>
