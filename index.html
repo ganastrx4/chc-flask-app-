@@ -1,134 +1,130 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenido a CharlyCoin</title>
-  
-  <script src="https://developer.worldcoin.org/idkit.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: radial-gradient(circle at center, #0d1117, #000);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: "Poppins", sans-serif;
-      overflow: hidden;
-    }
-
-    h1 {
-      font-size: 2.5em;
-      color: #00bcd4;
-      margin-bottom: 10px;
-      letter-spacing: 2px;
-      animation: fadeIn 1.5s ease-in-out;
-    }
-
-    h2 {
-      color: #aaa;
-      font-weight: 400;
-      animation: fadeIn 2s ease-in-out;
-    }
-
-    .btn-verify {
-      background: linear-gradient(90deg, #00bcd4, #9c27b0);
-      border: none;
-      color: white;
-      padding: 15px 30px;
-      border-radius: 50px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 20px;
-      display: none; 
-      transition: transform 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
-    }
-
-    .btn-verify:hover { transform: scale(1.05); }
-
-    .loader {
-      border: 6px solid #222;
-      border-top: 6px solid #00bcd4;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
-      margin-top: 25px;
-    }
-
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    footer { position: absolute; bottom: 20px; color: #555; font-size: 0.9em; letter-spacing: 1px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin - Multi-Wallet Access</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0d1117, #000);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #00bcd4;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+        }
+        .wallet-option {
+            background: rgba(255, 255, 255, 0.08);
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 188, 212, 0.3);
+        }
+        .wallet-option:hover {
+            background: rgba(0, 188, 212, 0.2);
+            transform: translateY(-3px);
+            border-color: #00bcd4;
+        }
+        .wallet-option img { width: 35px; height: 35px; }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 20px; }
+        h1 { margin-top: 0; color: #00bcd4; text-shadow: 0 0 10px rgba(0, 188, 212, 0.5); }
+    </style>
 </head>
 <body>
-  <h1>CharlyCoin 🌍</h1>
-  <h2 id="status-text">Iniciando sistema...</h2>
-  
-  <div id="loader" class="loader"></div>
 
-  <button id="world-id-button" class="btn-verify">
-    🚀 Verificar con World ID
-  </button>
-
-  <footer>© 2026 CharlyCoin. World Chain Ecosystem.</footer>
-
-  <script>
-  window.onload = function() {
-    // 1. Efecto visual de carga
-    setTimeout(() => {
-      const loader = document.getElementById('loader');
-      if(loader) loader.style.display = 'none';
-    }, 2000);
-
-    // 2. Función de búsqueda recursiva
-    let intentos = 0;
-    const checkIDKit = setInterval(() => {
-      intentos++;
-      console.log("Buscando IDKit en memoria... Intento: " + intentos);
-
-      if (typeof IDKit !== 'undefined') {
-        clearInterval(checkIDKit); // ¡Lo encontramos!
-        console.log("✅ IDKit detectado satisfactoriamente.");
+    <div class="card">
+        <h1>CharlyCoin 🌍</h1>
+        <p>Selecciona tu billetera para firmar acceso</p>
         
-        document.getElementById('status-text').innerText = 'Sistema listo. Verifica tu identidad.';
-        document.getElementById('world-id-button').style.display = 'block';
+        <div class="wallet-option" onclick="handleWallet('metamask')">
+            <span>MetaMask</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg">
+        </div>
 
-        IDKit.init({
-          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", 
-          action: "login",
-          onSuccess: (result) => {
-            fetch('http://127.0.0.1:5000/api/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(result)
-            }).finally(() => {
-              window.location.href = "buscador.html"; 
-            });
-          },
-        });
+        <div class="wallet-option" onclick="handleWallet('trust')">
+            <span>Trust Wallet</span>
+            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg">
+        </div>
 
-        document.getElementById("world-id-button").onclick = () => {
-          IDKit.open();
-        };
+        <div class="wallet-option" onclick="handleWallet('binance')">
+            <span>Binance Wallet</span>
+            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico">
+        </div>
 
-      } else if (intentos > 10) { // Si después de 10 segundos no carga
-        clearInterval(checkIDKit);
-        document.getElementById('status-text').innerText = 'Error de red: El SDK no responde.';
-        document.getElementById('status-text').style.color = "red";
-      }
-    }, 1000); // Revisa cada 1 segundo
-  };
-</script>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const statusText = document.getElementById('status');
+
+        async function handleWallet(type) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const currentUrl = window.location.href.replace("http://", "").replace("https://", "");
+
+            // SI ES CELULAR Y NO ESTÁ EN EL NAVEGADOR DE LA WALLET
+            if (isMobile && typeof window.ethereum === 'undefined') {
+                statusText.innerText = "Redirigiendo a la App...";
+                if (type === 'metamask') {
+                    window.location.href = "https://metamask.app.link/dapp/" + currentUrl;
+                } else if (type === 'trust') {
+                    window.location.href = "https://link.trustwallet.com/open_url?url=" + window.location.href;
+                }
+                return;
+            }
+
+            // SI ESTÁ EN PC O YA ESTÁ DENTRO DE LA APP DE LA WALLET
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    statusText.innerText = "Conectando...";
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    await provider.send("eth_requestAccounts", []);
+                    const signer = provider.getSigner();
+                    const address = await signer.getAddress();
+
+                    // FIRMA OBLIGATORIA (Para que la wallet salte sí o sí)
+                    statusText.innerText = "Por favor, firma el mensaje";
+                    const mensaje = "Acceso seguro a CharlyCoin buscador2\nID: " + Math.floor(Math.random() * 1000000);
+                    const firma = await signer.signMessage(mensaje);
+
+                    statusText.innerText = "Validando...";
+                    const res = await fetch('/api/validar_billetera', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ address, firma, mensaje })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        statusText.innerText = "¡Éxito! Entrando...";
+                        setTimeout(() => { window.location.href = "buscador2.html"; }, 1000);
+                    }
+                } catch (err) {
+                    statusText.innerText = "Error o conexión cancelada.";
+                    console.error(err);
+                }
+            } else {
+                statusText.innerText = "Instala la extensión o usa el celular.";
+            }
+        }
+    </script>
 </body>
 </html>
