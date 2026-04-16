@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - Acceso Web3</title>
+    <title>CharlyCoin - Selector de Billetera</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
         body {
@@ -15,89 +15,108 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
         }
         .card {
             background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
+            padding: 30px;
             border-radius: 20px;
             border: 1px solid #00bcd4;
             text-align: center;
             backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
         }
-        h1 { color: #00bcd4; margin-bottom: 10px; }
-        .btn-connect {
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
+        .wallet-option {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 12px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+            border: 1px solid transparent;
         }
-        .btn-connect:hover { transform: scale(1.05); filter: brightness(1.2); }
-        #status { margin-top: 20px; color: #888; font-size: 0.9em; }
+        .wallet-option:hover {
+            background: rgba(0, 188, 212, 0.2);
+            border-color: #00bcd4;
+        }
+        .wallet-option img { width: 30px; height: 30px; }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; }
+        .loading { color: #aaa; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>CharlyCoin 🌍</h1>
-        <p>Conecta tu billetera para validar tu identidad en World Chain</p>
+        <p>Selecciona tu billetera para ingresar</p>
         
-        <button id="btnConnect" class="btn-connect">🦊 Conectar MetaMask</button>
-        
-        <p id="status">Esperando conexión...</p>
+        <div class="wallet-option" onclick="connectWallet('metamask')">
+            <span>MetaMask</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg" alt="MetaMask">
+        </div>
+
+        <div class="wallet-option" onclick="connectWallet('trust')">
+            <span>Trust Wallet</span>
+            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="Trust">
+        </div>
+
+        <div class="wallet-option" onclick="connectWallet('binance')">
+            <span>Binance Web3</span>
+            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico" alt="Binance">
+        </div>
+
+        <p id="status">Esperando selección...</p>
     </div>
 
     <script>
-        const btnConnect = document.getElementById('btnConnect');
         const statusText = document.getElementById('status');
 
-        btnConnect.onclick = async () => {
+        async function connectWallet(type) {
+            statusText.className = "loading";
+            statusText.innerText = "Abriendo " + type + "...";
+
+            // Si es celular, intentamos el Deep Link para "saltar" del navegador a la App
+            if (/Android|iPhone/i.test(navigator.userAgent)) {
+                if (type === 'metamask') {
+                    window.location.href = "https://metamask.app.link/dapp/" + window.location.host;
+                } else if (type === 'trust') {
+                    window.location.href = "https://link.trustwallet.com/open_url?url=" + window.location.href;
+                }
+            }
+
+            // Lógica de conexión Web3 estándar
             if (typeof window.ethereum !== 'undefined') {
                 try {
-                    statusText.innerText = "Solicitando cuenta...";
-                    
-                    // 1. Pedir acceso a MetaMask
                     const provider = new ethers.providers.Web3Provider(window.ethereum);
                     await provider.send("eth_requestAccounts", []);
                     const signer = provider.getSigner();
                     const address = await signer.getAddress();
 
-                    statusText.innerText = "Validando dirección: " + address.substring(0, 10) + "...";
+                    statusText.innerText = "Conectado: " + address.substring(0, 6) + "...";
 
-                    // 2. Enviar la dirección a Flask
+                    // Enviar a tu Flask
                     const response = await fetch('/api/validar_billetera', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ address: address })
+                        body: JSON.stringify({ address: address, wallet_type: type })
                     });
 
                     const result = await response.json();
-
                     if (result.success) {
-                        statusText.style.color = "#00ff00";
-                        statusText.innerText = "¡Acceso concedido! Redirigiendo...";
-                        setTimeout(() => {
-                            window.location.href = "buscador.html";
-                        }, 1500);
-                    } else {
-                        statusText.style.color = "#ff4444";
-                        statusText.innerText = "Error: " + result.message;
+                        window.location.href = "buscador.html";
                     }
-
                 } catch (error) {
-                    console.error(error);
                     statusText.innerText = "Error al conectar.";
+                    console.error(error);
                 }
             } else {
-                alert("Instala MetaMask en tu laptop para usar CharlyCoin.");
+                statusText.innerText = "Billetera no detectada en este navegador.";
             }
-        };
+        }
     </script>
 </body>
 </html>
