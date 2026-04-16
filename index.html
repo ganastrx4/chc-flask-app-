@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CharlyCoin (CHC)</title>
+  <title>CharlyCoin (CHC) - World ID Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,36 +33,59 @@
       Bienvenido a <span class="text-cyan-400">CharlyCoin (CHC)</span>
     </h1>
 
-    <p class="text-lg max-w-2xl mx-auto mb-6 text-gray-300">
-      <b>CharlyCoin (CHC)</b> es un token en la red 
-      <span class="text-purple-400">World Chain</span>. Verifica tu identidad para acceder al ecosistema.
+    <p class="text-lg max-w-2xl mx-auto mb-8 text-gray-300">
+      Verifica tu identidad con <span class="text-purple-400">World ID</span> para ingresar al ecosistema de CharlyCoin y gestionar tus activos en World Chain.
     </p>
 
-    <button id="world-id-button" 
-       class="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-10 py-3 rounded-2xl shadow-lg hover:scale-105 transition transform duration-300 text-lg font-semibold inline-block">
-      🚀 Ingresar con World ID
-    </button>
+    <div class="flex justify-center">
+      <button id="world-id-button" 
+              class="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-10 py-4 rounded-2xl shadow-lg hover:scale-105 transition transform duration-300 text-xl font-bold border border-white/10">
+        🚀 Ingresar con World ID
+      </button>
+    </div>
 
-    <div class="mt-8 bg-gray-900/50 p-4 rounded-xl border border-gray-700 text-sm">
-        <h3 class="font-bold text-cyan-400 mb-2">Datos del Proyecto</h3>
-        <p><strong>Contrato:</strong> 0x6b2bA...eDb</p>
-        <p><strong>Red:</strong> World Chain (Anvil Local)</p>
+    <div class="mt-10 bg-gray-900/40 p-6 rounded-2xl border border-gray-800 backdrop-blur-sm max-w-md mx-auto">
+      <h3 class="text-cyan-400 font-bold mb-2">Estado del Sistema</h3>
+      <p class="text-sm text-gray-400"><strong>Red:</strong> World Chain (Local Anvil Fork)</p>
+      <p class="text-xs text-gray-500 mt-2 break-all"><strong>Contrato:</strong> 0x6b2bA4159916017267c39A3b70b507F7c1Af5eDb</p>
     </div>
   </div>
 
   <script>
-    // CONFIGURACIÓN DE WORLD ID
+    // 1. Inicializar IDKit
     IDKit.init({
       app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
       action: "login",
       onSuccess: (result) => {
-        console.log("Verificación exitosa:", result);
-        // Aquí redirigimos a tu buscador2.html después de que el usuario se verifique
-        window.location.href = "https://ganastrx4.github.io/chc-flask-app-/buscador2.html";
+        console.log("Verificación exitosa localmente:", result);
+
+        // 2. Avisar a nuestro backend local en Flask
+        fetch('http://127.0.0.1:5000/api/login', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(result)
+        })
+        .then(response => {
+          if (response.ok) {
+            console.log("Backend notificado correctamente");
+          }
+          // 3. Redirigir al buscador
+          window.location.href = "buscador2.html";
+        })
+        .catch(err => {
+          console.error("Error al conectar con Flask:", err);
+          // Redirigimos de todos modos para que no se trabe el flujo en pruebas
+          window.location.href = "buscador2.html";
+        });
       },
+      onError: (error) => {
+        console.error("Error en World ID:", error);
+      }
     });
 
-    // Abrir el modal al hacer clic
+    // 3. Vincular el botón al Modal
     document.getElementById("world-id-button").onclick = () => {
       IDKit.open();
     };
