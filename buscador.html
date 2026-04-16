@@ -2,133 +2,49 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenido a CharlyCoin</title>
-  
+  <title>CharlyCoin - World ID</title>
   <script src="https://developer.worldcoin.org/idkit.js"></script>
-
   <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: radial-gradient(circle at center, #0d1117, #000);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: "Poppins", sans-serif;
-      overflow: hidden;
-    }
-
-    h1 {
-      font-size: 2.5em;
-      color: #00bcd4;
-      margin-bottom: 10px;
-      letter-spacing: 2px;
-      animation: fadeIn 1.5s ease-in-out;
-    }
-
-    h2 {
-      color: #aaa;
-      font-weight: 400;
-      animation: fadeIn 2s ease-in-out;
-    }
-
-    .btn-verify {
-      background: linear-gradient(90deg, #00bcd4, #9c27b0);
-      border: none;
-      color: white;
-      padding: 15px 30px;
-      border-radius: 50px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 20px;
-      display: none; 
-      transition: transform 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
-    }
-
-    .btn-verify:hover { transform: scale(1.05); }
-
-    .loader {
-      border: 6px solid #222;
-      border-top: 6px solid #00bcd4;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
-      margin-top: 25px;
-    }
-
+    body { background: #000; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .btn { background: #00bcd4; color: #fff; padding: 15px 30px; border-radius: 30px; border: none; font-size: 1.2em; cursor: pointer; display: none; }
+    .loader { border: 4px solid #333; border-top: 4px solid #00bcd4; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    footer { position: absolute; bottom: 20px; color: #555; font-size: 0.9em; letter-spacing: 1px; }
   </style>
 </head>
 <body>
   <h1>CharlyCoin 🌍</h1>
-  <h2 id="status-text">Iniciando sistema...</h2>
-  
+  <p id="msg">Cargando SDK de World ID...</p>
   <div id="loader" class="loader"></div>
-
-  <button id="world-id-button" class="btn-verify">
-    🚀 Verificar con World ID
-  </button>
-
-  <footer>© 2026 CharlyCoin. World Chain Ecosystem.</footer>
+  <button id="world-id-button" class="btn">🚀 Verificar Identidad</button>
 
   <script>
-  window.onload = function() {
-    // 1. Efecto visual de carga
-    setTimeout(() => {
-      const loader = document.getElementById('loader');
-      if(loader) loader.style.display = 'none';
-    }, 2000);
-
-    // 2. Función de búsqueda recursiva
-    let intentos = 0;
-    const checkIDKit = setInterval(() => {
-      intentos++;
-      console.log("Buscando IDKit en memoria... Intento: " + intentos);
-
+    // Forzamos esperar a que todo cargue
+    window.onload = function() {
       if (typeof IDKit !== 'undefined') {
-        clearInterval(checkIDKit); // ¡Lo encontramos!
-        console.log("✅ IDKit detectado satisfactoriamente.");
-        
-        document.getElementById('status-text').innerText = 'Sistema listo. Verifica tu identidad.';
+        console.log("IDKit cargado correctamente desde la nube");
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('msg').innerText = 'Listo para verificar';
         document.getElementById('world-id-button').style.display = 'block';
 
         IDKit.init({
-          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", 
+          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
           action: "login",
           onSuccess: (result) => {
+            console.log("Éxito:", result);
             fetch('http://127.0.0.1:5000/api/login', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(result)
-            }).finally(() => {
-              window.location.href = "buscador.html"; 
-            });
-          },
+            }).finally(() => { window.location.href = "buscador.html"; });
+          }
         });
 
-        document.getElementById("world-id-button").onclick = () => {
-          IDKit.open();
-        };
-
-      } else if (intentos > 10) { // Si después de 10 segundos no carga
-        clearInterval(checkIDKit);
-        document.getElementById('status-text').innerText = 'Error de red: El SDK no responde.';
-        document.getElementById('status-text').style.color = "red";
+        document.getElementById("world-id-button").onclick = () => { IDKit.open(); };
+      } else {
+        document.getElementById('msg').innerText = 'Error: No se pudo conectar con World ID. Revisa tu internet.';
+        console.error("IDKit no se cargó.");
       }
-    }, 1000); // Revisa cada 1 segundo
-  };
-</script>
+    };
+  </script>
 </body>
 </html>
