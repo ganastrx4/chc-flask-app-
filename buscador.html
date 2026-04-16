@@ -1,72 +1,134 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>CharlyCoin (CHC)</title>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a CharlyCoin</title>
+  
+  <script src="https://developer.worldcoin.org/idkit.js"></script>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      background: radial-gradient(circle at center, #0f0f1a, #000000);
-      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0d1117, #000);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: "Poppins", sans-serif;
+      overflow: hidden;
     }
-    .fade-in {
+
+    h1 {
+      font-size: 2.5em;
+      color: #00bcd4;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h2 {
+      color: #aaa;
+      font-weight: 400;
       animation: fadeIn 2s ease-in-out;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95);}
-      to { opacity: 1; transform: scale(1);}
+
+    .btn-verify {
+      background: linear-gradient(90deg, #00bcd4, #9c27b0);
+      border: none;
+      color: white;
+      padding: 15px 30px;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      display: none; 
+      transition: transform 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
     }
+
+    .btn-verify:hover { transform: scale(1.05); }
+
+    .loader {
+      border: 6px solid #222;
+      border-top: 6px solid #00bcd4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
+      margin-top: 25px;
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer { position: absolute; bottom: 20px; color: #555; font-size: 0.9em; letter-spacing: 1px; }
   </style>
-  <div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-top: 20px;">
-    <h3>Datos del Proyecto</h3>
-    <p><strong>Contrato Oficial:</strong> <span id="contract">0x6b2bA4159916017267c39A3b70b507F7c1Af5eDb</span></p>
-    <p><strong>Red:</strong> World Chain (L2)</p>
-    <a href="https://worldchain-mainnet.explorer.alchemy.com/address/0x6b2bA4159916017267c39A3b70b507F7c1Af5eDb" target="_blank">Ver en Explorador</a>
-</div>
 </head>
-<body class="flex items-center justify-center min-h-screen text-white">
+<body>
+  <h1>CharlyCoin 🌍</h1>
+  <h2 id="status-text">Iniciando sistema...</h2>
+  
+  <div id="loader" class="loader"></div>
 
-  <div class="text-center fade-in px-4">
-    <!-- Logo -->
-    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" 
-         alt="CharlyCoin Logo" 
-         class="mx-auto w-48 drop-shadow-lg mb-6 rounded-2xl">
+  <button id="world-id-button" class="btn-verify">
+    🚀 Verificar con World ID
+  </button>
 
-    <!-- Título -->
-    <h1 class="text-4xl font-bold mb-4">
-      Bienvenido a <span class="text-cyan-400">CharlyCoin (CHC)</span>
-    </h1>
+  <footer>© 2026 CharlyCoin. World Chain Ecosystem.</footer>
 
-    <!-- Descripción -->
-    <p class="text-lg max-w-2xl mx-auto mb-6 text-gray-300">
-      <b>CharlyCoin (CHC)</b> es un token en la red 
-      <span class="text-purple-400">World Chain</span>, con liquidez gestionada en Dexscreener. 
-      Forma parte del nuevo ecosistema financiero digital, diseñado para 
-      impulsar transacciones rápidas, seguras y accesibles para todos.
-    </p>
+  <script>
+  window.onload = function() {
+    // 1. Efecto visual de carga
+    setTimeout(() => {
+      const loader = document.getElementById('loader');
+      if(loader) loader.style.display = 'none';
+    }, 2000);
 
-    <!-- Botón Ingresar -->
-    <a href="https://ganastrx4.github.io/chc-flask-app-/buscador2.html" 
-       class="bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-10 py-3 rounded-2xl shadow-lg hover:scale-105 transition transform duration-300 text-lg font-semibold inline-block">
-      🚀 Ingresar
-    </a>
+    // 2. Función de búsqueda recursiva
+    let intentos = 0;
+    const checkIDKit = setInterval(() => {
+      intentos++;
+      console.log("Buscando IDKit en memoria... Intento: " + intentos);
 
-    <!-- Links adicionales -->
-    <div class="mt-6 space-y-2">
-      <a href="https://dexscreener.com/worldchain/0x664fc02238c280aa52316895d34cff72274db756" 
-         target="_blank" class="block text-sm text-cyan-400 hover:underline">
-        📊 Ver estadísticas en Dexscreener CHUNWLD
-      </a>
+      if (typeof IDKit !== 'undefined') {
+        clearInterval(checkIDKit); // ¡Lo encontramos!
+        console.log("✅ IDKit detectado satisfactoriamente.");
+        
+        document.getElementById('status-text').innerText = 'Sistema listo. Verifica tu identidad.';
+        document.getElementById('world-id-button').style.display = 'block';
 
-      <a href="https://dexscreener.com/worldchain/0xdbf525a25f255da693a1c17c7a07b628c021b871" 
-         target="_blank" class="block text-sm text-cyan-400 hover:underline">
-        📊 Ver estadísticas en Dexscreener CHCWLD.
-      </a>
-    </div>
-  </div>
+        IDKit.init({
+          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", 
+          action: "login",
+          onSuccess: (result) => {
+            fetch('http://127.0.0.1:5000/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(result)
+            }).finally(() => {
+              window.location.href = "buscador.html"; 
+            });
+          },
+        });
 
+        document.getElementById("world-id-button").onclick = () => {
+          IDKit.open();
+        };
+
+      } else if (intentos > 10) { // Si después de 10 segundos no carga
+        clearInterval(checkIDKit);
+        document.getElementById('status-text').innerText = 'Error de red: El SDK no responde.';
+        document.getElementById('status-text').style.color = "red";
+      }
+    }, 1000); // Revisa cada 1 segundo
+  };
+</script>
 </body>
-</html> 
+</html>
