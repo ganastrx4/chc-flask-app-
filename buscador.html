@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - Multi-Wallet Access</title>
+    <title>CharlyCoin - Acceso Seguro</title>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -18,7 +20,7 @@
         }
         .card {
             background: rgba(255, 255, 255, 0.05);
-            padding: 30px;
+            padding: 40px;
             border-radius: 20px;
             border: 1px solid #00bcd4;
             text-align: center;
@@ -27,104 +29,117 @@
             max-width: 400px;
             box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
         }
-        .wallet-option {
-            background: rgba(255, 255, 255, 0.08);
-            margin: 15px 0;
-            padding: 15px;
-            border-radius: 15px;
+        h1 { color: #00bcd4; margin-bottom: 20px; }
+        .btn-wallet {
+            background: linear-gradient(90deg, #00bcd4, #9c27b0);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 188, 212, 0.3);
+            transition: 0.3s;
+            width: 100%;
         }
-        .wallet-option:hover {
-            background: rgba(0, 188, 212, 0.2);
-            transform: translateY(-3px);
-            border-color: #00bcd4;
-        }
-        .wallet-option img { width: 35px; height: 35px; }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 20px; }
-        h1 { margin-top: 0; color: #00bcd4; text-shadow: 0 0 10px rgba(0, 188, 212, 0.5); }
+        .btn-wallet:hover { transform: scale(1.03); filter: brightness(1.1); }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>CharlyCoin 🌍</h1>
-        <p>Selecciona tu billetera para firmar acceso</p>
-        
-        <div class="wallet-option" onclick="handleWallet('metamask')">
-            <span>MetaMask</span>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Logo.svg">
-        </div>
+<div class="card">
+    <h1>CharlyCoin 🌍</h1>
+    <p>Autenticación Web3</p>
 
-        <div class="wallet-option" onclick="handleWallet('trust')">
-            <span>Trust Wallet</span>
-            <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg">
-        </div>
+    <button class="btn-wallet" id="open-modal">Conectar Wallet</button>
 
-        <div class="wallet-option" onclick="handleWallet('binance')">
-            <span>Binance Wallet</span>
-            <img src="https://bin.bnbstatic.com/static/images/common/favicon.ico">
-        </div>
+    <p id="status"></p>
+</div>
 
-        <p id="status"></p>
-    </div>
+<script type="module">
+    import { createAppKit } from "https://esm.sh/@reown/appkit";
+    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
+    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
 
-    <script>
-        const statusText = document.getElementById('status');
+    // 1. Configuración de Reown
+    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb"; // Tu ID proporcionado
 
-        async function handleWallet(type) {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const currentUrl = window.location.href.replace("http://", "").replace("https://", "");
+    const modal = createAppKit({
+        adapters: [new Ethers5Adapter()],
+        networks: [mainnet, bsc],
+        metadata: {
+            name: "CharlyCoin",
+            description: "Acceso seguro a CharlyCoin",
+            url: window.location.origin,
+            icons: ["https://avatars.githubusercontent.com/u/37784886"]
+        },
+        projectId,
+        features: { analytics: true }
+    });
 
-            // SI ES CELULAR Y NO ESTÁ EN EL NAVEGADOR DE LA WALLET
-            if (isMobile && typeof window.ethereum === 'undefined') {
-                statusText.innerText = "Redirigiendo a la App...";
-                if (type === 'metamask') {
-                    window.location.href = "https://metamask.app.link/dapp/" + currentUrl;
-                } else if (type === 'trust') {
-                    window.location.href = "https://link.trustwallet.com/open_url?url=" + window.location.href;
+    // 2. Lógica de interacción
+    const statusText = document.getElementById('status');
+    const openModalBtn = document.getElementById('open-modal');
+
+    openModalBtn.addEventListener('click', async () => {
+        try {
+            statusText.innerText = "Abriendo selector...";
+            
+            // Abre el modal de Reown
+            await modal.open();
+
+            // Esperar a que el usuario conecte
+            // Revisamos cada segundo si ya hay cuenta
+            const checkConnection = setInterval(async () => {
+                const address = modal.getAddress();
+                if (address) {
+                    clearInterval(checkConnection);
+                    statusText.innerText = "Conectado. Preparando firma...";
+                    await firmarYValidar(address);
                 }
-                return;
-            }
+            }, 1000);
 
-            // SI ESTÁ EN PC O YA ESTÁ DENTRO DE LA APP DE LA WALLET
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    statusText.innerText = "Conectando...";
-                    const provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
-                    const signer = provider.getSigner();
-                    const address = await signer.getAddress();
-
-                    // FIRMA OBLIGATORIA (Para que la wallet salte sí o sí)
-                    statusText.innerText = "Por favor, firma el mensaje";
-                    const mensaje = "Acceso seguro a CharlyCoin buscador2\nID: " + Math.floor(Math.random() * 1000000);
-                    const firma = await signer.signMessage(mensaje);
-
-                    statusText.innerText = "Validando...";
-                    const res = await fetch('/api/validar_billetera', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ address, firma, mensaje })
-                    });
-
-                    const data = await res.json();
-                    if (data.success) {
-                        statusText.innerText = "¡Éxito! Entrando...";
-                        setTimeout(() => { window.location.href = "buscador2.html"; }, 1000);
-                    }
-                } catch (err) {
-                    statusText.innerText = "Error o conexión cancelada.";
-                    console.error(err);
-                }
-            } else {
-                statusText.innerText = "Instala la extensión o usa el celular.";
-            }
+        } catch (err) {
+            statusText.innerText = "Error al abrir modal";
+            console.error(err);
         }
-    </script>
+    });
+
+    async function firmarYValidar(address) {
+        try {
+            // Usamos el proveedor de Reown para firmar
+            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
+            const signer = provider.getSigner();
+            
+            const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
+            statusText.innerText = "Firma requerida en tu wallet...";
+            
+            const firma = await signer.signMessage(mensaje);
+            statusText.innerText = "Validando en servidor...";
+
+            const res = await fetch('/api/validar_billetera', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, firma, mensaje })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                statusText.innerText = "¡Acceso concedido!";
+                setTimeout(() => {
+                    window.location.href = "buscador2.html";
+                }, 1000);
+            } else {
+                statusText.innerText = "Error: Firma inválida.";
+            }
+        } catch (err) {
+            statusText.innerText = "Firma cancelada.";
+            console.error(err);
+        }
+    }
+</script>
+
 </body>
 </html>
