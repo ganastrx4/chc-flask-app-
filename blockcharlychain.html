@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CharlyScan - Live Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; }
+        .neon-text { color: #38bdf8; text-shadow: 0 0 10px #38bdf8; }
+        .mining-anim { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold neon-text">CHARLYSCAN <span class="text-sm font-light text-slate-400">v1.0</span></h1>
+            <div class="text-right">
+                <p class="text-slate-400">Estado de Red: <span class="text-green-400 mining-anim">● EN VIVO</span></p>
+                <p id="total-blocks" class="text-2xl font-mono">Bloques: 0</p>
+            </div>
+        </header>
+
+        <div class="card p-6 mb-8">
+            <label class="block mb-2 text-sm text-slate-400">Rastreador de Wallet Personal:</label>
+            <input type="text" id="wallet-input" placeholder="Pega tu dirección pública aquí..." 
+                   class="w-full bg-slate-900 border border-slate-700 p-3 rounded-lg focus:outline-none focus:border-sky-500 text-sky-400 font-mono">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6 text-center">
+                <h3 class="text-slate-400 mb-2 uppercase text-xs tracking-widest">Mi Saldo Minado</h3>
+                <p id="user-balance" class="text-3xl font-bold text-yellow-400">0.00 CHC</p>
+            </div>
+            <div class="card p-6 text-center">
+                <h3 class="text-slate-400 mb-2 uppercase text-xs tracking-widest">Circulación Total</h3>
+                <p id="total-supply" class="text-3xl font-bold text-sky-400">0 CHC</p>
+            </div>
+            <div class="card p-6 text-center">
+                <h3 class="text-slate-400 mb-2 uppercase text-xs tracking-widest">Dificultad Actual</h3>
+                <p class="text-3xl font-bold text-purple-400">4 Ceros</p>
+            </div>
+        </div>
+
+        <div class="card overflow-hidden">
+            <div class="p-4 border-b border-slate-700 bg-slate-800/50">
+                <h2 class="font-bold">Últimos Bloques Minados</h2>
+            </div>
+            <table class="w-full text-left">
+                <thead class="bg-slate-800 text-slate-400 text-sm">
+                    <tr>
+                        <th class="p-4">Bloque</th>
+                        <th class="p-4">Minero (Receptor)</th>
+                        <th class="p-4">Monto</th>
+                        <th class="p-4">Hash</th>
+                    </tr>
+                </thead>
+                <tbody id="blockchain-table">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const response = await fetch('http://localhost:8000/api/blockchain');
+                const chain = await response.json();
+                const myWallet = document.getElementById('wallet-input').value.trim();
+                
+                let userBalance = 0;
+                let totalSupply = 0;
+                let tableHtml = '';
+
+                chain.reverse().forEach(block => {
+                    const tx = block.transacciones[0];
+                    if(tx) {
+                        totalSupply += tx.monto;
+                        if(tx.receptor === myWallet) {
+                            userBalance += tx.monto;
+                        }
+
+                        tableHtml += `
+                            <tr class="border-b border-slate-800 hover:bg-slate-700/30 transition">
+                                <td class="p-4 font-mono text-sky-400">#${block.indice}</td>
+                                <td class="p-4 font-mono text-xs text-slate-300">${tx.receptor.substring(0,20)}...</td>
+                                <td class="p-4 font-bold text-yellow-500">+${tx.monto.toLocaleString()} CHC</td>
+                                <td class="p-4 font-mono text-xs text-slate-500">${block.hash.substring(0,15)}...</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                document.getElementById('blockchain-table').innerHTML = tableHtml;
+                document.getElementById('user-balance').innerText = userBalance.toLocaleString() + ' CHC';
+                document.getElementById('total-supply').innerText = totalSupply.toLocaleString() + ' CHC';
+                document.getElementById('total-blocks').innerText = 'Bloques: ' + (chain.length);
+
+            } catch (err) {
+                console.error("Error conectando al backend:", err);
+            }
+        }
+
+        // Actualizar cada 5 segundos
+        setInterval(updateDashboard, 5000);
+        updateDashboard();
+    </script>
+</body>
+</html>
