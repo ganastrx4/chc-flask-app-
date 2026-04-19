@@ -51,7 +51,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="card p-8 bg-gradient-to-br from-gray-900 to-black">
+            <div class="card p-8 bg-gradient-to-br from-gray-900 to-black border-l-4 border-l-yellow-500">
                 <h3 class="text-slate-400 text-xs font-bold uppercase mb-4 tracking-widest">Mi Saldo Acumulado</h3>
                 <p id="user-balance" class="text-4xl font-black text-yellow-400 font-mono">0.00 CHC</p>
                 <p class="text-slate-500 text-xs mt-2">Basado en bloques validados</p>
@@ -71,7 +71,7 @@
         <div class="card overflow-hidden">
             <div class="p-5 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
                 <h2 class="font-bold text-lg text-slate-200">Historial Reciente de la Blockchain</h2>
-                <span class="text-xs text-slate-500">Se actualiza cada 5s</span>
+                <span class="text-xs text-slate-500 tracking-tighter">NODO MAESTRO: CHIMALHUACÁN, MX</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -84,19 +84,36 @@
                         </tr>
                     </thead>
                     <tbody id="blockchain-table" class="divide-y divide-slate-800">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // Cambia 'localhost' por la IP de tu PC si lo vas a ver desde el celular
-        const API_URL = 'https://8250-177-245-65-11.ngrok-free.app/api/blockchain';
+        // ========================================================
+        // ⚠️ IMPORTANTE: PEGA TU DIRECCIÓN DE NGROK AQUÍ ABAJO
+        // Debe empezar con https:// y terminar SIN la barra final /
+        // Ejemplo: const NGROK_URL = 'https://1234-abcd.ngrok-free.app';
+        // ========================================================
+        const NGROK_URL = 'https://TU_URL_DE_NGROK_AQUI.ngrok-free.app';
+        
+        const API_URL = `${NGROK_URL}/api/blockchain`;
 
         async function updateDashboard() {
+            if (NGROK_URL.includes("TU_URL")) {
+                document.getElementById('total-blocks').innerText = 'Configurar NGROK';
+                return;
+            }
+
             try {
-                const response = await fetch(API_URL);
+                // Añadimos un header para evitar la pantalla de advertencia de ngrok
+                const response = await fetch(API_URL, {
+                    headers: {
+                        "ngrok-skip-browser-warning": "true"
+                    }
+                });
+                
                 if (!response.ok) throw new Error('Servidor fuera de línea');
                 
                 const chain = await response.json();
@@ -106,7 +123,6 @@
                 let totalSupply = 0;
                 let tableHtml = '';
 
-                // Invertimos la cadena para ver lo más nuevo arriba
                 const recentBlocks = [...chain].reverse();
 
                 recentBlocks.forEach(block => {
@@ -115,12 +131,10 @@
                         const monto = parseFloat(tx.monto);
                         totalSupply += monto;
 
-                        // Sumar al saldo del usuario si coincide la wallet
                         if(myWallet !== "" && tx.receptor === myWallet) {
                             userBalance += monto;
                         }
 
-                        // Generar fila de la tabla
                         tableHtml += `
                             <tr class="hover:bg-slate-800/40 transition-all group">
                                 <td class="p-5 font-mono text-cyan-500 font-bold text-lg">#${block.indice}</td>
@@ -130,17 +144,17 @@
                                     </span>
                                 </td>
                                 <td class="p-5 font-black text-yellow-500">+${monto.toLocaleString()}</td>
-                                <td class="p-5 font-mono text-[10px] text-slate-600">${block.hash}</td>
+                                <td class="p-5 font-mono text-[10px] text-slate-600">${block.hash.substring(0,32)}...</td>
                             </tr>
                         `;
                     }
                 });
 
-                // Actualizar interfaz
                 document.getElementById('blockchain-table').innerHTML = tableHtml || '<tr><td colspan="4" class="p-10 text-center text-slate-500">Esperando primer bloque...</td></tr>';
                 document.getElementById('user-balance').innerText = userBalance.toLocaleString(undefined, {minimumFractionDigits: 2}) + ' CHC';
                 document.getElementById('total-supply').innerText = totalSupply.toLocaleString() + ' CHC';
                 document.getElementById('total-blocks').innerText = 'Bloques: ' + chain.length;
+                document.getElementById('total-blocks').classList.remove('text-red-500');
 
             } catch (err) {
                 console.error("Error de conexión:", err);
@@ -149,17 +163,13 @@
             }
         }
 
-        // NUEVO: Escuchar tecla ENTER para búsqueda instantánea
         document.getElementById('wallet-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 updateDashboard();
             }
         });
 
-        // Auto-actualización cada 5 segundos
         setInterval(updateDashboard, 5000);
-        
-        // Carga inicial
         updateDashboard();
     </script>
 </body>
