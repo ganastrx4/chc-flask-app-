@@ -1,74 +1,119 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CharlyCoin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin - NewWorld Network</title>
 
-<!-- 🔥 ESTA ES LA VERSION CORRECTA -->
-<script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.min.js"></script>
+    <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.min.js"></script>
 
-<style>
-body{
-    background:#0d1117;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    font-family:sans-serif;
-}
-button{
-    padding:15px;
-    background:#00bcd4;
-    border:none;
-    border-radius:10px;
-    font-weight:bold;
-}
-</style>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0d1117, #000);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #00bcd4;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+        }
+        h1 { color: #00bcd4; margin-bottom: 20px; }
+        button {
+            padding: 15px 30px;
+            background: #00bcd4;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+        button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 15px #00bcd4;
+        }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; font-size: 0.9rem; }
+    </style>
 </head>
-
 <body>
 
-<button id="login">Login World ID</button>
+<div class="card">
+    <h1>CharlyCoin 🌍</h1>
+    <p>Verificación de Humanidad</p>
+    <button id="login">Login con World ID</button>
+    <p id="status">Esperando interacción...</p>
+</div>
 
 <script>
-const API = "https://binance-bot-2kbp.onrender.com";
+    const API = "https://binance-bot-2kbp.onrender.com";
+    const statusText = document.getElementById("status");
+    const loginBtn = document.getElementById("login");
 
-// 🔥 SIN INIT, SIN WAIT, SIN ERRORES
-document.getElementById("login").onclick = () => {
-
-    if (!window.IDKit) {
-        alert("❌ IDKit no cargó");
-        return;
-    }
-
-    window.IDKit.open({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-        action: "login",
-        signal: "charlycoin_user",
-
-        onSuccess: async (result) => {
-
-            console.log("OK:", result);
-
-            // 🔥 ENVÍA A RENDER
-            await fetch(API + "/verify-world", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(result)
-            });
-
-            alert("✅ Verificado");
-
-        },
-
-        onError: (err) => {
-            console.log(err);
-            alert("Error o cancelado");
+    loginBtn.onclick = () => {
+        if (!window.IDKit) {
+            alert("❌ El sistema de seguridad no ha cargado. Reintenta.");
+            return;
         }
-    });
-};
+
+        window.IDKit.open({
+            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+            action: "login",
+            signal: "charlycoin_user",
+            verification_level: "device",
+
+            onSuccess: async (result) => {
+                // Bloqueamos el botón y avisamos
+                loginBtn.disabled = true;
+                statusText.innerText = "Verificado en App. Validando en servidor...";
+
+                try {
+                    // Verificamos que el objeto result tenga los datos necesarios para evitar el error de 'payload'
+                    if (!result || !result.proof) {
+                        throw new Error("Datos de verificación incompletos.");
+                    }
+
+                    const response = await fetch(`${API}/verify-world`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(result)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        statusText.innerText = "✅ ¡Acceso Concedido!";
+                        alert("Verificación Exitosa");
+                        window.location.href = "buscador2.html";
+                    } else {
+                        throw new Error(data.message || "Fallo en la validación del servidor.");
+                    }
+                } catch (err) {
+                    console.error("Error en el proceso:", err);
+                    statusText.innerText = "❌ Error: " + err.message;
+                    loginBtn.disabled = false;
+                }
+            },
+
+            onError: (err) => {
+                console.log("Error de IDKit:", err);
+                statusText.innerText = "❌ Verificación cancelada o fallida.";
+            }
+        });
+    };
 </script>
 
 </body>
