@@ -6,6 +6,7 @@
     <title>CharlyCoin - Acceso Seguro</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@worldcoin/idkit-standalone"></script>
 
     <style>
         body {
@@ -29,9 +30,9 @@
             max-width: 400px;
             box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
         }
-        h1 { color: #00bcd4; margin-bottom: 20px; }
-        .btn-wallet {
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
+        h1 { color: #00bcd4; margin-bottom: 10px; }
+        p { margin-bottom: 20px; opacity: 0.8; }
+        .btn-wallet, .btn-world {
             border: none;
             color: white;
             padding: 15px 30px;
@@ -41,18 +42,28 @@
             cursor: pointer;
             transition: 0.3s;
             width: 100%;
+            margin-bottom: 10px;
         }
-        .btn-wallet:hover { transform: scale(1.03); filter: brightness(1.1); }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; }
+        .btn-wallet {
+            background: linear-gradient(90deg, #00bcd4, #9c27b0);
+        }
+        .btn-world {
+            background: #ffffff;
+            color: #000;
+            display: none; /* Se muestra después de la wallet */
+        }
+        .btn-wallet:hover, .btn-world:hover { transform: scale(1.03); filter: brightness(1.1); }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>CharlyCoin 🌍</h1>
-    <p>Autenticación Web3</p>
+    <p>NewWorld Network Autenticación</p>
 
-    <button class="btn-wallet" id="open-modal">Conectar Wallet</button>
+    <button class="btn-wallet" id="open-modal">1. Conectar Wallet</button>
+    <button class="btn-world" id="world-id-btn">2. Verificar Humanidad</button>
 
     <p id="status"></p>
 </div>
@@ -62,8 +73,28 @@
     import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
     import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
 
-    // 1. Configuración de Reown
-    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb"; // Tu ID proporcionado
+    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb";
+    const statusText = document.getElementById('status');
+    const openModalBtn = document.getElementById('open-modal');
+    const worldBtn = document.getElementById('world-id-btn');
+
+    // Inicializar World ID Kit
+    IDKit.init({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        action: "login", // Tu Action Identifier
+        verification_level: "device",
+        onSuccess: (result) => {
+            statusText.innerText = "Humanidad confirmada. Redirigiendo...";
+            // Aquí puedes enviar 'result' a tu backend si quieres validar el proof
+            setTimeout(() => {
+                window.location.href = "buscador2.html";
+            }, 1500);
+        },
+        onError: (error) => {
+            console.error("Error WorldID:", error);
+            statusText.innerText = "Error en Verificación Mundial.";
+        }
+    });
 
     const modal = createAppKit({
         adapters: [new Ethers5Adapter()],
@@ -78,67 +109,47 @@
         features: { analytics: true }
     });
 
-    // 2. Lógica de interacción
-    const statusText = document.getElementById('status');
-    const openModalBtn = document.getElementById('open-modal');
-
     openModalBtn.addEventListener('click', async () => {
         try {
             statusText.innerText = "Abriendo selector...";
-            
-            // Abre el modal de Reown
             await modal.open();
 
-            // Esperar a que el usuario conecte
-            // Revisamos cada segundo si ya hay cuenta
             const checkConnection = setInterval(async () => {
                 const address = modal.getAddress();
                 if (address) {
                     clearInterval(checkConnection);
-                    statusText.innerText = "Conectado. Preparando firma...";
+                    statusText.innerText = "Wallet conectada. Firma el mensaje...";
                     await firmarYValidar(address);
                 }
             }, 1000);
-
         } catch (err) {
-            statusText.innerText = "Error al abrir modal";
-            console.error(err);
+            statusText.innerText = "Error al conectar wallet.";
         }
     });
 
     async function firmarYValidar(address) {
         try {
-            // Usamos el proveedor de Reown para firmar
             const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
             const signer = provider.getSigner();
-            
             const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
-            statusText.innerText = "Firma requerida en tu wallet...";
             
             const firma = await signer.signMessage(mensaje);
-            statusText.innerText = "Validando en servidor...";
+            statusText.innerText = "Firma exitosa. Ahora verifica con World ID.";
+            
+            // Ocultamos botón de wallet y mostramos el de World ID
+            openModalBtn.style.display = "none";
+            worldBtn.style.display = "block";
 
-            const res = await fetch('/api/validar_billetera', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address, firma, mensaje })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                statusText.innerText = "¡Acceso concedido!";
-                setTimeout(() => {
-                    window.location.href = "buscador2.html";
-                }, 1000);
-            } else {
-                statusText.innerText = "Error: Firma inválida.";
-            }
+            // Opcional: Podrías enviar la firma a tu API de Flask aquí
         } catch (err) {
             statusText.innerText = "Firma cancelada.";
-            console.error(err);
         }
     }
+
+    // Evento para abrir World ID
+    worldBtn.addEventListener('click', () => {
+        IDKit.open();
+    });
 </script>
 
 </body>
