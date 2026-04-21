@@ -1,46 +1,50 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <title>CharlyCoin - NewWorld Network</title>
     <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.js"></script>
 </head>
 <body>
 
-    <button id="world-id-button">Verificar con World ID</button>
+    <button id="world-id-button" style="display:none; padding: 15px; background: #00bcd4; color: white; border-radius: 10px; border: none; cursor: pointer;">
+        Verificar con World ID
+    </button>
+    <p id="loading-msg">Cargando sistema de seguridad...</p>
 
     <script>
-        // Este es el equivalente al "handleVerify" de tu código
-        const verifyProof = async (proof) => {
-            console.log("Prueba recibida:", proof);
-            
-            const response = await fetch("https://tu-app-en-render.com/verify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(proof),
-            });
+        // Función para esperar a que IDKit aparezca en el sistema
+        function iniciarCuandoEsteListo() {
+            if (window.IDKit) {
+                console.log("IDKit detectado correctamente.");
+                document.getElementById('loading-msg').style.display = 'none';
+                document.getElementById('world-id-button').style.display = 'block';
 
-            if (response.ok) {
-                alert("¡Verificación de Humanidad Exitosa!");
+                window.IDKit.init({
+                    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+                    action: "login",
+                    onSuccess: (result) => {
+                        console.log("Éxito:", result);
+                        window.location.href = "buscador2.html";
+                    },
+                    verification_level: "device",
+                });
             } else {
-                throw new Error("La validación falló en el servidor");
+                // Si no está listo, reintentar en 100 milisegundos
+                setTimeout(iniciarCuandoEsteListo, 100);
             }
-        };
+        }
 
-        // Inicializar el Widget (Equivalente al <IDKitWidget>)
-        window.IDKit.init({
-            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
-            action: "login", // Tu Action ID del portal
-            signal: "user_session_001", // El 'signal' que pusiste en tu código
-            onSuccess: (result) => {
-                // Esto se ejecuta después de que verifyProof tiene éxito
-                window.location.href = "buscador2.html";
-            },
-            handleVerify: verifyProof, // Aquí conectamos la lógica de validación
-            verification_level: "device",
-        });
+        // Lanzar la comprobación
+        iniciarCuandoEsteListo();
 
-        // Evento para abrir el modal al dar clic
+        // Configurar el clic del botón
         document.getElementById("world-id-button").addEventListener("click", () => {
-            window.IDKit.open();
+            if (window.IDKit) {
+                window.IDKit.open();
+            } else {
+                alert("El sistema de World ID aún no está listo. Reintenta en un segundo.");
+            }
         });
     </script>
 </body>
