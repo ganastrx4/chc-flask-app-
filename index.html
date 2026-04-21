@@ -1,87 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - Acceso Seguro</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            background: radial-gradient(circle at center, #0d1117, #000);
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid #00bcd4;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
-        }
-        h1 { color: #00bcd4; margin-bottom: 20px; }
-        .btn-main {
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .btn-main:hover { transform: scale(1.03); filter: brightness(1.1); }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h1>CharlyCoin 🌍</h1>
-    <p>NewWorld Network</p>
-
-    <button class="btn-main" id="world-id-btn">Verificar con World ID</button>
-    
-    <button class="btn-main" id="open-modal" style="display:none;">Conectar Wallet</button>
-
-    <p id="status">Esperando verificación...</p>
-</div>
-
 <script>
-    function iniciarWorldID() {
-        if (window.IDKit) {
-            window.IDKit.init({
-                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                action: "login", 
-                verification_level: "device",
-                // Esto ayuda a que la App identifique el origen del logo
-                bridge_url: "", 
-                onSuccess: (result) => {
-                    console.log("Verificado");
-                    window.location.href = "buscador2.html";
-                }
-            });
-            console.log("IDKit Configurado");
-        } else {
-            setTimeout(iniciarWorldID, 100);
-        }
-    }
-    iniciarWorldID();
-</script>
+let idkit;
 
-</body>
-</html>
+function iniciarWorldID() {
+    if (window.IDKit) {
+
+        idkit = window.IDKit.init({
+            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+            action: "login",
+            verification_level: "device",
+            signal: "charlycoin_login",
+
+            onSuccess: (result) => {
+                console.log("Verificado:", result);
+                document.getElementById("status").innerText = "✅ Verificado correctamente";
+                
+                // Redirección después de validar
+                setTimeout(() => {
+                    window.location.href = "buscador2.html";
+                }, 1500);
+            },
+
+            onError: (error) => {
+                console.error(error);
+                document.getElementById("status").innerText = "❌ Error en verificación";
+            }
+        });
+
+        console.log("IDKit listo");
+
+    } else {
+        setTimeout(iniciarWorldID, 100);
+    }
+}
+
+iniciarWorldID();
+
+// BOTÓN
+document.getElementById("world-id-btn").addEventListener("click", () => {
+    if (idkit) {
+        idkit.open(); // 🔥 ESTE ES EL QUE TE FALTABA
+    }
+});
+</script>
