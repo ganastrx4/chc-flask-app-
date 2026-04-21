@@ -2,50 +2,123 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CharlyCoin - NewWorld Network</title>
+
     <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0d1117, #000);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #00bcd4;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+        }
+        h1 { color: #00bcd4; margin-bottom: 10px; }
+        p { margin-bottom: 25px; opacity: 0.8; }
+        
+        .btn-world {
+            background: #ffffff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            display: none; /* Se activa cuando IDKit carga */
+        }
+        .btn-world:hover {
+            transform: scale(1.03);
+            background: #f0f0f0;
+        }
+        #status {
+            margin-top: 20px;
+            color: #00bcd4;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
 
-    <button id="world-id-button" style="display:none; padding: 15px; background: #00bcd4; color: white; border-radius: 10px; border: none; cursor: pointer;">
-        Verificar con World ID
+<div class="card">
+    <h1>CharlyCoin 🌍</h1>
+    <p>Acceso a NewWorld Network</p>
+
+    <button class="btn-world" id="world-id-button">
+        Verificar Humanidad
     </button>
-    <p id="loading-msg">Cargando sistema de seguridad...</p>
 
-    <script>
-        // Función para esperar a que IDKit aparezca en el sistema
-        function iniciarCuandoEsteListo() {
-            if (window.IDKit) {
-                console.log("IDKit detectado correctamente.");
-                document.getElementById('loading-msg').style.display = 'none';
-                document.getElementById('world-id-button').style.display = 'block';
+    <p id="status">Iniciando escudo de seguridad...</p>
+</div>
 
-                window.IDKit.init({
-                    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                    action: "login",
-                    onSuccess: (result) => {
-                        console.log("Éxito:", result);
+<script>
+    const statusText = document.getElementById('status');
+    const worldBtn = document.getElementById('world-id-button');
+
+    // Función que vigila la carga de IDKit para evitar el error de "undefined"
+    function inicializarApp() {
+        if (window.IDKit) {
+            console.log("IDKit cargado exitosamente.");
+            statusText.innerText = "Sistema listo para autenticación.";
+            worldBtn.style.display = "block";
+
+            // CONFIGURACIÓN OFICIAL WORLD ID 4.0
+            window.IDKit.init({
+                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+                action: "login", // Asegúrate que este sea el 'Identifier' que guardaste
+                verification_level: "device",
+                onSuccess: (result) => {
+                    console.log("Verificación completa:", result);
+                    statusText.innerText = "¡Acceso concedido!";
+                    
+                    // Redirección a tu buscador de CharlyCoin
+                    setTimeout(() => {
                         window.location.href = "buscador2.html";
-                    },
-                    verification_level: "device",
-                });
-            } else {
-                // Si no está listo, reintentar en 100 milisegundos
-                setTimeout(iniciarCuandoEsteListo, 100);
-            }
+                    }, 1500);
+                },
+                onError: (error) => {
+                    console.error("Error de WorldID:", error);
+                    statusText.innerText = "Error en la verificación.";
+                }
+            });
+        } else {
+            // Reintenta cada 100ms si aún no carga el script externo
+            setTimeout(inicializarApp, 100);
         }
+    }
 
-        // Lanzar la comprobación
-        iniciarCuandoEsteListo();
+    // Ejecutar la espera de carga
+    inicializarApp();
 
-        // Configurar el clic del botón
-        document.getElementById("world-id-button").addEventListener("click", () => {
-            if (window.IDKit) {
-                window.IDKit.open();
-            } else {
-                alert("El sistema de World ID aún no está listo. Reintenta en un segundo.");
-            }
-        });
-    </script>
+    // Evento de clic para abrir el modal nativo
+    worldBtn.addEventListener('click', () => {
+        try {
+            window.IDKit.open();
+        } catch (err) {
+            console.error("Fallo al abrir IDKit:", err);
+            statusText.innerText = "Reintenta abrir la verificación.";
+        }
+    });
+</script>
+
 </body>
 </html>
