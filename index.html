@@ -61,64 +61,26 @@
     <p id="status">Esperando verificación...</p>
 </div>
 
-<script type="module">
-    import { createAppKit } from "https://esm.sh/@reown/appkit";
-    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
-    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
-
-    const statusText = document.getElementById('status');
-    const worldBtn = document.getElementById('world-id-btn');
-    const walletBtn = document.getElementById('open-modal');
-
-    // 1. Inicializar World ID (Para que el portal te apruebe)
-    async function initWorldID() {
+<script>
+    function iniciarWorldID() {
         if (window.IDKit) {
             window.IDKit.init({
                 app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
                 action: "login", 
                 verification_level: "device",
+                // Esto ayuda a que la App identifique el origen del logo
+                bridge_url: "", 
                 onSuccess: (result) => {
-                    statusText.innerText = "¡Humano verificado! Ahora conecta tu wallet.";
-                    worldBtn.style.display = "none";
-                    walletBtn.style.display = "block";
+                    console.log("Verificado");
+                    window.location.href = "buscador2.html";
                 }
             });
+            console.log("IDKit Configurado");
         } else {
-            setTimeout(initWorldID, 100);
+            setTimeout(iniciarWorldID, 100);
         }
     }
-    initWorldID();
-
-    worldBtn.onclick = () => window.IDKit.open();
-
-    // 2. Configuración de tu Reown (Tu código original)
-    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb";
-    const modal = createAppKit({
-        adapters: [new Ethers5Adapter()],
-        networks: [mainnet, bsc],
-        metadata: {
-            name: "CharlyCoin",
-            description: "Acceso seguro a CharlyCoin",
-            url: window.location.origin,
-            icons: ["https://avatars.githubusercontent.com/u/37784886"]
-        },
-        projectId
-    });
-
-    walletBtn.onclick = async () => {
-        statusText.innerText = "Abriendo wallet...";
-        await modal.open();
-        
-        const check = setInterval(() => {
-            const address = modal.getAddress();
-            if (address) {
-                clearInterval(check);
-                statusText.innerText = "Conectado: " + address.substring(0,6) + "...";
-                // Aquí podrías redirigir a buscador2.html
-                setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
-            }
-        }, 1000);
-    };
+    iniciarWorldID();
 </script>
 
 </body>
