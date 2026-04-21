@@ -29,71 +29,35 @@
     <p id="status"></p>
 </div>
 
-<script type="module">
-    import { createAppKit } from "https://esm.sh/@reown/appkit";
-    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
-    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
 
-    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb";
-    const statusText = document.getElementById('status');
-    const openModalBtn = document.getElementById('open-modal');
-    const worldBtn = document.getElementById('world-id-btn');
+<script>
+  // Inicializar el MiniKit
+  window.onload = async () => {
+    const { MiniKit } = window.MiniKit;
+    MiniKit.install(); // Esto activa la conexión con la ventanita de la imagen
+  };
 
-    // CONFIGURACIÓN DE IDKIT (Accediendo mediante window para asegurar detección)
-    window.onload = function() {
-        if (window.IDKit) {
-            window.IDKit.init({
-                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                action: "login",
-                onSuccess: (result) => {
-                    statusText.innerText = "¡Humano verificado! Entrando...";
-                    setTimeout(() => { window.location.href = "buscador2.html"; }, 1500);
-                },
-            });
-        } else {
-            console.error("IDKit no cargó correctamente.");
+  async function solicitarPago() {
+    const { MiniKit } = window.MiniKit;
+
+    // Esto es lo que dispara la ventana de "Permitir transacción"
+    const { finalPayload } = await MiniKit.commands.pay({
+      reference: "pago_charlycoin_001",
+      to: "0xTuDireccionDeBilletera", // Tu wallet donde recibes
+      tokens: [
+        {
+          symbol: "WLD",
+          amount: "0.142208", // Como en tu imagen
         }
-    };
-
-    const modal = createAppKit({
-        adapters: [new Ethers5Adapter()],
-        networks: [mainnet, bsc],
-        metadata: {
-            name: "CharlyCoin",
-            url: window.location.origin,
-            icons: ["https://avatars.githubusercontent.com/u/37784886"]
-        },
-        projectId
+      ],
+      description: "Recibir CHC - NewWorld Network",
     });
 
-    openModalBtn.addEventListener('click', async () => {
-        statusText.innerText = "Abriendo selector...";
-        await modal.open();
-        const interval = setInterval(() => {
-            const address = modal.getAddress();
-            if (address) {
-                clearInterval(interval);
-                firmar(address);
-            }
-        }, 1000);
-    });
-
-    async function firmar(address) {
-        try {
-            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
-            const signer = provider.getSigner();
-            await signer.signMessage("Acceso CharlyCoin");
-            statusText.innerText = "Wallet lista. Ahora haz el paso 2.";
-            openModalBtn.style.display = "none";
-            worldBtn.style.display = "block";
-        } catch (e) { statusText.innerText = "Firma fallida."; }
+    if (finalPayload.status === "success") {
+      alert("¡Transacción permitida!");
     }
-
-    worldBtn.addEventListener('click', () => {
-        if (window.IDKit) {
-            window.IDKit.open();
-        }
-    });
+  }
 </script>
 
 </body>
