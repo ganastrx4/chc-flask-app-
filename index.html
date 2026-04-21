@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - NewWorld Network</title>
+    <title>CharlyCoin - Acceso Seguro</title>
 
-    <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
     <style>
         body {
@@ -16,7 +16,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
         }
         .card {
             background: rgba(255, 255, 255, 0.05);
@@ -30,90 +30,115 @@
             box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
         }
         h1 { color: #00bcd4; margin-bottom: 20px; }
-        button {
-            padding: 15px 30px;
-            background: #00bcd4;
-            color: white;
+        .btn-wallet {
+            background: linear-gradient(90deg, #00bcd4, #9c27b0);
             border: none;
+            color: white;
+            padding: 15px 30px;
             border-radius: 50px;
-            font-weight: bold;
             font-size: 1.1rem;
+            font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
             width: 100%;
         }
-        button:hover {
-            transform: scale(1.03);
-            box-shadow: 0 0 15px #00bcd4;
-        }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; font-size: 0.9rem; }
+        .btn-wallet:hover { transform: scale(1.03); filter: brightness(1.1); }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>CharlyCoin 🌍</h1>
-    <p>Verificación de Humanidad</p>
-    <button id="login">Login con World ID</button>
-    <p id="status">Esperando interacción...</p>
+    <p>Autenticación Web3</p>
+
+    <button class="btn-wallet" id="open-modal">Conectar Wallet</button>
+
+    <p id="status"></p>
 </div>
 
-<script>
-    const API = "https://binance-bot-2kbp.onrender.com";
-    const statusText = document.getElementById("status");
-    const loginBtn = document.getElementById("login");
+<script type="module">
+    import { createAppKit } from "https://esm.sh/@reown/appkit";
+    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
+    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
 
-    loginBtn.onclick = () => {
-        if (!window.IDKit) {
-            alert("❌ El sistema de seguridad no ha cargado. Reintenta.");
-            return;
-        }
+    // 1. Configuración de Reown
+    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb"; // Tu ID proporcionado
 
-        window.IDKit.open({
-            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-            action: "login",
-            signal: "charlycoin_user",
-            verification_level: "device",
+    const modal = createAppKit({
+        adapters: [new Ethers5Adapter()],
+        networks: [mainnet, bsc],
+        metadata: {
+            name: "CharlyCoin",
+            description: "Acceso seguro a CharlyCoin",
+            url: window.location.origin,
+            icons: ["https://avatars.githubusercontent.com/u/37784886"]
+        },
+        projectId,
+        features: { analytics: true }
+    });
 
-            onSuccess: async (result) => {
-                // Bloqueamos el botón y avisamos
-                loginBtn.disabled = true;
-                statusText.innerText = "Verificado en App. Validando en servidor...";
+    // 2. Lógica de interacción
+    const statusText = document.getElementById('status');
+    const openModalBtn = document.getElementById('open-modal');
 
-                try {
-                    // Verificamos que el objeto result tenga los datos necesarios para evitar el error de 'payload'
-                    if (!result || !result.proof) {
-                        throw new Error("Datos de verificación incompletos.");
-                    }
+    openModalBtn.addEventListener('click', async () => {
+        try {
+            statusText.innerText = "Abriendo selector...";
+            
+            // Abre el modal de Reown
+            await modal.open();
 
-                    const response = await fetch(`${API}/verify-world`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(result)
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        statusText.innerText = "✅ ¡Acceso Concedido!";
-                        alert("Verificación Exitosa");
-                        window.location.href = "buscador2.html";
-                    } else {
-                        throw new Error(data.message || "Fallo en la validación del servidor.");
-                    }
-                } catch (err) {
-                    console.error("Error en el proceso:", err);
-                    statusText.innerText = "❌ Error: " + err.message;
-                    loginBtn.disabled = false;
+            // Esperar a que el usuario conecte
+            // Revisamos cada segundo si ya hay cuenta
+            const checkConnection = setInterval(async () => {
+                const address = modal.getAddress();
+                if (address) {
+                    clearInterval(checkConnection);
+                    statusText.innerText = "Conectado. Preparando firma...";
+                    await firmarYValidar(address);
                 }
-            },
+            }, 1000);
 
-            onError: (err) => {
-                console.log("Error de IDKit:", err);
-                statusText.innerText = "❌ Verificación cancelada o fallida.";
+        } catch (err) {
+            statusText.innerText = "Error al abrir modal";
+            console.error(err);
+        }
+    });
+
+    async function firmarYValidar(address) {
+        try {
+            // Usamos el proveedor de Reown para firmar
+            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
+            const signer = provider.getSigner();
+            
+            const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
+            statusText.innerText = "Firma requerida en tu wallet...";
+            
+            const firma = await signer.signMessage(mensaje);
+            statusText.innerText = "Validando en servidor...";
+
+            const res = await fetch('/api/validar_billetera', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, firma, mensaje })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                statusText.innerText = "¡Acceso concedido!";
+                setTimeout(() => {
+                    window.location.href = "buscador2.html";
+                }, 1000);
+            } else {
+                statusText.innerText = "Error: Firma inválida.";
             }
-        });
-    };
+        } catch (err) {
+            statusText.innerText = "Firma cancelada.";
+            console.error(err);
+        }
+    }
 </script>
 
 </body>
