@@ -6,7 +6,6 @@
 <title>CharlyCoin Login</title>
 
 <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.3.0/dist/idkit-standalone.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
 <style>
 body{
@@ -17,19 +16,16 @@ body{
     align-items:center;
     height:100vh;
     font-family:sans-serif;
-    margin:0;
 }
 .card{
     background:#111;
     padding:30px;
     border-radius:15px;
     text-align:center;
-    width:350px;
-    box-shadow:0 0 20px rgba(0,188,212,0.3);
+    width:300px;
 }
 button{
     padding:12px;
-    margin:10px 0;
     width:100%;
     border:none;
     border-radius:10px;
@@ -38,174 +34,90 @@ button{
     font-weight:bold;
     cursor:pointer;
 }
-button:hover{
-    opacity:0.9;
-}
 #status{
     margin-top:15px;
     color:#00e5ff;
-    min-height:24px;
 }
 </style>
 </head>
 
 <body>
+
 <div class="card">
     <h2>CharlyCoin 🌍</h2>
-
-    <button id="verify">Verificar con World ID</button>
-    <button id="wallet" style="display:none;">Conectar Wallet</button>
-
-    <p id="status">Esperando verificación...</p>
+    <button id="loginBtn">Conectar World ID</button>
+    <p id="status">Listo...</p>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+const API = "https://binance-bot-2kbp.onrender.com";
 
-    const API = "https://binance-bot-2kbp.onrender.com";
+let idkit = null;
 
-    const status = document.getElementById("status");
-    const verifyBtn = document.getElementById("verify");
-    const walletBtn = document.getElementById("wallet");
+// 🔥 ESPERAR A QUE CARGUE IDKIT BIEN
+function waitIDKit() {
+    if (window.IDKit) {
+        initIDKit();
+    } else {
+        setTimeout(waitIDKit, 300);
+    }
+}
 
-    let idkit = null;
-    let proofGlobal = null;
-    let verificado = false;
+function initIDKit() {
 
-    // =========================
-    // INICIALIZAR WORLD ID
-    // =========================
-    function initID() {
+    idkit = window.IDKit.init({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+        action: "login",
+        signal: "charlycoin_user",
 
-        if (window.IDKit && !idkit) {
+        onSuccess: async (proof) => {
 
-            idkit = window.IDKit.init({
-                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                action: "login",
-                signal: "charlycoin_user",
+            document.getElementById("status").innerText = "Verificando...";
 
-                onSuccess: async (proof) => {
+            try {
+                const res = await fetch(`${API}/verify-world`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(proof)
+                });
 
-                    status.innerText = "Verificando humanidad...";
+                const data = await res.json();
 
-                    try {
-                        const res = await fetch(`${API}/verify-world`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(proof)
-                        });
+                if (data.success) {
+                    document.getElementById("status").innerText = "✅ Verificado correctamente";
 
-                        const data = await res.json();
+                    // 🔥 AQUÍ YA FUNCIONA COMO PUF
+                    setTimeout(()=>{
+                        window.location.href = "buscador2.html";
+                    }, 1500);
 
-                        if (data.success) {
-                            verificado = true;
-                            proofGlobal = proof;
-
-                            status.innerText = "✅ Humano verificado";
-                            walletBtn.style.display = "block";
-                        } else {
-                            status.innerText = "❌ Verificación fallida";
-                        }
-
-                    } catch (error) {
-                        console.error(error);
-                        status.innerText = "❌ Error conectando servidor";
-                    }
+                } else {
+                    document.getElementById("status").innerText = "❌ Falló verificación";
                 }
-            });
 
-            status.innerText = "World ID listo";
-
-        } else if (!idkit) {
-            status.innerText = "Cargando World ID...";
-            setTimeout(initID, 300);
+            } catch (e) {
+                document.getElementById("status").innerText = "❌ Error servidor";
+            }
         }
+    });
+
+    document.getElementById("status").innerText = "World ID listo";
+}
+
+// 🔥 CLICK
+document.getElementById("loginBtn").onclick = () => {
+
+    if (!idkit) {
+        document.getElementById("status").innerText = "Cargando World ID...";
+        return;
     }
 
-    initID();
+    idkit.open();
+};
 
-    // =========================
-    // BOTÓN VERIFICAR WORLD ID
-    // =========================
-    verifyBtn.addEventListener("click", () => {
-
-        if (!idkit) {
-            status.innerText = "Cargando World ID...";
-            return;
-        }
-
-        try {
-            idkit.open();
-        } catch (err) {
-            console.error(err);
-            status.innerText = "❌ Error al abrir World ID";
-        }
-    });
-
-    // =========================
-    // BOTÓN WALLET
-    // =========================
-    walletBtn.addEventListener("click", async () => {
-
-        if (!verificado) {
-            status.innerText = "Primero verifica con World ID";
-            return;
-        }
-
-        if (!window.ethereum) {
-            status.innerText = "❌ Instala MetaMask";
-            return;
-        }
-
-        try {
-
-            status.innerText = "Conectando wallet...";
-
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-            await provider.send("eth_requestAccounts", []);
-
-            const signer = provider.getSigner();
-            const address = await signer.getAddress();
-
-            status.innerText = "Solicitando firma...";
-
-            const mensaje = "Login CharlyCoin " + Date.now();
-            const firma = await signer.signMessage(mensaje);
-
-            status.innerText = "Validando acceso...";
-
-            const res = await fetch(`${API}/guardar_usuario`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    wallet: address,
-                    firma: firma,
-                    mensaje: mensaje,
-                    nullifier: proofGlobal.nullifier_hash
-                })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                status.innerText = "🎉 Acceso concedido";
-
-                setTimeout(() => {
-                    window.location.href = "buscador2.html";
-                }, 1500);
-
-            } else {
-                status.innerText = "❌ " + (data.msg || "Acceso denegado");
-            }
-
-        } catch (error) {
-            console.error(error);
-            status.innerText = "❌ Wallet cancelada o error";
-        }
-    });
-
-});
+// INICIAR
+waitIDKit();
 </script>
+
 </body>
 </html>
