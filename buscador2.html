@@ -181,158 +181,115 @@ font-size:14px;
 <script>
 $(document).ready(function(){
 
-$('#searchBtn').click(async function(){
-const symbol = $('#cryptoInput').val().trim();
+    $('#searchBtn').click(async function(){
+        const query = $('#cryptoInput').val().trim();
 
-if(!symbol){
-alert("Escribe token");
-return;
-}
+        if(!query){
+            alert("Ingresa nombre, símbolo o contrato");
+            return;
+        }
 
-const token = await getToken(symbol);
+        $('#cryptoName').text("Buscando...");
+        $('#priceUSD').text("...");
+        $('#cryptoInfo').show();
 
-if(token){
-$('#cryptoName').text(token.name + " (" + token.symbol + ")");
-$('#priceUSD').text(token.price);
-$('#cryptoInfo').show();
-}else{
-alert("Token no encontrado");
-}
-});
+        const token = await searchWorldToken(query);
 
-loadLists();
-loadPairs();
-
-});
-
-/* ===========================
- BUSCAR TOKEN WORLDCHAIN
-=========================== */
-async function getToken(symbol){
-
-try{
-
-const r = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${symbol}`);
-const j = await r.json();
-
-if(!j.pairs) return null;
-
-const pairs = j.pairs.filter(x=>x.chainId=="worldchain");
-
-if(!pairs.length) return null;
-
-const p = pairs[0];
-
-return{
-name:p.baseToken.name,
-symbol:p.baseToken.symbol,
-price:parseFloat(p.priceUsd||0).toFixed(6)
-};
-
-}catch(e){
-return null;
-}
-
-}
-
-/* ===========================
- CARGAR LISTAS
-=========================== */
-async function loadLists(){
-
-try{
-
-const r = await fetch("https://api.dexscreener.com/latest/dex/search?q=worldchain");
-const j = await r.json();
-
-if(!j.pairs) return;
-
-const pairs = j.pairs.filter(x=>x.chainId=="worldchain");
-
-const winners = [...pairs].sort((a,b)=>(b.priceChange?.h24||0)-(a.priceChange?.h24||0));
-const volume = [...pairs].sort((a,b)=>(b.volume?.h24||0)-(a.volume?.h24||0));
-const losers = [...pairs].sort((a,b)=>(a.priceChange?.h24||0)-(b.priceChange?.h24||0));
-
-render("#winners", winners.slice(0,6));
-render("#popular", volume.slice(0,6));
-render("#losers", losers.slice(0,6));
-render("#new", pairs.slice(0,6));
-
-}catch(e){}
-
-}
-
-/* ===========================
- RENDER TABLAS
-=========================== */
-function render(id,data){
-
-let html = `
-<tr>
-<th>Token</th>
-<th>Precio</th>
-<th>24h</th>
-</tr>
-`;
-
-data.forEach(x=>{
-
-let name = x.baseToken.symbol;
-let price = parseFloat(x.priceUsd||0).toFixed(6);
-let chg = parseFloat(x.priceChange?.h24||0).toFixed(2);
-
-html += `
-<tr>
-<td>${name}</td>
-<td>$${price}</td>
-<td class="${chg>=0?'green':'red'}">${chg}%</td>
-</tr>
-`;
+        if(token){
+            $('#cryptoName').text(token.name + " (" + token.symbol + ")");
+            $('#priceUSD').text(token.price);
+        }else{
+            $('#cryptoName').text("No encontrado");
+            $('#priceUSD').text("--");
+        }
+    });
 
 });
 
-$(id).html(html);
+/* ===============================
+ BUSCADOR REAL WORLDCHAIN
+=================================*/
+async function searchWorldToken(query){
 
+    try{
+
+        const isAddress = /^0x[a-fA-F0-9]{40}$/.test(query);
+
+        /* ======================
+           1. BUSCAR ADDRESS
+        ====================== */
+        if(isAddress){
+
+            const r = await fetch(
+              `https://api.dexscreener.com/latest/dex/search?q=${query}`
+            );
+
+            const j = await r.json();
+
+            if(j.pairs && j.pairs.length){
+
+                const found = j.pairs.find(
+                    x =>
+                    x.chainId &&
+                    x.chainId.toLowerCase() === "worldchain"
+                );
+
+                if(found){
+                    return normalizeToken(found);
+                }
+            }
+        }
+
+        /* ======================
+           2. BUSCAR NOMBRE/SIMBOLO
+        ====================== */
+        const r2 = await fetch(
+          `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`
+        );
+
+        const j2 = await r2.json();
+
+        if(j2.pairs && j2.pairs.length){
+
+            const worlds = j2.pairs.filter(
+                x =>
+                x.chainId &&
+                x.chainId.toLowerCase() === "worldchain"
+            );
+
+            /* Coincidencia exacta símbolo */
+            let exact = worlds.find(
+                x => x.baseToken.symbol.toUpperCase() === query.toUpperCase()
+            );
+
+            if(exact) return normalizeToken(exact);
+
+            /* Coincidencia nombre */
+            let nameMatch = worlds.find(
+                x => x.baseToken.name.toUpperCase().includes(query.toUpperCase())
+            );
+
+            if(nameMatch) return normalizeToken(nameMatch);
+
+            /* cualquiera */
+            if(worlds.length) return normalizeToken(worlds[0]);
+        }
+
+        return null;
+
+    }catch(e){
+        console.error(e);
+        return null;
+    }
 }
 
-/* ===========================
- PARES FIJOS WORLDCHAIN
-=========================== */
-const MY_PAIRS = [
-{
-name:"WLD / USDC",
-url:"https://worldscan.org/"
-},
-{
-name:"CHUN / WLD",
-url:"https://worldscan.org/"
-},
-{
-name:"TOKEN / WLD",
-url:"https://worldscan.org/"
-}
-];
-
-function loadPairs(){
-
-let html = `
-<tr>
-<th>Par</th>
-<th>Link</th>
-</tr>
-`;
-
-MY_PAIRS.forEach(p=>{
-html += `
-<tr>
-<td>${p.name}</td>
-<td><a href="${p.url}" target="_blank">Ver</a></td>
-</tr>
-`;
-});
-
-$("#pairs").html(html);
-
+/* =============================== */
+function normalizeToken(p){
+    return {
+        name: p.baseToken?.name || "Token",
+        symbol: p.baseToken?.symbol || "---",
+        price: parseFloat(p.priceUsd || 0).toFixed(8)
+    };
 }
 </script>
 
