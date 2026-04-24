@@ -44,6 +44,18 @@ def get_signature():
     # Retorna la firma para que el Frontend pueda iniciar IDKit
     return jsonify(sign_request(SIGNING_KEY, ACTION))
 
+@app.route('/api/rp-signature', methods=['POST'])
+def get_signature():
+    try:
+        sig_data = sign_request(SIGNING_KEY, ACTION)
+        if sig_data is None:
+            return jsonify({"error": "No se pudo generar la firma. Revisa la SIGNING_KEY."}), 500
+        
+        print(f"Firma generada con éxito: {sig_data['nonce']}") # Esto saldrá en tus logs
+        return jsonify(sig_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/verify-proof', methods=['POST'])
 def verify_proof():
     # Recibe el payload completo de IDKit y lo manda a Worldcoin (Step 5)
