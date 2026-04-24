@@ -1,0 +1,21 @@
+{
+  "manifest_version": 1,
+  "app_id": "app_7686f9027d3e3c0b53d987a3caf1e111",
+  "name": "CHC",
+  "description": "CharlyCoin Mini App",
+  "icons": [
+    {
+      "src": "https://tu-app.onrender.com/static/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "developer_name": "Charly",
+  "permissions": [
+    "wallet",
+    "auth",
+    "payments"
+  ],
+  "platforms": ["web"],
+  "homepage_url": "https://tu-app.onrender.com"
+}
