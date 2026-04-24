@@ -1,105 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>CHC World ID v4</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>CHC - CharlyCoin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            height: 100vh; display: flex; justify-content: center; align-items: center; 
+            background: #000; color: #fff; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        .card { 
+            width: 320px; padding: 40px 20px; text-align: center; 
+            border: 1px solid #00bcd4; border-radius: 28px; 
+            background: linear-gradient(145deg, #0f0f0f, #050505);
+            box-shadow: 0 0 30px rgba(0, 188, 212, 0.1);
+        }
+        h1 { color: #00bcd4; font-size: 35px; margin-bottom: 10px; letter-spacing: 3px; }
+        p { color: #777; font-size: 14px; margin-bottom: 30px; }
+        
+        /* Botón Principal */
+        .btn-main {
+            width: 100%; padding: 16px; border-radius: 50px; border: none;
+            background: #00bcd4; color: #000; font-weight: 800;
+            font-size: 16px; cursor: pointer; transition: 0.3s;
+        }
+        
+        /* Botón Donar (Oculto al inicio) */
+        #btnDonar {
+            display: none; width: 100%; padding: 14px; border-radius: 50px;
+            background: transparent; color: #9c27b0; border: 1px solid #9c27b0;
+            font-weight: bold; margin-top: 15px; cursor: pointer;
+        }
 
-<style>
-body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:#000;
-font-family:Arial;
-color:#fff;
-}
-.card{
-width:320px;
-padding:30px;
-border-radius:22px;
-background:#111;
-border:1px solid #00bcd4;
-text-align:center;
-}
-button{
-width:100%;
-padding:16px;
-border:none;
-border-radius:50px;
-background:#00bcd4;
-font-weight:bold;
-cursor:pointer;
-margin-bottom:10px;
-}
-#status{
-margin-top:15px;
-font-size:13px;
-color:#00bcd4;
-min-height:30px;
-}
-</style>
+        #status { margin-top: 20px; font-size: 12px; color: #00bcd4; opacity: 0.8; }
+        .wallet-text { font-family: monospace; font-size: 10px; color: #4caf50; margin-top: 5px; }
+    </style>
 </head>
 <body>
 
 <div class="card">
-
-<h1>CHC 🌍</h1>
-
-<button id="login">ENTRAR CON WORLD ID</button>
-
-<div id="status">Listo...</div>
-
+    <h1>CHC 🌍</h1>
+    <p id="msg">Conecta tu billetera para entrar</p>
+    
+    <button id="btnEntrar" class="btn-main">CONECTAR Y ENTRAR</button>
+    <button id="btnDonar">🎁 APOYAR PROYECTO (0.1 WLD)</button>
+    
+    <div id="status">Esperando conexión...</div>
 </div>
 
 <script type="module">
-import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
+    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-const status = document.getElementById("status");
+    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const status = document.getElementById("status");
+    const btnEntrar = document.getElementById("btnEntrar");
+    const btnDonar = document.getElementById("btnDonar");
+    const msg = document.getElementById("msg");
 
-await MiniKit.install(APP_ID);
-
-// 1. Escuchamos la respuesta SIEMPRE
-MiniKit.subscribe("walletAuth", async (response) => {
-    if (response.finalPayload) {
-        status.innerText = "Verificando en servidor...";
-        enviarAlBackend(response.finalPayload);
-    }
-});
-
-async function enviarAlBackend(payload) {
-    try {
-        const r = await fetch("/api/verify-proof", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const j = await r.json();
-        if (j.success) {
-            status.innerText = "¡Bienvenido! ✅";
-            setTimeout(() => { location.href = "buscador2.html"; }, 1000);
-        } else {
-            status.innerText = "Error: " + (j.error?.message || "Rechazado");
+    async function init() {
+        try {
+            await MiniKit.install(APP_ID);
+            status.innerText = "MiniKit Conectado ✅";
+        } catch (e) {
+            status.innerText = "Error: Úsalo dentro de World App";
         }
-    } catch (e) {
-        status.innerText = "Error de conexión con servidor";
     }
-}
 
-document.getElementById("login").onclick = async () => {
-    status.innerText = "Abriendo World ID...";
-    // Usamos walletAuth que es el que dispara el modal nativo en v4
-    await MiniKit.walletAuth({
-        nonce: Date.now().toString(),
-        requestId: "login_chc",
-        scope: ["uniqueness"], 
-        action: "login",
-        signal: "charlycoin"
-    });
-};
+    // --- LÓGICA DE ENTRADA ---
+    btnEntrar.onclick = async () => {
+        try {
+            status.innerText = "Solicitando acceso a billetera...";
+            
+            // walletAuth solo pide permiso para leer la dirección
+            const { address, error } = await MiniKit.walletAuth({
+                nonce: Date.now().toString(),
+                requestId: "login_chc",
+            });
+
+            if (address) {
+                // Guardar en la "estancia" del navegador
+                localStorage.setItem("user_wallet", address);
+                localStorage.setItem("last_login", new Date().toISOString());
+
+                // Cambiar interfaz
+                status.innerHTML = `Conectado: <span class="wallet-text">${address.substring(0,10)}...</span>`;
+                msg.innerText = "¡Registro exitoso!";
+                btnEntrar.style.display = "none";
+                btnDonar.style.display = "block";
+
+                status.innerText = "Redirigiendo al buscador...";
+                setTimeout(() => {
+                    window.location.href = "buscador2.html";
+                }, 2500); // Damos tiempo por si quiere darle a Donar
+            } else {
+                // Si cancela o hay error, igual lo mandamos al buscador como pediste
+                window.location.href = "buscador2.html";
+            }
+        } catch (e) {
+            window.location.href = "buscador2.html";
+        }
+    };
+
+    // --- LÓGICA DE DONACIÓN ---
+    btnDonar.onclick = async () => {
+        try {
+            status.innerText = "Abriendo pago...";
+            await MiniKit.pay({
+                reference: "donacion-chc-" + Date.now(),
+                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
+                description: "Donación CharlyCoin"
+            });
+            // Después de donar, también lo mandamos al buscador
+            setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
+        } catch (e) {
+            window.location.href = "buscador2.html";
+        }
+    };
+
+    init();
 </script>
 </body>
 </html>
