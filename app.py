@@ -116,8 +116,12 @@ def verify_proof():
             "success": False,
             "error": str(e)
         }), 500
-
-
+# =========================
+# buscador
+# =========================
+@app.route("/buscador2.html")
+def buscador():
+    return render_template("buscador2.html")
 # =========================
 # RUN
 # =========================
