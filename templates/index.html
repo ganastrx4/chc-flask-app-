@@ -3,159 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>CHC - CharlyCoin 🌍</title>
+    <title>CHC - World ID 4.0</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: radial-gradient(circle at center, #0d1117, #000);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            color: #fff;
-            padding: 20px;
+        body { 
+            margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; 
+            background: #000; color: #fff; font-family: sans-serif; 
         }
-        .card {
-            width: 100%;
-            max-width: 360px;
-            padding: 30px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .05);
-            border: 1px solid rgba(0, 188, 212, .35);
-            backdrop-filter: blur(14px);
-            box-shadow: 0 0 30px rgba(0, 188, 212, .18);
-            text-align: center;
+        .card { 
+            width: 320px; padding: 30px; text-align: center; border-radius: 20px;
+            background: #111; border: 1px solid #00bcd4;
         }
-        .logo { font-size: 40px; margin-bottom: 10px; }
-        h1 { font-size: 28px; color: #00bcd4; margin-bottom: 8px; }
-        .sub { font-size: 14px; color: #bbb; line-height: 1.4; margin-bottom: 25px; }
-        button {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 12px;
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
-            transition: 0.3s;
+        button { 
+            width: 100%; padding: 15px; border-radius: 50px; border: none; 
+            background: #00bcd4; color: #000; font-weight: bold; cursor: pointer; 
         }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #444; cursor: not-allowed; }
-        #status {
-            margin-top: 15px;
-            min-height: 44px;
-            font-size: 13px;
-            color: #00bcd4;
-        }
-        .ok { color: #4caf50 !important; }
-        .err { color: #ff5252 !important; }
+        #status { margin-top: 15px; font-size: 14px; color: #00bcd4; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="logo">🌍</div>
-    <h1>CHC</h1>
-    <div class="sub">Mini App Oficial CharlyCoin<br>Wallet • Login • Tokens</div>
-
-    <button id="btnLogin">Entrar con World ID</button>
-    <button id="btnWallet">Ver mi Wallet</button>
-    <button id="btnSend">Enviar 0.1 WLD</button>
-    
-    <div id="status">Iniciando MiniKit...</div>
+    <h1>CHC 🌍</h1>
+    <p style="color: #888; margin-bottom: 20px;">World ID 4.0 Ready</p>
+    <button id="btnLogin">ENTRAR</button>
+    <div id="status">Esperando MiniKit...</div>
 </div>
 
 <script type="module">
-    // Usamos la versión de MiniKit recomendada para producción
     import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-    const status = document.getElementById("status");
-    const btnLogin = document.getElementById("btnLogin");
-    const btnWallet = document.getElementById("btnWallet");
-    const btnSend = document.getElementById("btnSend");
-
     const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const status = document.getElementById("status");
 
-    // Función para mostrar mensajes
-    function setStatus(msg, type = "") {
-        status.className = "";
-        if (type) status.classList.add(type);
-        status.innerText = msg;
-    }
-
-    // Inicialización de MiniKit
     async function init() {
         try {
             await MiniKit.install(APP_ID);
-            setStatus("MiniKit Conectado ✅", "ok");
+            status.innerText = "MiniKit Conectado ✅";
         } catch (e) {
-            console.error(e);
-            setStatus("Error: Abre esto dentro de World App", "err");
+            status.innerText = "Error de conexión";
         }
     }
 
-    // --- COMANDO LOGIN ---
-    btnLogin.onclick = async () => {
+    document.getElementById("btnLogin").onclick = async () => {
         try {
-            setStatus("Esperando confirmación en World App...");
-            
-            // Generamos un nonce aleatorio para la seguridad del login
-            const loginPayload = {
-                nonce: Math.random().toString(36).substring(2),
-                requestId: "login_chc"
-            };
+            status.innerText = "Iniciando World ID 4.0...";
 
-            const { finalPayload } = await MiniKit.commands.walletAuth(loginPayload);
+            // Configuramos la solicitud según el punto 2 que pasaste:
+            const authResponse = await MiniKit.commands.walletAuth({
+                nonce: Date.now().toString(),
+                requestId: "login_chc",
+                // Esto es CRUCIAL para World ID 4.0:
+                scope: ["uniqueness"], // Pedimos prueba de que es un humano único
+            });
 
-            if (finalPayload) {
-                setStatus("¡Acceso concedido!", "ok");
+            // Si la World App nos devuelve el paquete (finalPayload)
+            if (authResponse.finalPayload) {
+                status.innerText = "Verificación exitosa...";
+                
+                // Redirigir como querías
                 setTimeout(() => {
                     window.location.href = "buscador2.html";
                 }, 1000);
+            } else {
+                status.innerText = "Cancelado por el usuario";
             }
         } catch (e) {
             console.error(e);
-            setStatus("Autenticación fallida o cancelada", "err");
+            status.innerText = "Error: " + (e.message || "Fallo al autenticar");
         }
     };
 
-    // --- COMANDO WALLET ---
-    btnWallet.onclick = async () => {
-        try {
-            const user = MiniKit.user; // En MiniKit la info suele estar en el objeto user
-            if (user && user.walletAddress) {
-                setStatus("Wallet: " + user.walletAddress.substring(0, 10) + "...", "ok");
-            } else {
-                setStatus("Conecta tu wallet en la App", "err");
-            }
-        } catch (e) {
-            setStatus("No se pudo leer la wallet", "err");
-        }
-    };
-
-    // --- COMANDO PAGO ---
-    btnSend.onclick = async () => {
-        try {
-            setStatus("Procesando pago de 0.1 WLD...");
-            
-            await MiniKit.commands.pay({
-                reference: "chc-pay-" + Date.now(),
-                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
-                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
-                description: "Aporte CharlyCoin"
-            });
-
-            setStatus("Solicitud de pago enviada", "ok");
-        } catch (e) {
-            setStatus("Pago cancelado", "err");
-        }
-    };
-
-    // Arrancamos
     init();
 </script>
 </body>
