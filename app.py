@@ -11,7 +11,9 @@ app = Flask(__name__)
 APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
 ACTION = "login"
 RP_ID = "rp_aa5ead0710fce1dc" 
+
 # Lee la variable desde el panel de Render (Settings -> Environment)
+# Asegúrate de que en Render el valor NO tenga el "0x" al inicio
 SIGNING_KEY = os.environ.get('signer_key') 
 
 def sign_request(signing_key_hex, action):
@@ -21,8 +23,12 @@ def sign_request(signing_key_hex, action):
         return None
 
     try:
-        # Convertimos la clave hex a bytes eliminando espacios
-        key = bytes.fromhex(signing_key_hex.strip())
+        # Limpieza profunda: quitamos 0x, comillas, llaves y espacios
+        clean_key = signing_key_hex.strip().replace('0x', '').replace('"', '').replace('{', '').replace('}', '')
+        
+        # Convertimos la clave hex a bytes
+        key = bytes.fromhex(clean_key)
+        
         nonce = str(int(time.time() * 1000))
         created_at = int(time.time())
         expires_at = created_at + 3600 # 1 hora de validez
@@ -38,7 +44,7 @@ def sign_request(signing_key_hex, action):
             "expires_at": expires_at
         }
     except Exception as e:
-        print(f"Error interno al firmar: {e}")
+        print(f"Error interno al procesar la clave hexadecimal: {e}")
         return None
 
 @app.route('/')
@@ -53,7 +59,7 @@ def get_signature():
         if sig_data is None:
             return jsonify({
                 "error": "Error de configuración en el servidor",
-                "detail": "Asegúrate de que 'signer_key' sea un valor hexadecimal válido en Render."
+                "detail": "La clave 'signer_key' en Render no es válida o está ausente."
             }), 500
         
         return jsonify(sig_data)
@@ -68,6 +74,7 @@ def verify_proof():
         if not idkit_data:
             return jsonify({"error": "No se recibieron datos de IDKit"}), 400
 
+        # Endpoint oficial para World ID 4.0
         worldcoin_url = f"https://developer.world.org/api/v4/verify/{RP_ID}"
         
         response = requests.post(
@@ -90,6 +97,6 @@ def verify_proof():
         return jsonify({"error": "Error interno del servidor", "detail": str(e)}), 500
 
 if __name__ == '__main__':
-    # Render usa la variable de entorno PORT
+    # Render asigna el puerto dinámicamente mediante la variable PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
