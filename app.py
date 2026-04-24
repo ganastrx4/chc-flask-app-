@@ -98,6 +98,11 @@ def glosario():
     return render_template("glosario.html")
 
 
+@app.route("/wdd.html")
+def wdd():
+    return render_template("wdd.html")
+
+
 # =========================
 # WORLD ID VERIFY
 # =========================
