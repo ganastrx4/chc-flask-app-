@@ -53,19 +53,29 @@ def exchange():
     return render_template("exchange.html")
 
 
+@app.route("/graficachcwld.html")
+def graficachcwld():
+    return render_template("graficachcwld.html")
+
+
+@app.route("/charlycoinapp.html")
+def charlycoinapp():
+    return render_template("charlycoinapp.html")
+
+
+@app.route("/chcoin.html")
+def chcoin():
+    return render_template("chcoin.html")
+
+
 @app.route("/faucets.html")
 def faucets():
     return render_template("faucets.html")
 
 
-@app.route("/ganarchun.html")
-def ganarchun():
-    return render_template("ganarchun.html")
-
-
-@app.route("/glosario.html")
-def glosario():
-    return render_template("glosario.html")
+@app.route("/chun.html")
+def chun():
+    return render_template("chun.html")
 
 
 # =========================
