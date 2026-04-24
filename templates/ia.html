@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat con Gemini</title>
+  <style>
+    body { font-family: Arial; background: #f0f0f0; padding: 20px; }
+    #chat { background: white; padding: 10px; border-radius: 10px; height: 400px; overflow-y: auto; }
+    .msg-user { color: blue; margin: 5px 0; }
+    .msg-ai { color: green; margin: 5px 0; }
+    #inputBox { width: 80%; padding: 10px; }
+    #btn { padding: 10px 15px; }
+  </style>
+</head>
+
+<body>
+
+<h2>💬 Chat con Gemini (HTML/JS)</h2>
+<div id="chat"></div>
+
+<br>
+<input id="inputBox" type="text" placeholder="Escribe aquí...">
+<button id="btn">Enviar</button>
+
+<script>
+const API_KEY = "AIzaSyAVn2kfSRa9v3LfZIwBTlg6sJkBpJRb7PY";  // <-- pon tu nueva API key
+const MODEL = "gemini-2.0-flash";
+const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
+let history = [];  // memoria del chat
+
+document.getElementById("btn").onclick = sendMessage;
+document.getElementById("inputBox").addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
+
+function addMessage(text, cls) {
+  const chat = document.getElementById("chat");
+  const div = document.createElement("div");
+  div.className = cls;
+  div.innerText = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendMessage() {
+  const userText = document.getElementById("inputBox").value.trim();
+  if (userText === "") return;
+
+  addMessage("Tú: " + userText, "msg-user");
+  document.getElementById("inputBox").value = "";
+
+  history.push({ role: "user", parts: [{ text: userText }] });
+
+  try {
+    const body = { contents: history };
+
+    const response = await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+    const output = data.candidates[0].content.parts[0].text;
+
+    addMessage("Gemini: " + output, "msg-ai");
+
+    history.push({ role: "model", parts: [{ text: output }] });
+
+  } catch (error) {
+    addMessage("⚠️ Error: " + error, "msg-ai");
+  }
+}
+</script>
+
+</body>
+</html>
