@@ -5,10 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CharlyCoin - World ID 4.0</title>
     <style>
-        body { margin: 0; height: 100vh; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
-        .card { padding: 40px; border-radius: 20px; border: 1px solid #00bcd4; text-align: center; }
-        .btn { background: #00bcd4; border: none; padding: 15px; border-radius: 50px; cursor: pointer; width: 100%; font-weight: bold; }
-        #status { margin-top: 20px; font-size: 0.8rem; color: #00bcd4; }
+        body { 
+            margin: 0; 
+            height: 100vh; 
+            background: radial-gradient(circle at center, #0d1117, #000); 
+            color: #fff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        .card { 
+            padding: 40px; 
+            border-radius: 20px; 
+            border: 1px solid #00bcd4; 
+            text-align: center; 
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+            width: 320px;
+        }
+        h1 { color: #00bcd4; margin-bottom: 20px; }
+        .btn { 
+            background: linear-gradient(90deg, #00bcd4, #9c27b0); 
+            border: none; 
+            padding: 15px; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            width: 100%; 
+            font-weight: bold; 
+            color: white;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        #status { 
+            margin-top: 20px; 
+            font-size: 0.85rem; 
+            color: #00bcd4; 
+            min-height: 40px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -16,31 +52,52 @@
 <div class="card">
     <h1>CharlyCoin 🌍</h1>
     <button class="btn" id="btn-verify">Verificar con World ID 4.0</button>
-    <p id="status"></p>
+    <p id="status">Listo para verificar</p>
 </div>
 
 <script type="module">
-    // Importamos IDKit Core para manejar el flujo manual de la 4.0
+    // Importamos el SDK Core de World ID 4.0
     import { IDKit, orbLegacy } from "https://esm.sh/@worldcoin/idkit-core";
 
     const btn = document.getElementById('btn-verify');
     const status = document.getElementById('status');
 
+    // CONFIGURACIÓN - IMPORTANTE: Reemplaza TU_RP_ID_AQUI con el de tu portal
+    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const RP_ID = "TU_RP_ID_AQUI"; 
+    const ACTION = "login";
+
     btn.addEventListener('click', async () => {
         try {
-            status.innerText = "Obteniendo firma del servidor...";
+            status.innerText = "Solicitando firma de seguridad al servidor...";
+            btn.disabled = true;
 
-            // 1. Pedir firma al backend (Step 3)
-            const sigRes = await fetch("/api/rp-signature", { method: "POST" });
+            // 1. Obtener la firma RP del backend (Generada en app.py con tu signer_key)
+            const sigRes = await fetch("/api/rp-signature", { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!sigRes.ok) {
+                const errorData = await sigRes.json();
+                throw new Error(errorData.error || "Error al obtener firma del servidor");
+            }
+
             const rpSig = await sigRes.json();
 
-            // 2. Iniciar solicitud a World ID (Step 4)
-            status.innerText = "Conectando con World ID...";
+            // Validación de seguridad para evitar el error de 'nonce' nulo
+            if (!rpSig || !rpSig.nonce) {
+                throw new Error("El servidor devolvió una firma vacía. Revisa la variable signer_key en Render.");
+            }
+
+            // 2. Iniciar el flujo de World ID 4.0 (IDKit Request)
+            status.innerText = "Conectando con World ID... Abre tu App";
+            
             const request = await IDKit.request({
-                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                action: "login",
+                app_id: APP_ID,
+                action: ACTION,
                 rp_context: {
-                    rp_id: "TU_RP_ID_AQUI", // Reemplaza por el de tu panel
+                    rp_id: RP_ID,
                     nonce: rpSig.nonce,
                     created_at: rpSig.created_at,
                     expires_at: rpSig.expires_at,
@@ -49,30 +106,35 @@
                 environment: "production" 
             }).preset(orbLegacy({ signal: "user-session-1" }));
 
-            // 3. Abrir el modal y esperar (Step 4 & 5)
-            // Nota: El conectorURI se genera aquí si necesitas mostrar un QR manual
-            status.innerText = "Por favor, escanea el código en tu App World";
-            
+            // 3. Esperar a que el usuario escanee el QR y confirme en su móvil
             const idkitResponse = await request.pollUntilCompletion();
 
-            // 4. Enviar resultado al backend para validación final
-            status.innerText = "Validando prueba...";
+            // 4. Enviar la prueba resultante al backend para la verificación final (Step 5)
+            status.innerText = "Validando identidad en la red World...";
+            
             const verifyRes = await fetch("/api/verify-proof", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(idkitResponse)
             });
 
-            if (verifyRes.ok) {
-                status.innerText = "¡Verificación Exitosa!";
-                window.location.href = "buscador2.html";
+            const verifyData = await verifyRes.json();
+
+            if (verifyRes.ok && verifyData.success) {
+                status.style.color = "#4caf50";
+                status.innerText = "¡Verificación Exitosa! Redirigiendo...";
+                setTimeout(() => {
+                    window.location.href = "buscador2.html";
+                }, 1500);
             } else {
-                status.innerText = "Error en la validación final.";
+                throw new Error(verifyData.detail?.message || "La verificación falló en el servidor.");
             }
 
         } catch (err) {
-            console.error(err);
+            console.error("Error en flujo:", err);
+            status.style.color = "#ff5252";
             status.innerText = "Error: " + err.message;
+            btn.disabled = false;
         }
     });
 </script>
