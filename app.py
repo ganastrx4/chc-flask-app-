@@ -1,55 +1,66 @@
-from flask import Flask, render_template, request, jsonify
+import os
+import time
+import hmac
+import hashlib
 import requests
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# --- CONFIGURACIÓN ---
-# Asegúrate de que este ID sea el de la app que dejaste activa en el portal
-APP_ID = "app_ad065b6571dd4628b88a124ff444e14a"
-ACTION_ID = "login"
+# --- CONFIGURACIÓN DESDE VARIABLES DE ENTORNO ---
+# Aquí le decimos a Python que busque "signer_key" en la configuración de Render
+APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
+ACTION = "login"
+RP_ID = "rp_aa5ead0710fce1dc" # Pon tu RP_ID aquí o también como variable
+SIGNING_KEY = os.environ.get('signer_key') # <--- Lee la variable de Render
+
+def sign_request(signing_key_hex, action):
+    # Verificación de seguridad por si la variable no cargó
+    if not signing_key_hex:
+        print("ERROR: No se encontró la SIGNING_KEY en las variables de entorno.")
+        return None
+
+    key = bytes.fromhex(signing_key_hex)
+    nonce = str(int(time.time() * 1000))
+    created_at = int(time.time())
+    expires_at = created_at + 3600 
+    
+    message = f"{action}:{nonce}:{created_at}:{expires_at}".encode()
+    sig = hmac.new(key, message, hashlib.sha256).hexdigest()
+    
+    return {
+        "sig": sig,
+        "nonce": nonce,
+        "created_at": created_at,
+        "expires_at": expires_at
+    }
 
 @app.route('/')
 def index():
-    # Esto busca el archivo index.html dentro de la carpeta /templates
     return render_template('index.html')
 
-# --- ESTO ES LO QUE VA "DENTRO" DE LA RUTA /api/verify-worldid ---
-@app.route('/api/verify-worldid', methods=['POST'])
-def verify_worldid():
-    try:
-        data = request.json
-        
-        # 1. Armamos el paquete para enviarlo a Worldcoin
-        verification_payload = {
-            "nullifier_hash": data.get("nullifier_hash"),
-            "merkle_root": data.get("merkle_root"),
-            "proof": data.get("proof"),
-            "verification_level": data.get("verification_level"),
-            "action": ACTION_ID,
-            "signal": data.get("signal", "")
-        }
+@app.route('/api/rp-signature', methods=['POST'])
+def get_signature():
+    # Retorna la firma para que el Frontend pueda iniciar IDKit
+    return jsonify(sign_request(SIGNING_KEY, ACTION))
 
-        # 2. Hacemos la petición al API oficial de Worldcoin
-        response = requests.post(
-            f"https://developer.worldcoin.org/api/v1/verify/{APP_ID}",
-            json=verification_payload,
-            headers={"Content-Type": "application/json"}
-        )
-
-        # 3. Si Worldcoin dice que es OK (status 200)
-        if response.status_code == 200:
-            return jsonify({"success": True}), 200
-        else:
-            # Si falla, devolvemos el error que nos dio Worldcoin
-            return jsonify({"success": False, "detail": response.json()}), response.status_code
-
-    except Exception as e:
-        return jsonify({"success": False, "detail": str(e)}), 500
-
-@app.route('/api/validar_billetera', methods=['POST'])
-def validar_billetera():
-    # Esta ruta maneja el paso final de la wallet
-    return jsonify({"success": True}), 200
+@app.route('/api/verify-proof', methods=['POST'])
+def verify_proof():
+    # Recibe el payload completo de IDKit y lo manda a Worldcoin (Step 5)
+    idkit_data = request.json 
+    
+    worldcoin_url = f"https://developer.world.org/api/v4/verify/{RP_ID}"
+    
+    response = requests.post(
+        worldcoin_url,
+        json=idkit_data,
+        headers={"Content-Type": "application/json"}
+    )
+    
+    if response.status_code == 200:
+        return jsonify({"success": True}), 200
+    else:
+        return jsonify({"error": "Fallo en Worldcoin", "detail": response.json()}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
