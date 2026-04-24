@@ -3,171 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - Acceso Seguro</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/@worldcoin/idkit-standalone/dist/idkit-standalone.js"></script>
-
+    <title>CharlyCoin - World ID 4.0</title>
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            background: radial-gradient(circle at center, #0d1117, #000);
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid #00bcd4;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
-        }
-        h1 { color: #00bcd4; margin-bottom: 20px; }
-        p { font-size: 0.9rem; opacity: 0.8; }
-        .btn-action {
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            width: 100%;
-            margin-top: 15px;
-        }
-        .btn-world {
-            background: #000;
-            border: 1px solid #fff;
-            color: white;
-        }
-        .btn-action:hover { transform: scale(1.03); filter: brightness(1.1); }
-        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; font-size: 0.85rem; }
-        .hidden { display: none; }
+        body { margin: 0; height: 100vh; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
+        .card { padding: 40px; border-radius: 20px; border: 1px solid #00bcd4; text-align: center; }
+        .btn { background: #00bcd4; border: none; padding: 15px; border-radius: 50px; cursor: pointer; width: 100%; font-weight: bold; }
+        #status { margin-top: 20px; font-size: 0.8rem; color: #00bcd4; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>CharlyCoin 🌍</h1>
-    <p id="instruction">Paso 1: Demuestra que eres humano</p>
-
-    <button class="btn-action btn-world" id="world-id-btn">
-        Verificar con World ID
-    </button>
-
-    <button class="btn-action hidden" id="open-modal">
-        Conectar Wallet Web3
-    </button>
-
+    <button class="btn" id="btn-verify">Verificar con World ID 4.0</button>
     <p id="status"></p>
 </div>
 
 <script type="module">
-    import { createAppKit } from "https://esm.sh/@reown/appkit";
-    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
-    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
+    // Importamos IDKit Core para manejar el flujo manual de la 4.0
+    import { IDKit, orbLegacy } from "https://esm.sh/@worldcoin/idkit-core";
 
-    const statusText = document.getElementById('status');
-    const instruction = document.getElementById('instruction');
-    const worldBtn = document.getElementById('world-id-btn');
-    const walletBtn = document.getElementById('open-modal');
+    const btn = document.getElementById('btn-verify');
+    const status = document.getElementById('status');
 
-    // --- 1. CONFIGURACIÓN DE REOWN ---
-    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb";
-    const modal = createAppKit({
-        adapters: [new Ethers5Adapter()],
-        networks: [mainnet, bsc],
-        metadata: {
-            name: "CharlyCoin",
-            description: "Acceso seguro a CharlyCoin",
-            url: window.location.origin,
-            icons: ["https://avatars.githubusercontent.com/u/37784886"]
-        },
-        projectId
-    });
-
-    // --- 2. LÓGICA DE WORLD ID ---
-    worldBtn.addEventListener('click', () => {
-        statusText.innerText = "Esperando a World ID...";
-        
-        IDKit.init({
-            app_id: "app_ad065b6571dd4628b88a124ff444e14a", 
-            action: "login",
-            onSuccess: (result) => {
-                statusText.innerText = "¡Humano verificado con éxito!";
-                instruction.innerText = "Paso 2: Conecta tu billetera";
-                worldBtn.classList.add('hidden');
-                walletBtn.classList.remove('hidden');
-            },
-            handleVerify: async (proof) => {
-                const res = await fetch('/api/verify-worldid', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(proof)
-                });
-                if (!res.ok) throw new Error("La validación de World ID falló.");
-            }
-        });
-        IDKit.open();
-    });
-
-    // --- 3. LÓGICA DE WALLET ---
-    walletBtn.addEventListener('click', async () => {
+    btn.addEventListener('click', async () => {
         try {
-            statusText.innerText = "Abriendo Wallet...";
-            await modal.open();
+            status.innerText = "Obteniendo firma del servidor...";
 
-            const checkConnection = setInterval(async () => {
-                const address = modal.getAddress();
-                if (address) {
-                    clearInterval(checkConnection);
-                    statusText.innerText = "Billetera conectada. Firmando...";
-                    await firmarYValidar(address);
-                }
-            }, 1000);
-        } catch (err) {
-            statusText.innerText = "Error en la conexión.";
-        }
-    });
+            // 1. Pedir firma al backend (Step 3)
+            const sigRes = await fetch("/api/rp-signature", { method: "POST" });
+            const rpSig = await sigRes.json();
 
-    async function firmarYValidar(address) {
-        try {
-            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
-            const signer = provider.getSigner();
-            const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
+            // 2. Iniciar solicitud a World ID (Step 4)
+            status.innerText = "Conectando con World ID...";
+            const request = await IDKit.request({
+                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+                action: "login",
+                rp_context: {
+                    rp_id: "TU_RP_ID_AQUI", // Reemplaza por el de tu panel
+                    nonce: rpSig.nonce,
+                    created_at: rpSig.created_at,
+                    expires_at: rpSig.expires_at,
+                    signature: rpSig.sig,
+                },
+                environment: "production" 
+            }).preset(orbLegacy({ signal: "user-session-1" }));
+
+            // 3. Abrir el modal y esperar (Step 4 & 5)
+            // Nota: El conectorURI se genera aquí si necesitas mostrar un QR manual
+            status.innerText = "Por favor, escanea el código en tu App World";
             
-            const firma = await signer.signMessage(mensaje);
-            statusText.innerText = "Validando acceso final...";
+            const idkitResponse = await request.pollUntilCompletion();
 
-            const res = await fetch('/api/validar_billetera', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address, firma, mensaje })
+            // 4. Enviar resultado al backend para validación final
+            status.innerText = "Validando prueba...";
+            const verifyRes = await fetch("/api/verify-proof", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(idkitResponse)
             });
 
-            const data = await res.json();
-            if (data.success) {
-                statusText.innerText = "¡Bienvenido, Humano!";
-                setTimeout(() => { window.location.href = "buscador2.html"; }, 1500);
+            if (verifyRes.ok) {
+                status.innerText = "¡Verificación Exitosa!";
+                window.location.href = "buscador2.html";
             } else {
-                statusText.innerText = "Firma inválida.";
+                status.innerText = "Error en la validación final.";
             }
-        } catch (err) {
-            statusText.innerText = "Operación cancelada.";
-        }
-    }
-</script>
 
+        } catch (err) {
+            console.error(err);
+            status.innerText = "Error: " + err.message;
+        }
+    });
+</script>
 </body>
 </html>
