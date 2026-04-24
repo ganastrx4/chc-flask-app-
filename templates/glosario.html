@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scanner WLDUSDT</title>
+
+<style>
+body{
+    background:#0d0d0d;
+    color:#eee;
+    font-family:Arial, sans-serif;
+    margin:0;
+    padding:20px;
+}
+h2{
+    text-align:center;
+    margin-bottom:15px;
+}
+.dashboard{
+    display:flex;
+    gap:15px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+.panel{
+    background:#1a1a1a;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid #333;
+    min-width:280px;
+}
+.stat{
+    text-align:center;
+    color:#888;
+    font-size:.9em;
+    margin-bottom:10px;
+}
+.stat span{
+    display:block;
+    color:#00d084;
+    font-size:1.5em;
+    font-weight:bold;
+    margin-top:5px;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#151515;
+    font-size:.85em;
+}
+th{
+    background:#222;
+    color:#00d084;
+    padding:10px;
+}
+td{
+    padding:8px;
+    border-bottom:1px solid #222;
+    text-align:center;
+}
+.up{color:#2ecc71;font-weight:bold;}
+.down{color:#e74c3c;font-weight:bold;}
+.wait{color:#f1c40f;font-weight:bold;}
+.price{
+    font-family:monospace;
+}
+#status{
+    text-align:center;
+    margin-bottom:15px;
+    color:#f1c40f;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📊 Scanner SOLO WLDUSDT</h2>
+
+<div id="status">Conectando...</div>
+
+<div class="dashboard">
+    <div class="panel">
+        <div class="stat">Precio Actual <span id="priceNow">0</span></div>
+        <div class="stat">Cambio % <span id="change24">0%</span></div>
+    </div>
+
+    <div class="panel">
+        <div class="stat">Tendencia <span id="trend">ESPERANDO</span></div>
+        <div class="stat">Señal <span id="signal">--</span></div>
+    </div>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Hora</th>
+<th>Entrada</th>
+<th>Actual</th>
+<th>Mínimo</th>
+<th>Máximo</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<script>
+const symbol = "WLDUSDT";
+const wsUrl = "wss://stream.binance.com:9443/ws/wldusdt@ticker";
+
+let entryPrice = 0;
+let minPrice = 999999;
+let maxPrice = 0;
+
+function addRow(price){
+    const tbody = document.getElementById("tableBody");
+    const row = tbody.insertRow(0);
+
+    row.innerHTML = `
+        <td>${new Date().toLocaleTimeString()}</td>
+        <td class="price">${entryPrice.toFixed(4)}</td>
+        <td class="price">${price.toFixed(4)}</td>
+        <td class="down">${minPrice.toFixed(4)}</td>
+        <td class="up">${maxPrice.toFixed(4)}</td>
+        <td id="res">${(((price-entryPrice)/entryPrice)*100).toFixed(2)}%</td>
+    `;
+}
+
+function setSignal(price){
+    const trend = document.getElementById("trend");
+    const signal = document.getElementById("signal");
+
+    let pct = ((price-entryPrice)/entryPrice)*100;
+
+    if(pct > 0.50){
+        trend.textContent = "ALCISTA";
+        trend.className = "up";
+        signal.textContent = "LONG";
+        signal.className = "up";
+    }
+    else if(pct < -0.50){
+        trend.textContent = "BAJISTA";
+        trend.className = "down";
+        signal.textContent = "SHORT";
+        signal.className = "down";
+    }
+    else{
+        trend.textContent = "LATERAL";
+        trend.className = "wait";
+        signal.textContent = "ESPERAR";
+        signal.className = "wait";
+    }
+}
+
+function connect(){
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = ()=>{
+        document.getElementById("status").textContent = "Conectado a Binance WLDUSDT";
+    };
+
+    ws.onmessage = (event)=>{
+        const data = JSON.parse(event.data);
+
+        const price = parseFloat(data.c);
+        const change = parseFloat(data.P);
+
+        if(entryPrice === 0){
+            entryPrice = price;
+        }
+
+        if(price < minPrice) minPrice = price;
+        if(price > maxPrice) maxPrice = price;
+
+        document.getElementById("priceNow").textContent = price.toFixed(4);
+        document.getElementById("change24").textContent = change.toFixed(2)+"%";
+
+        setSignal(price);
+        addRow(price);
+    };
+
+    ws.onclose = ()=>{
+        document.getElementById("status").textContent = "Reconectando...";
+        setTimeout(connect,3000);
+    };
+
+    ws.onerror = ()=>{
+        ws.close();
+    };
+}
+
+connect();
+</script>
+
+</body>
+</html>
