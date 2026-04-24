@@ -3,30 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>CHC - World ID 4.0</title>
+    <title>CHC - CharlyCoin</title>
     <style>
-        body { 
-            margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; 
-            background: #000; color: #fff; font-family: sans-serif; 
-        }
-        .card { 
-            width: 320px; padding: 30px; text-align: center; border-radius: 20px;
-            background: #111; border: 1px solid #00bcd4;
-        }
-        button { 
-            width: 100%; padding: 15px; border-radius: 50px; border: none; 
-            background: #00bcd4; color: #000; font-weight: bold; cursor: pointer; 
-        }
-        #status { margin-top: 15px; font-size: 14px; color: #00bcd4; }
+        body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; color: #fff; font-family: sans-serif; }
+        .card { width: 300px; padding: 30px; text-align: center; border: 1px solid #00bcd4; border-radius: 20px; background: #111; }
+        button { width: 100%; padding: 15px; border-radius: 50px; border: none; background: #00bcd4; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        #status { margin-top: 15px; font-size: 13px; color: #00bcd4; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>CHC 🌍</h1>
-    <p style="color: #888; margin-bottom: 20px;">World ID 4.0 Ready</p>
     <button id="btnLogin">ENTRAR</button>
-    <div id="status">Esperando MiniKit...</div>
+    <button id="btnSend">ENVIAR 0.1 WLD</button>
+    <div id="status">Iniciando...</div>
 </div>
 
 <script type="module">
@@ -37,39 +28,51 @@
 
     async function init() {
         try {
+            // Sintaxis correcta de instalación
             await MiniKit.install(APP_ID);
             status.innerText = "MiniKit Conectado ✅";
         } catch (e) {
-            status.innerText = "Error de conexión";
+            status.innerText = "Error de inicio";
         }
     }
 
+    // --- LOGIN CORREGIDO ---
     document.getElementById("btnLogin").onclick = async () => {
         try {
-            status.innerText = "Iniciando World ID 4.0...";
+            status.innerText = "Autenticando...";
 
-            // Configuramos la solicitud según el punto 2 que pasaste:
-            const authResponse = await MiniKit.commands.walletAuth({
+            // REGLA NUEVA: Se llama directo a MiniKit.walletAuth (sin .commands)
+            const { finalPayload } = await MiniKit.walletAuth({
                 nonce: Date.now().toString(),
                 requestId: "login_chc",
-                // Esto es CRUCIAL para World ID 4.0:
-                scope: ["uniqueness"], // Pedimos prueba de que es un humano único
+                scope: ["uniqueness"], 
             });
 
-            // Si la World App nos devuelve el paquete (finalPayload)
-            if (authResponse.finalPayload) {
-                status.innerText = "Verificación exitosa...";
-                
-                // Redirigir como querías
-                setTimeout(() => {
-                    window.location.href = "buscador2.html";
-                }, 1000);
-            } else {
-                status.innerText = "Cancelado por el usuario";
+            if (finalPayload) {
+                status.innerText = "¡Éxito! Entrando...";
+                setTimeout(() => { window.location.href = "buscador2.html"; }, 1000);
             }
         } catch (e) {
-            console.error(e);
-            status.innerText = "Error: " + (e.message || "Fallo al autenticar");
+            status.innerText = "Error en Login";
+        }
+    };
+
+    // --- PAGO CORREGIDO ---
+    document.getElementById("btnSend").onclick = async () => {
+        try {
+            status.innerText = "Abriendo Wallet...";
+
+            // REGLA NUEVA: Se llama directo a MiniKit.pay (sin .commands)
+            await MiniKit.pay({
+                reference: "chc-" + Date.now(),
+                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
+                description: "Pago CHC"
+            });
+            
+            status.innerText = "Solicitud enviada";
+        } catch (e) {
+            status.innerText = "Pago cancelado";
         }
     };
 
