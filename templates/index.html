@@ -1,103 +1,234 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-    <title>CHC - CharlyCoin</title>
-    <style>
-        body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; }
-        .card { width: 320px; padding: 40px 20px; text-align: center; border: 1px solid #00bcd4; border-radius: 24px; background: #0a0a0a; box-shadow: 0 0 20px rgba(0, 188, 212, 0.2); }
-        h1 { color: #00bcd4; margin-bottom: 5px; font-size: 32px; letter-spacing: 2px; }
-        p { color: #666; margin-bottom: 30px; font-size: 14px; }
-        button { 
-            width: 100%; padding: 16px; border-radius: 50px; border: none; 
-            background: linear-gradient(90deg, #00bcd4, #9c27b0); 
-            color: #fff; font-weight: 800; cursor: pointer; font-size: 16px; 
-            margin-bottom: 15px; transition: 0.3s;
-        }
-        button:active { transform: scale(0.95); opacity: 0.8; }
-        #status { margin-top: 15px; font-size: 14px; color: #00bcd4; font-weight: bold; }
-        .ok { color: #4caf50 !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>CHC - CharlyCoin</title>
+
+<style>
+body{
+margin:0;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#000;
+color:#fff;
+font-family:'Segoe UI',sans-serif;
+}
+
+.card{
+width:320px;
+padding:40px 20px;
+text-align:center;
+border:1px solid #00bcd4;
+border-radius:24px;
+background:#0a0a0a;
+box-shadow:0 0 20px rgba(0,188,212,.20);
+}
+
+h1{
+color:#00bcd4;
+margin-bottom:5px;
+font-size:32px;
+letter-spacing:2px;
+}
+
+p{
+color:#666;
+margin-bottom:28px;
+font-size:14px;
+}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:50px;
+font-size:16px;
+font-weight:800;
+cursor:pointer;
+margin-bottom:14px;
+color:#fff;
+background:linear-gradient(90deg,#00bcd4,#9c27b0);
+transition:.2s;
+}
+
+button:active{
+transform:scale(.97);
+}
+
+.sec{
+background:#1a1a1a;
+border:1px solid #444;
+font-size:13px;
+}
+
+#status{
+margin-top:14px;
+font-size:14px;
+font-weight:bold;
+color:#00bcd4;
+min-height:32px;
+line-height:1.4;
+}
+
+.ok{color:#4caf50!important;}
+.err{color:#ff5252!important;}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-    <h1>CHC 🌍</h1>
-    <p>Identidad Digital CharlyCoin</p>
-    
-    <button id="btnLogin">VERIFICAR Y ENTRAR</button>
-    <button id="btnSend" style="background: #1a1a1a; border: 1px solid #444; font-size: 13px;">ENVIAR 0.1 WLD</button>
-    
-    <div id="status">Iniciando MiniKit...</div>
+
+<h1>CHC 🌍</h1>
+<p>Identidad Digital CharlyCoin</p>
+
+<button id="btnLogin">ENTRAR CON WORLD ID</button>
+<button id="btnSend" class="sec">ENVIAR 0.1 WLD</button>
+
+<div id="status">Iniciando MiniKit...</div>
+
 </div>
 
 <script type="module">
-    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const status = document.getElementById("status");
+import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-    function entrarAlBuscador() {
-        status.innerText = "¡Verificado! Entrando...";
-        status.className = "ok";
-        setTimeout(() => {
-            window.location.href = "buscador2.html";
-        }, 600);
-    }
+const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
 
-    async function init() {
-        try {
-            await MiniKit.install(APP_ID);
-            status.innerText = "MiniKit Conectado ✅";
+const status = document.getElementById("status");
+const btnLogin = document.getElementById("btnLogin");
+const btnSend = document.getElementById("btnSend");
 
-            // Escuchamos la respuesta de la wallet
-            MiniKit.subscribe("walletAuth", (response) => {
-                if (response.finalPayload) {
-                    entrarAlBuscador();
-                }
-            });
-        } catch (e) {
-            status.innerText = "Error: Abre esto en World App";
-        }
-    }
+function setStatus(txt,cls=""){
+status.className = cls;
+status.innerText = txt;
+}
 
-    // BOTÓN LOGIN CON MODAL NATIVO
-    document.getElementById("btnLogin").onclick = async () => {
-        try {
-            status.innerText = "Esperando confirmación...";
-            
-            // Para que salga el modal de confirmación, usamos esta configuración:
-            await MiniKit.walletAuth({
-                nonce: Math.random().toString(36).substring(2), // Genera un código único
-                requestId: "login_chc",
-                scope: ["uniqueness"], // Esto activa la verificación Orb
-                redirectUri: window.location.origin // Ayuda a que la app sepa a dónde volver
-            });
+function entrar(){
+setStatus("¡Verificado! Entrando...","ok");
+setTimeout(()=>{
+window.location.href="buscador2.html";
+},700);
+}
 
-        } catch (e) {
-            console.error(e);
-            status.innerText = "Error al abrir el modal";
-        }
-    };
+async function init(){
 
-    // BOTÓN PAGO (El que ya te funciona)
-    document.getElementById("btnSend").onclick = async () => {
-        try {
-            status.innerText = "Abriendo Wallet...";
-            await MiniKit.pay({
-                reference: "chc-" + Date.now(),
-                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
-                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
-                description: "Aporte CHC"
-            });
-            status.innerText = "Solicitud enviada";
-        } catch (e) {
-            status.innerText = "Pago cancelado";
-        }
-    };
+try{
 
-    init();
+await MiniKit.install(APP_ID);
+
+setStatus("MiniKit conectado ✅","ok");
+
+/* Escuchar respuesta asíncrona */
+if(MiniKit.subscribe){
+MiniKit.subscribe("walletAuth",(payload)=>{
+console.log("walletAuth subscribe:",payload);
+
+if(
+payload?.finalPayload ||
+payload?.payload ||
+payload?.status === "success"
+){
+entrar();
+}
+});
+}
+
+}catch(e){
+
+console.log(e);
+setStatus("Ábrelo desde World App","err");
+
+}
+
+}
+
+/* LOGIN CON VENTANA NATIVA */
+btnLogin.onclick = async ()=>{
+
+try{
+
+setStatus("Abriendo World ID...");
+
+const reqId = "login-" + Date.now();
+
+const result = await MiniKit.walletAuth({
+
+nonce: Date.now().toString(),
+
+requestId: reqId,
+
+scope:["uniqueness"]
+
+});
+
+console.log("walletAuth result:",result);
+
+/* algunas versiones responden directo */
+if(
+result?.finalPayload ||
+result?.payload ||
+result?.status === "success"
+){
+entrar();
+return;
+}
+
+/* otras responden después por subscribe */
+setStatus("Esperando confirmación...");
+
+}catch(e){
+
+console.log(e);
+setStatus("Login cancelado","err");
+
+}
+
+};
+
+/* PAGO NATIVO */
+btnSend.onclick = async ()=>{
+
+try{
+
+setStatus("Abriendo wallet...");
+
+const pay = await MiniKit.pay({
+
+reference:"chc-" + Date.now(),
+
+to:"0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+
+tokens:[
+{
+symbol:"WLD",
+token_amount:"0.1"
+}
+],
+
+description:"Aporte CHC"
+
+});
+
+console.log(pay);
+
+setStatus("Solicitud enviada","ok");
+
+}catch(e){
+
+console.log(e);
+setStatus("Pago cancelado","err");
+
+}
+
+};
+
+init();
+
 </script>
+
 </body>
 </html>
