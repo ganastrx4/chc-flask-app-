@@ -78,6 +78,16 @@ def chun():
     return render_template("chun.html")
 
 
+@app.route("/next_page.html")
+def next_page():
+    return render_template("next_page.html")
+
+
+@app.route("/index.html")
+def index():
+    return render_template("index.html")
+
+
 # =========================
 # WORLD ID VERIFY
 # =========================
