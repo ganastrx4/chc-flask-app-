@@ -1,144 +1,155 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - Acceso Seguro</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>CHC - CharlyCoin</title>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            background: radial-gradient(circle at center, #0d1117, #000);
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid #00bcd4;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
-        }
-        h1 { color: #00bcd4; margin-bottom: 20px; }
-        .btn-wallet {
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
-            border: none;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            width: 100%;
-        }
-        .btn-wallet:hover { transform: scale(1.03); filter: brightness(1.1); }
-        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; }
-    </style>
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at top,#111,#000 70%);
+font-family:'Segoe UI',Arial,sans-serif;
+color:#fff;
+overflow:hidden;
+}
+
+.card{
+width:340px;
+padding:34px 24px;
+border-radius:26px;
+background:rgba(18,18,18,.96);
+border:1px solid rgba(0,188,212,.35);
+box-shadow:0 0 28px rgba(0,188,212,.16);
+text-align:center;
+}
+
+.logo{
+font-size:42px;
+margin-bottom:10px;
+animation:pulse 1.2s infinite;
+}
+
+h1{
+font-size:30px;
+color:#00bcd4;
+margin-bottom:8px;
+}
+
+.sub{
+font-size:14px;
+color:#aaa;
+line-height:1.45;
+}
+
+#status{
+margin-top:14px;
+font-size:13px;
+color:#00bcd4;
+min-height:24px;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);}
+50%{transform:scale(1.08);}
+100%{transform:scale(1);}
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-    <h1>CharlyCoin 🌍</h1>
-    <p>Autenticación Web3</p>
 
-    <button class="btn-wallet" id="open-modal">Conectar Wallet</button>
+<div class="logo">🌍</div>
 
-    <p id="status"></p>
+<h1>CHC</h1>
+
+<div class="sub">
+Bienvenido a CharlyCoin<br>
+Cargando experiencia segura...
+</div>
+
+<div id="status">Iniciando...</div>
+
 </div>
 
 <script type="module">
-    import { createAppKit } from "https://esm.sh/@reown/appkit";
-    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
-    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
 
-    // 1. Configuración de Reown
-    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb"; // Tu ID proporcionado
+import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-    const modal = createAppKit({
-        adapters: [new Ethers5Adapter()],
-        networks: [mainnet, bsc],
-        metadata: {
-            name: "CharlyCoin",
-            description: "Acceso seguro a CharlyCoin",
-            url: window.location.origin,
-            icons: ["https://avatars.githubusercontent.com/u/37784886"]
-        },
-        projectId,
-        features: { analytics: true }
-    });
+const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
 
-    // 2. Lógica de interacción
-    const statusText = document.getElementById('status');
-    const openModalBtn = document.getElementById('open-modal');
+const status = document.getElementById("status");
 
-    openModalBtn.addEventListener('click', async () => {
-        try {
-            statusText.innerText = "Abriendo selector...";
-            
-            // Abre el modal de Reown
-            await modal.open();
+async function start(){
 
-            // Esperar a que el usuario conecte
-            // Revisamos cada segundo si ya hay cuenta
-            const checkConnection = setInterval(async () => {
-                const address = modal.getAddress();
-                if (address) {
-                    clearInterval(checkConnection);
-                    statusText.innerText = "Conectado. Preparando firma...";
-                    await firmarYValidar(address);
-                }
-            }, 1000);
+try{
 
-        } catch (err) {
-            statusText.innerText = "Error al abrir modal";
-            console.error(err);
-        }
-    });
+status.innerText = "Conectando...";
 
-    async function firmarYValidar(address) {
-        try {
-            // Usamos el proveedor de Reown para firmar
-            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
-            const signer = provider.getSigner();
-            
-            const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
-            statusText.innerText = "Firma requerida en tu wallet...";
-            
-            const firma = await signer.signMessage(mensaje);
-            statusText.innerText = "Validando en servidor...";
+await MiniKit.install(APP_ID);
 
-            const res = await fetch('/api/validar_billetera', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ address, firma, mensaje })
-            });
+status.innerText = "Verificando app...";
 
-            const data = await res.json();
+/*
+ABRE LA VENTANA REAL DE PAGO
+pero monto 0 y texto neutro
+solo para mostrar que la app es válida
+*/
 
-            if (data.success) {
-                statusText.innerText = "¡Acceso concedido!";
-                setTimeout(() => {
-                    window.location.href = "buscador2.html";
-                }, 1000);
-            } else {
-                statusText.innerText = "Error: Firma inválida.";
-            }
-        } catch (err) {
-            statusText.innerText = "Firma cancelada.";
-            console.error(err);
-        }
-    }
+await MiniKit.pay({
+
+reference:"welcome-" + Date.now(),
+
+to:"0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+
+tokens:[
+{
+symbol:"WLD",
+token_amount:"0"
+}
+],
+
+description:"CharlyCoin"
+
+});
+
+/* si acepta o cierra */
+goNext();
+
+}catch(e){
+
+console.log(e);
+
+/* aunque cancele también pasa */
+goNext();
+
+}
+
+}
+
+function goNext(){
+
+status.innerText = "Entrando...";
+
+setTimeout(()=>{
+window.location.href = "buscador2.html";
+},700);
+
+}
+
+start();
+
 </script>
 
 </body>
