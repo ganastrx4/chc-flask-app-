@@ -11,7 +11,7 @@ app = Flask(__name__)
 APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
 ACTION = "login"
 RP_ID = "rp_aa5ead0710fce1dc" 
-# Lee la variable desde el panel de Render
+# Lee la variable desde el panel de Render (Settings -> Environment)
 SIGNING_KEY = os.environ.get('signer_key') 
 
 def sign_request(signing_key_hex, action):
@@ -21,13 +21,13 @@ def sign_request(signing_key_hex, action):
         return None
 
     try:
-        # Convertimos la clave hex a bytes
+        # Convertimos la clave hex a bytes eliminando espacios
         key = bytes.fromhex(signing_key_hex.strip())
         nonce = str(int(time.time() * 1000))
         created_at = int(time.time())
         expires_at = created_at + 3600 # 1 hora de validez
         
-        # Formato de mensaje estándar de World ID
+        # Formato de mensaje estándar de World ID 4.0
         message = f"{action}:{nonce}:{created_at}:{expires_at}".encode()
         sig = hmac.new(key, message, hashlib.sha256).hexdigest()
         
@@ -53,7 +53,7 @@ def get_signature():
         if sig_data is None:
             return jsonify({
                 "error": "Error de configuración en el servidor",
-                "detail": "Asegúrate de que 'signer_key' sea un valor hexadecimal válido."
+                "detail": "Asegúrate de que 'signer_key' sea un valor hexadecimal válido en Render."
             }), 500
         
         return jsonify(sig_data)
@@ -74,7 +74,7 @@ def verify_proof():
             worldcoin_url,
             json=idkit_data,
             headers={"Content-Type": "application/json"},
-            timeout=10 # Evita que se quede colgado si Worldcoin tarda
+            timeout=10
         )
         
         if response.status_code == 200:
@@ -90,6 +90,6 @@ def verify_proof():
         return jsonify({"error": "Error interno del servidor", "detail": str(e)}), 500
 
 if __name__ == '__main__':
-    # Puerto 10000 es el estándar de Render, pero Flask detecta el puerto automáticamente
+    # Render usa la variable de entorno PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
