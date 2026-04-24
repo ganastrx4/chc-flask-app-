@@ -55,68 +55,51 @@ min-height:30px;
 </div>
 
 <script type="module">
-
 import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
 const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-
 const status = document.getElementById("status");
 
 await MiniKit.install(APP_ID);
 
-status.innerText = "MiniKit conectado";
-
-document.getElementById("login").onclick = async ()=>{
-
-try{
-
-status.innerText = "Abriendo World ID...";
-
-const verify = await MiniKit.verify({
- action:"login",
- signal:"charlycoin"
+// 1. Escuchamos la respuesta SIEMPRE
+MiniKit.subscribe("walletAuth", async (response) => {
+    if (response.finalPayload) {
+        status.innerText = "Verificando en servidor...";
+        enviarAlBackend(response.finalPayload);
+    }
 });
 
-console.log(verify);
-
-status.innerText = "Validando backend...";
-
-const r = await fetch("/api/verify-proof",{
- method:"POST",
- headers:{
-   "Content-Type":"application/json"
- },
- body:JSON.stringify(verify)
-});
-
-const j = await r.json();
-
-console.log(j);
-
-if(j.success){
-
-status.innerText = "Éxito ✅";
-
-setTimeout(()=>{
- location.href="buscador2.html";
-},1000);
-
-}else{
-
-status.innerText = "Login rechazado";
-
+async function enviarAlBackend(payload) {
+    try {
+        const r = await fetch("/api/verify-proof", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+        if (j.success) {
+            status.innerText = "¡Bienvenido! ✅";
+            setTimeout(() => { location.href = "buscador2.html"; }, 1000);
+        } else {
+            status.innerText = "Error: " + (j.error?.message || "Rechazado");
+        }
+    } catch (e) {
+        status.innerText = "Error de conexión con servidor";
+    }
 }
 
-}catch(e){
-
-console.log(e);
-
-status.innerText = "Error login";
-
-}
-
+document.getElementById("login").onclick = async () => {
+    status.innerText = "Abriendo World ID...";
+    // Usamos walletAuth que es el que dispara el modal nativo en v4
+    await MiniKit.walletAuth({
+        nonce: Date.now().toString(),
+        requestId: "login_chc",
+        scope: ["uniqueness"], 
+        action: "login",
+        signal: "charlycoin"
+    });
 };
-
 </script>
 </body>
 </html>
