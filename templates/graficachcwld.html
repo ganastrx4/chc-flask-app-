@@ -96,7 +96,17 @@
     </style>
 </head>
 <body>
+<script>
+    const access = localStorage.getItem("bot_access");
+    const expiry = localStorage.getItem("bot_expiry");
 
+    if (!access || !expiry || Date.now() > parseInt(expiry)) {
+        alert("Tu tiempo ha expirado o no has pagado.");
+        localStorage.removeItem("bot_access");
+        localStorage.removeItem("bot_expiry");
+        window.location.href = "index.html"; // Regresa al inicio para pagar
+    }
+</script>
 <div class="container">
     <h1>Análisis Técnico de Criptomonedas</h1>
     <div class="control-panel">
@@ -992,6 +1002,67 @@
 
 })();
 </script>
+<div id="payment-container" style="text-align: center; padding: 20px;">
+    <button id="btnPayBot" style="background: #00bcd4; color: #000; padding: 15px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; font-size: 16px;">
+        PAGAR 0.1 WLD PARA CORRER BOT
+    </button>
+    <div id="pay-status" style="margin-top: 10px; color: #00bcd4; font-size: 14px;"></div>
+</div>
 
+<script type="module">
+    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
+
+    const btnPay = document.getElementById("btnPayBot");
+    const status = document.getElementById("pay-status");
+
+    // Función para habilitar el bot
+    function habilitarBot() {
+        const expiracion = Date.now() + (60 * 60 * 1000); // 1 hora desde ahora
+        localStorage.setItem("bot_access", "true");
+        localStorage.setItem("bot_expiry", expiracion.toString());
+        
+        status.innerHTML = "✅ Acceso concedido por 1 hora. Redirigiendo...";
+        btnPay.style.display = "none";
+        
+        setTimeout(() => {
+            window.location.href = "graficachcwld.html";
+        }, 1500);
+    }
+
+    btnPay.onclick = async () => {
+        try {
+            status.innerText = "Esperando confirmación en World App...";
+            
+            // Inicia el pago de 0.1 WLD
+            const payload = await MiniKit.pay({
+                reference: "bot_access_" + Date.now(),
+                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+                tokens: [{ 
+                    symbol: "WLD", 
+                    token_amount: "0.1" 
+                }],
+                description: "Acceso único al Bot CHC (1 hora)"
+            });
+
+            // Si el pago es exitoso (o se procesa el envío)
+            if (payload) {
+                habilitarBot();
+            }
+        } catch (e) {
+            console.error(e);
+            status.innerText = "❌ Error en el pago o cancelado.";
+        }
+    };
+
+    // Verificar si ya tiene acceso al cargar la página
+    window.onload = () => {
+        const expiry = localStorage.getItem("bot_expiry");
+        if (expiry && Date.now() < parseInt(expiry)) {
+            status.innerText = "Ya tienes un acceso activo.";
+            btnPay.innerText = "CONTINUAR AL BOT";
+            btnPay.onclick = () => window.location.href = "graficachcwld.html";
+        }
+    };
+</script>
 </body>
 </html>
