@@ -88,6 +88,16 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/ganarchun.html")
+def ganarchun():
+    return render_template("ganarchun.html")
+
+
+@app.route("/glosario.html")
+def glosario():
+    return render_template("glosario.html")
+
+
 # =========================
 # WORLD ID VERIFY
 # =========================
