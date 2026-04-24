@@ -105,7 +105,7 @@
             // 3. Esperar el escaneo del QR
             const idkitResponse = await request.pollUntilCompletion();
 
-            // 4. Verificación Final y Detección de Duplicados (Step 5 y 6)
+            // 4. Verificación Final y Detección de Duplicados
             status.innerText = "Finalizando validación...";
             
             const verifyRes = await fetch("/api/verify-proof", {
@@ -123,7 +123,6 @@
                     window.location.href = "buscador2.html";
                 }, 1500);
             } else {
-                // Captura el error de "Identidad duplicada" enviado por el servidor
                 throw new Error(verifyData.error || "La verificación falló.");
             }
 
@@ -133,7 +132,7 @@
             status.innerText = "Error: " + err.message;
             btn.disabled = false;
         }
-    });
+    }); // <--- ESTE PARÉNTESIS Y LLAVE CIERRAN EL EVENTO DEL BOTÓN
 </script>
 </body>
 </html>
