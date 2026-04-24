@@ -2,78 +2,75 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>CharlyCoin 🌍</title>
 
 <style>
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
 body{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:radial-gradient(circle at center,#0d1117,#000);
-    font-family:Arial,Helvetica,sans-serif;
-    color:white;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:radial-gradient(circle at center,#0d1117,#000);
+font-family:Arial,Helvetica,sans-serif;
+color:#fff;
 }
 
 .card{
-    width:360px;
-    padding:35px;
-    border-radius:24px;
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(0,188,212,.35);
-    backdrop-filter:blur(12px);
-    box-shadow:0 0 30px rgba(0,188,212,.18);
-    text-align:center;
-}
-
-.logo{
-    font-size:34px;
-    margin-bottom:8px;
+width:360px;
+padding:35px;
+border-radius:24px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(0,188,212,.35);
+backdrop-filter:blur(12px);
+box-shadow:0 0 30px rgba(0,188,212,.18);
+text-align:center;
 }
 
 h1{
-    color:#00bcd4;
-    font-size:28px;
-    margin-bottom:8px;
+font-size:30px;
+color:#00bcd4;
+margin-bottom:10px;
 }
 
 .sub{
-    color:#bdbdbd;
-    font-size:14px;
-    margin-bottom:28px;
-    line-height:1.45;
+font-size:14px;
+color:#bdbdbd;
+margin-bottom:28px;
+line-height:1.4;
 }
 
 button{
-    width:100%;
-    border:none;
-    padding:16px;
-    border-radius:60px;
-    cursor:pointer;
-    font-size:16px;
-    font-weight:bold;
-    color:#fff;
-    background:linear-gradient(90deg,#00bcd4,#9c27b0);
+width:100%;
+padding:16px;
+border:none;
+border-radius:50px;
+cursor:pointer;
+font-size:16px;
+font-weight:bold;
+color:#fff;
+background:linear-gradient(90deg,#00bcd4,#9c27b0);
+margin-bottom:12px;
 }
 
 button:disabled{
-    background:#444;
-    cursor:not-allowed;
+background:#444;
+cursor:not-allowed;
 }
 
 #status{
-    margin-top:18px;
-    min-height:42px;
-    font-size:14px;
-    line-height:1.4;
-    color:#00bcd4;
+margin-top:12px;
+min-height:42px;
+font-size:14px;
+line-height:1.4;
+color:#00bcd4;
+word-break:break-word;
 }
 
 .ok{color:#4caf50!important;}
@@ -84,126 +81,169 @@ button:disabled{
 <body>
 
 <div class="card">
-    <div class="logo">🌍</div>
-    <h1>CharlyCoin</h1>
-    <div class="sub">
-        Acceso oficial con World App<br>
-        Estilo UNO Mini App
-    </div>
 
-    <button id="btnLogin">
-        Entrar con World ID
-    </button>
+<h1>CharlyCoin 🌍</h1>
 
-    <div id="status">Esperando autenticación...</div>
+<div class="sub">
+Mini App oficial World App<br>
+Login + Wallet + Tokens + Pools
+</div>
+
+<button id="btnLogin">Entrar con World App</button>
+
+<button id="btnWallet">Ver Wallet</button>
+
+<button id="btnPay">Transferir Token</button>
+
+<button id="btnPool">Pools / Swap</button>
+
+<div id="status">Esperando acción...</div>
+
 </div>
 
 <script type="module">
 
-const btn = document.getElementById("btnLogin");
+import { MiniKit } from "https://esm.sh/@worldcoin/minikit-js";
+
 const status = document.getElementById("status");
 
-/* CONFIG */
-const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+const btnLogin  = document.getElementById("btnLogin");
+const btnWallet = document.getElementById("btnWallet");
+const btnPay    = document.getElementById("btnPay");
+const btnPool   = document.getElementById("btnPool");
 
-/* helpers */
 function setStatus(msg,type=""){
-    status.className="";
-    if(type) status.classList.add(type);
-    status.innerText = msg;
-}
-
-function lock(v=true){
-    btn.disabled = v;
+status.className="";
+if(type) status.classList.add(type);
+status.innerText=msg;
 }
 
 function insideWorldApp(){
-    return navigator.userAgent.toLowerCase().includes("world");
+return navigator.userAgent.toLowerCase().includes("world");
 }
 
-/* fallback clásico */
-async function fallbackLogin(){
+async function init(){
 
-    setStatus("Modo navegador detectado...");
-
-    const mod = await import("https://esm.sh/@worldcoin/idkit-core");
-    const IDKit = mod.IDKit;
-
-    const result = await IDKit.verify({
-        app_id: APP_ID,
-        action: "login",
-        signal: "charlycoin-user"
-    });
-
-    if(result.success){
-        setStatus("Acceso correcto","ok");
-
-        setTimeout(()=>{
-            window.location.href="buscador2.html";
-        },1200);
-    }else{
-        throw new Error("No autorizado");
-    }
+if(!insideWorldApp()){
+setStatus("Abre esta app dentro de World App","err");
+return false;
 }
 
-/* modo world app estilo UNO */
-async function miniKitLogin(){
+await MiniKit.install();
 
-    const sdk = await import("https://esm.sh/@worldcoin/minikit-js");
-
-    const MiniKit = sdk.MiniKit;
-
-    await MiniKit.install();
-
-    setStatus("Abriendo ventana segura...");
-
-    /* ESTO ABRE LA VENTANA ABAJO */
-    const result = await MiniKit.commands.verify({
-        action: "login",
-        signal: "charlycoin-user"
-    });
-
-    if(result.finalPayload?.status === "success" || result.status === "success"){
-
-        setStatus("Verificación exitosa","ok");
-
-        setTimeout(()=>{
-            window.location.href="buscador2.html";
-        },1200);
-
-    }else{
-        throw new Error("Autenticación cancelada");
-    }
+return true;
 }
 
-/* main */
-btn.addEventListener("click", async ()=>{
+/* LOGIN VENTANITA REAL */
+btnLogin.onclick = async ()=>{
 
-    try{
+try{
 
-        lock(true);
+setStatus("Abriendo autorización...");
 
-        if(insideWorldApp()){
+if(!await init()) return;
 
-            setStatus("World App detectada");
+const res = await MiniKit.commands.walletAuth();
 
-            await miniKitLogin();
+console.log(res);
 
-        }else{
+setStatus("Acceso concedido","ok");
 
-            await fallbackLogin();
+setTimeout(()=>{
+window.location.href="buscador2.html";
+},1200);
 
-        }
+}catch(e){
 
-    }catch(err){
+console.log(e);
+setStatus("Cancelado o error","err");
 
-        console.error(err);
-        setStatus("Error: " + err.message,"err");
-        lock(false);
+}
 
-    }
+};
+
+/* VER WALLET */
+btnWallet.onclick = async ()=>{
+
+try{
+
+setStatus("Leyendo wallet...");
+
+if(!await init()) return;
+
+const user = await MiniKit.getUser();
+
+console.log(user);
+
+setStatus("Wallet conectada","ok");
+
+}catch(e){
+
+setStatus("No disponible","err");
+
+}
+
+};
+
+/* TRANSFERIR TOKEN VENTANITA REAL */
+btnPay.onclick = async ()=>{
+
+try{
+
+setStatus("Abriendo pago...");
+
+if(!await init()) return;
+
+const pay = await MiniKit.commands.pay({
+
+reference:"charlycoin-transfer-" + Date.now(),
+
+to:"0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+
+tokens:[
+{
+symbol:"WLD",
+token_amount:"0.1"
+}
+],
+
+description:"Transferencia CharlyCoin"
 
 });
+
+console.log(pay);
+
+setStatus("Pago enviado","ok");
+
+}catch(e){
+
+console.log(e);
+setStatus("Pago cancelado","err");
+
+}
+
+};
+
+/* POOLS / SWAP */
+btnPool.onclick = async ()=>{
+
+try{
+
+setStatus("Abriendo pools...");
+
+if(!await init()) return;
+
+/* puedes redirigir a pool propia */
+window.location.href =
+"https://www.geckoterminal.com/world-chain";
+
+}catch(e){
+
+setStatus("No disponible","err");
+
+}
+
+};
 
 </script>
 
