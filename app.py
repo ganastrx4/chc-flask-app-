@@ -1,62 +1,38 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-from web3 import Web3
-from eth_account.messages import encode_defunct
+from flask import Flask, render_template, request, jsonify
+import requests
 
 app = Flask(__name__)
-CORS(app)
 
-w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:8545'))
+# Reemplaza con tus datos del Developer Portal
+APP_ID = "app_ad065b6571dd4628b88a124ff444e14a"
+ACTION_ID = "login"
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
-@app.route('/<path:path>')
-def serve_files(path):
-    return send_from_directory('.', path)
-
-@app.route('/api/validar_billetera', methods=['POST'])
-def validar():
+@app.route('/api/verify-worldid', methods=['POST'])
+def verify_worldid():
     data = request.json
-
-    address = data.get('address')
-    firma = data.get('firma')
-    mensaje = data.get('mensaje')
-
-    if not address or not firma or not mensaje:
-        return jsonify({"success": False, "error": "Datos incompletos"}), 400
-
-    try:
-        # 🔥 NORMALIZAR MENSAJE (clave para Reown)
-        mensaje = str(mensaje)
-
-        msj_eth = encode_defunct(text=mensaje)
-        recovered_addr = w3.eth.account.recover_message(msj_eth, signature=firma)
-
-        # 🔥 COMPARACIÓN SEGURA
-        if recovered_addr.lower() == address.lower():
-            print(f"✅ Usuario verificado: {address}")
-
-            return jsonify({
-                "success": True,
-                "address": address
-            }), 200
-
-        else:
-            print(f"⚠️ Dirección no coincide: {recovered_addr} vs {address}")
-            return jsonify({"success": False}), 401
-
-    except Exception as e:
-        print(f"❌ Error validando firma: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
-import os
+    
+    # Esta es la llamada al backend de Worldcoin
+    verify_res = requests.post(
+        f"https://developer.worldcoin.org/api/v1/verify/{APP_ID}",
+        json={
+            "condition": "uniqueness-plus", # O el nivel que hayas elegido
+            "action": ACTION_ID,
+            "signal": data.get("signal", ""),
+            "merkle_root": data.get("merkle_root"),
+            "nullifier_hash": data.get("nullifier_hash"),
+            "proof": data.get("proof"),
+            "verification_level": data.get("verification_level")
+        }
+    )
+    
+    if verify_res.status_code == 200:
+        return jsonify({"success": True}), 200
+    else:
+        return jsonify({"success": False, "detail": verify_res.json()}), 400
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
