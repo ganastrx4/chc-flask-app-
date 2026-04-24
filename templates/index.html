@@ -19,54 +19,61 @@ body{
     align-items:center;
     background:radial-gradient(circle at center,#0d1117,#000);
     font-family:Arial,Helvetica,sans-serif;
-    color:#fff;
+    color:white;
 }
 
 .card{
-    width:350px;
+    width:360px;
     padding:35px;
-    border-radius:22px;
+    border-radius:24px;
     background:rgba(255,255,255,.05);
-    border:1px solid #00bcd4;
-    backdrop-filter:blur(10px);
-    box-shadow:0 0 25px rgba(0,188,212,.2);
+    border:1px solid rgba(0,188,212,.35);
+    backdrop-filter:blur(12px);
+    box-shadow:0 0 30px rgba(0,188,212,.18);
     text-align:center;
+}
+
+.logo{
+    font-size:34px;
+    margin-bottom:8px;
 }
 
 h1{
     color:#00bcd4;
-    font-size:30px;
-    margin-bottom:10px;
+    font-size:28px;
+    margin-bottom:8px;
 }
 
 .sub{
-    color:#bbb;
+    color:#bdbdbd;
     font-size:14px;
-    margin-bottom:25px;
+    margin-bottom:28px;
+    line-height:1.45;
 }
 
 button{
     width:100%;
-    padding:16px;
     border:none;
-    border-radius:50px;
+    padding:16px;
+    border-radius:60px;
     cursor:pointer;
-    color:#fff;
-    font-weight:bold;
     font-size:16px;
+    font-weight:bold;
+    color:#fff;
     background:linear-gradient(90deg,#00bcd4,#9c27b0);
 }
 
 button:disabled{
     background:#444;
+    cursor:not-allowed;
 }
 
 #status{
     margin-top:18px;
-    min-height:40px;
+    min-height:42px;
     font-size:14px;
-    color:#00bcd4;
     line-height:1.4;
+    color:#00bcd4;
 }
 
 .ok{color:#4caf50!important;}
@@ -77,14 +84,18 @@ button:disabled{
 <body>
 
 <div class="card">
-    <h1>CharlyCoin 🌍</h1>
-    <div class="sub">Acceso Universal World ID</div>
+    <div class="logo">🌍</div>
+    <h1>CharlyCoin</h1>
+    <div class="sub">
+        Acceso oficial con World App<br>
+        Estilo UNO Mini App
+    </div>
 
     <button id="btnLogin">
         Entrar con World ID
     </button>
 
-    <div id="status">Listo para verificar</div>
+    <div id="status">Esperando autenticación...</div>
 </div>
 
 <script type="module">
@@ -92,88 +103,67 @@ button:disabled{
 const btn = document.getElementById("btnLogin");
 const status = document.getElementById("status");
 
+/* CONFIG */
 const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-const ACTION = "login";
-const RP_ID  = "rp_aa5ead0710fce1dc";
 
+/* helpers */
 function setStatus(msg,type=""){
     status.className="";
     if(type) status.classList.add(type);
-    status.innerText=msg;
+    status.innerText = msg;
 }
 
 function lock(v=true){
-    btn.disabled=v;
+    btn.disabled = v;
 }
 
-/* Detecta World App */
 function insideWorldApp(){
-    return navigator.userAgent.toLowerCase().includes("worldapp");
+    return navigator.userAgent.toLowerCase().includes("world");
 }
 
-/* FLOW NORMAL WORLD ID */
-async function classicFlow(){
+/* fallback clásico */
+async function fallbackLogin(){
+
+    setStatus("Modo navegador detectado...");
 
     const mod = await import("https://esm.sh/@worldcoin/idkit-core");
     const IDKit = mod.IDKit;
-    const orbLegacy = mod.orbLegacy;
 
-    setStatus("Solicitando firma...");
-
-    const sigRes = await fetch("/api/rp-signature",{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        }
-    });
-
-    const sigData = await sigRes.json();
-
-    if(!sigRes.ok){
-        throw new Error(sigData.error || "Error backend");
-    }
-
-    setStatus("Abriendo World ID...");
-
-    const request = await IDKit.request({
-
+    const result = await IDKit.verify({
         app_id: APP_ID,
-        action: ACTION,
-        allow_legacy_proofs: true,
-
-        rp_context:{
-            rp_id: RP_ID,
-            nonce: sigData.nonce,
-            created_at: sigData.created_at,
-            expires_at: sigData.expires_at,
-            signature: sigData.sig
-        },
-
-        environment:"production"
-
-    }).preset(
-        orbLegacy({
-            signal:"charlycoin-login"
-        })
-    );
-
-    setStatus("Escanea con World App...");
-
-    const proof = await request.pollUntilCompletion();
-
-    setStatus("Validando identidad...");
-
-    const verifyRes = await fetch("/api/verify-proof",{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body: JSON.stringify(proof)
+        action: "login",
+        signal: "charlycoin-user"
     });
 
-    const verifyData = await verifyRes.json();
+    if(result.success){
+        setStatus("Acceso correcto","ok");
 
-    if(verifyRes.ok && verifyData.success){
+        setTimeout(()=>{
+            window.location.href="buscador2.html";
+        },1200);
+    }else{
+        throw new Error("No autorizado");
+    }
+}
+
+/* modo world app estilo UNO */
+async function miniKitLogin(){
+
+    const sdk = await import("https://esm.sh/@worldcoin/minikit-js");
+
+    const MiniKit = sdk.MiniKit;
+
+    await MiniKit.install();
+
+    setStatus("Abriendo ventana segura...");
+
+    /* ESTO ABRE LA VENTANA ABAJO */
+    const result = await MiniKit.commands.verify({
+        action: "login",
+        signal: "charlycoin-user"
+    });
+
+    if(result.finalPayload?.status === "success" || result.status === "success"){
 
         setStatus("Verificación exitosa","ok");
 
@@ -182,16 +172,12 @@ async function classicFlow(){
         },1200);
 
     }else{
-        throw new Error(
-            verifyData.error ||
-            verifyData.detail ||
-            "No validado"
-        );
+        throw new Error("Autenticación cancelada");
     }
 }
 
-/* FLOW FALLBACK */
-async function smartLogin(){
+/* main */
+btn.addEventListener("click", async ()=>{
 
     try{
 
@@ -199,28 +185,14 @@ async function smartLogin(){
 
         if(insideWorldApp()){
 
-            setStatus("World App detectada.");
+            setStatus("World App detectada");
 
-            try{
-                await classicFlow();
-                return;
-            }catch(e){
-
-                if(String(e).includes("MiniKit") ||
-                   String(e).includes("compatible")){
-
-                    setStatus("MiniKit antiguo. Usa modo web...");
-                    await classicFlow();
-                    return;
-                }
-
-                throw e;
-            }
+            await miniKitLogin();
 
         }else{
 
-            setStatus("Navegador detectado.");
-            await classicFlow();
+            await fallbackLogin();
+
         }
 
     }catch(err){
@@ -231,9 +203,7 @@ async function smartLogin(){
 
     }
 
-}
-
-btn.addEventListener("click", smartLogin);
+});
 
 </script>
 
