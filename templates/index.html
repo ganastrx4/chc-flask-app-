@@ -1,138 +1,211 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - World ID 4.0</title>
-    <style>
-        body { 
-            margin: 0; 
-            height: 100vh; 
-            background: radial-gradient(circle at center, #0d1117, #000); 
-            color: #fff; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        }
-        .card { 
-            padding: 40px; 
-            border-radius: 20px; 
-            border: 1px solid #00bcd4; 
-            text-align: center; 
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
-            width: 320px;
-        }
-        h1 { color: #00bcd4; margin-bottom: 20px; }
-        .btn { 
-            background: linear-gradient(90deg, #00bcd4, #9c27b0); 
-            border: none; 
-            padding: 15px; 
-            border-radius: 50px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-weight: bold; 
-            color: white;
-            transition: transform 0.2s;
-        }
-        .btn:hover { transform: scale(1.02); filter: brightness(1.1); }
-        .btn:disabled { background: #444; cursor: not-allowed; transform: scale(1); }
-        #status { 
-            margin-top: 20px; 
-            font-size: 0.85rem; 
-            color: #00bcd4; 
-            min-height: 40px;
-            line-height: 1.4;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CharlyCoin - World ID 4.0</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:radial-gradient(circle at center,#0d1117,#000);
+    font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;
+    color:white;
+}
+
+.card{
+    width:340px;
+    padding:40px 30px;
+    border-radius:22px;
+    background:rgba(255,255,255,.05);
+    backdrop-filter:blur(10px);
+    border:1px solid #00bcd4;
+    box-shadow:0 0 30px rgba(0,188,212,.25);
+    text-align:center;
+}
+
+h1{
+    color:#00bcd4;
+    margin-bottom:10px;
+    font-size:30px;
+}
+
+.sub{
+    color:#ccc;
+    font-size:14px;
+    margin-bottom:28px;
+}
+
+.btn{
+    width:100%;
+    border:none;
+    padding:16px;
+    border-radius:60px;
+    font-weight:bold;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+    background:linear-gradient(90deg,#00bcd4,#9c27b0);
+    transition:.25s;
+}
+
+.btn:hover{
+    transform:scale(1.02);
+    filter:brightness(1.1);
+}
+
+.btn:disabled{
+    background:#444;
+    cursor:not-allowed;
+    transform:none;
+}
+
+#status{
+    margin-top:20px;
+    min-height:42px;
+    font-size:14px;
+    line-height:1.4;
+    color:#00bcd4;
+    word-break:break-word;
+}
+
+.ok{color:#4caf50!important;}
+.err{color:#ff5252!important;}
+</style>
 </head>
+
 <body>
 
 <div class="card">
     <h1>CharlyCoin 🌍</h1>
-    <button class="btn" id="btn-verify">Verificar con World ID 4.0</button>
-    <p id="status">Listo para verificar</p>
+    <div class="sub">Verificación oficial World ID 4.0</div>
+
+    <button id="btnVerify" class="btn">
+        Verificar con World ID
+    </button>
+
+    <div id="status">Listo para verificar</div>
 </div>
 
 <script type="module">
-    import { IDKit, orbLegacy } from "https://esm.sh/@worldcoin/idkit-core";
 
-    const btn = document.getElementById('btn-verify');
-    const status = document.getElementById('status');
+import { IDKit, orbLegacy } from "https://esm.sh/@worldcoin/idkit-core";
 
-    // CONFIGURACIÓN OFICIAL
-    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const RP_ID = "rp_aa5ead0710fce1dc"; 
-    const ACTION = "login";
+const btn = document.getElementById("btnVerify");
+const status = document.getElementById("status");
 
-    btn.addEventListener('click', async () => {
-        try {
-            status.style.color = "#00bcd4";
-            status.innerText = "Solicitando firma de seguridad...";
-            btn.disabled = true;
+/* CONFIG */
+const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+const RP_ID = "rp_aa5ead0710fce1dc";
+const ACTION = "login";
 
-            // 1. Obtener la firma del Backend (Step 3)
-            const sigRes = await fetch("/api/rp-signature", { 
-                method: "POST",
-                headers: { "Content-Type": "application/json" }
-            });
+/* helpers */
+function setStatus(msg,color=""){
+    status.className="";
+    if(color) status.classList.add(color);
+    status.innerText=msg;
+}
 
-            if (!sigRes.ok) {
-                const errorData = await sigRes.json();
-                throw new Error(errorData.error || "Error de conexión con el servidor");
+function lock(v=true){
+    btn.disabled=v;
+}
+
+/* main */
+btn.addEventListener("click", async ()=>{
+
+    try{
+
+        lock(true);
+        setStatus("Solicitando firma segura...");
+
+        /* STEP 1 backend signature */
+        const sigRes = await fetch("/api/rp-signature",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
             }
+        });
 
-            const rpSig = await sigRes.json();
+        const sigData = await sigRes.json();
 
-            // 2. Iniciar IDKit (Step 4)
-            status.innerText = "Conectando con World ID... Abre tu App";
-            
-            const request = await IDKit.request({
-                app_id: APP_ID,
-                action: ACTION,
-                rp_context: {
-                    rp_id: RP_ID,
-                    nonce: rpSig.nonce,
-                    created_at: rpSig.created_at,
-                    expires_at: rpSig.expires_at,
-                    signature: rpSig.sig,
-                },
-                environment: "production" 
-            }).preset(orbLegacy({ signal: "user-session-1" }));
-
-            // 3. Esperar el escaneo del QR
-            const idkitResponse = await request.pollUntilCompletion();
-
-            // 4. Verificación Final y Detección de Duplicados
-            status.innerText = "Finalizando validación...";
-            
-            const verifyRes = await fetch("/api/verify-proof", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(idkitResponse)
-            });
-
-            const verifyData = await verifyRes.json();
-
-            if (verifyRes.ok && verifyData.success) {
-                status.style.color = "#4caf50";
-                status.innerText = "¡Verificación Exitosa! Redirigiendo...";
-                setTimeout(() => {
-                    window.location.href = "buscador2.html";
-                }, 1500);
-            } else {
-                throw new Error(verifyData.error || "La verificación falló.");
-            }
-
-        } catch (err) {
-            console.error("Error en flujo:", err);
-            status.style.color = "#ff5252";
-            status.innerText = "Error: " + err.message;
-            btn.disabled = false;
+        if(!sigRes.ok){
+            throw new Error(sigData.error || "Error del servidor");
         }
-    }); // <--- ESTE PARÉNTESIS Y LLAVE CIERRAN EL EVENTO DEL BOTÓN
+
+        setStatus("Abriendo World ID...");
+
+        /* STEP 2 open IDKit */
+        const request = await IDKit.request({
+            app_id: APP_ID,
+            action: ACTION,
+            rp_context:{
+                rp_id: RP_ID,
+                nonce: sigData.nonce,
+                created_at: sigData.created_at,
+                expires_at: sigData.expires_at,
+                signature: sigData.sig
+            },
+            environment:"production"
+        }).preset(
+            orbLegacy({
+                signal:"charlycoin-login"
+            })
+        );
+
+        setStatus("Escanea con World App...");
+
+        /* STEP 3 wait response */
+        const result = await request.pollUntilCompletion();
+
+        setStatus("Validando prueba...");
+
+        /* STEP 4 verify backend */
+        const verifyRes = await fetch("/api/verify-proof",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body: JSON.stringify(result)
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if(verifyRes.ok && verifyData.success){
+
+            setStatus("Verificación exitosa. Redirigiendo...","ok");
+
+            setTimeout(()=>{
+                window.location.href="buscador2.html";
+            },1500);
+
+        }else{
+            throw new Error(
+                verifyData.error ||
+                verifyData.detail ||
+                "La verificación falló"
+            );
+        }
+
+    }catch(err){
+
+        console.error(err);
+        setStatus("Error: " + err.message,"err");
+        lock(false);
+
+    }
+
+});
+
 </script>
+
 </body>
 </html>
