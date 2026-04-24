@@ -1,81 +1,173 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Autenticación World ID</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: linear-gradient(135deg, #000428, #004e92);
-      color: white;
-      text-align: center;
-      font-family: 'Arial', sans-serif;
-      overflow: hidden;
-    }
-    .fade-in {
-      animation: fadeIn 1s ease-in-out forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin - Acceso Seguro</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@worldcoin/idkit-standalone/dist/idkit-standalone.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0d1117, #000);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #00bcd4;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+        }
+        h1 { color: #00bcd4; margin-bottom: 20px; }
+        p { font-size: 0.9rem; opacity: 0.8; }
+        .btn-action {
+            background: linear-gradient(90deg, #00bcd4, #9c27b0);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn-world {
+            background: #000;
+            border: 1px solid #fff;
+            color: white;
+        }
+        .btn-action:hover { transform: scale(1.03); filter: brightness(1.1); }
+        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; font-size: 0.85rem; }
+        .hidden { display: none; }
+    </style>
 </head>
-<body class="flex flex-col justify-center items-center min-h-screen">
+<body>
 
-  <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024-rw/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp"
-       alt="Logo" class="w-64 mb-8 rounded-xl shadow-xl fade-in">
+<div class="card">
+    <h1>CharlyCoin 🌍</h1>
+    <p id="instruction">Paso 1: Demuestra que eres humano</p>
 
-  <h1 class="text-4xl font-bold mb-6 fade-in">Verifica tu identidad en World App</h1>
-  <p class="mb-6 fade-in">Accede a tu cuenta de forma segura y privada.</p>
+    <button class="btn-action btn-world" id="world-id-btn">
+        Verificar con World ID
+    </button>
 
-  <button onclick="startAuth()"
-    class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in mb-4">
-    🔒 Autenticar con World App
-  </button>
+    <button class="btn-action hidden" id="open-modal">
+        Conectar Wallet Web3
+    </button>
 
-  <!-- Botón adicional para ir a enviar.html -->
-  <button onclick="window.location.href='enviar.html'"
-    class="bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:scale-105 transition fade-in">
-    🚀 Enviar
-  </button>
+    <p id="status"></p>
+</div>
 
-  <div id="result" class="mt-8 text-sm text-green-300"></div>
+<script type="module">
+    import { createAppKit } from "https://esm.sh/@reown/appkit";
+    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
+    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
 
-  <script>
-  function startAuth() {
-    const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const redirectUri = "https://ganastrx4.github.io/chc-flask-app-/";
-    const state = Math.random().toString(36).substring(2);
-    const scope = "openid";
-    const responseType = "code";
-    const nonce = Math.random().toString(36).substring(2);
+    const statusText = document.getElementById('status');
+    const instruction = document.getElementById('instruction');
+    const worldBtn = document.getElementById('world-id-btn');
+    const walletBtn = document.getElementById('open-modal');
 
-    const authUrl = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${encodeURIComponent(responseType)}&scope=${encodeURIComponent(scope)}&state=${state}&nonce=${nonce}`;
-    window.location.href = authUrl;
-  }
+    // --- 1. CONFIGURACIÓN DE REOWN ---
+    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb";
+    const modal = createAppKit({
+        adapters: [new Ethers5Adapter()],
+        networks: [mainnet, bsc],
+        metadata: {
+            name: "CharlyCoin",
+            description: "Acceso seguro a CharlyCoin",
+            url: window.location.origin,
+            icons: ["https://avatars.githubusercontent.com/u/37784886"]
+        },
+        projectId
+    });
 
-  // Procesar tokens si vienen en la URL
-  window.onload = function () {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
+    // --- 2. LÓGICA DE WORLD ID ---
+    worldBtn.addEventListener('click', () => {
+        statusText.innerText = "Esperando a World ID...";
+        
+        IDKit.init({
+            app_id: "app_ad065b6571dd4628b88a124ff444e14a", 
+            action: "login",
+            onSuccess: (result) => {
+                statusText.innerText = "¡Humano verificado con éxito!";
+                instruction.innerText = "Paso 2: Conecta tu billetera";
+                worldBtn.classList.add('hidden');
+                walletBtn.classList.remove('hidden');
+            },
+            handleVerify: async (proof) => {
+                const res = await fetch('/api/verify-worldid', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(proof)
+                });
+                if (!res.ok) throw new Error("La validación de World ID falló.");
+            }
+        });
+        IDKit.open();
+    });
 
-    const accessToken = params.get("access_token");
-    const idToken = params.get("id_token");
+    // --- 3. LÓGICA DE WALLET ---
+    walletBtn.addEventListener('click', async () => {
+        try {
+            statusText.innerText = "Abriendo Wallet...";
+            await modal.open();
 
-    if (accessToken && idToken) {
-      document.getElementById("result").innerHTML = `
-        ✅ Autenticado correctamente.<br>
-        <strong>Access Token:</strong> ${accessToken}<br>
-        <strong>ID Token:</strong> ${idToken}
-      `;
+            const checkConnection = setInterval(async () => {
+                const address = modal.getAddress();
+                if (address) {
+                    clearInterval(checkConnection);
+                    statusText.innerText = "Billetera conectada. Firmando...";
+                    await firmarYValidar(address);
+                }
+            }, 1000);
+        } catch (err) {
+            statusText.innerText = "Error en la conexión.";
+        }
+    });
 
-      console.log("Access Token:", accessToken);
-      console.log("ID Token:", idToken);
+    async function firmarYValidar(address) {
+        try {
+            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
+            const signer = provider.getSigner();
+            const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
+            
+            const firma = await signer.signMessage(mensaje);
+            statusText.innerText = "Validando acceso final...";
+
+            const res = await fetch('/api/validar_billetera', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, firma, mensaje })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                statusText.innerText = "¡Bienvenido, Humano!";
+                setTimeout(() => { window.location.href = "buscador2.html"; }, 1500);
+            } else {
+                statusText.innerText = "Firma inválida.";
+            }
+        } catch (err) {
+            statusText.innerText = "Operación cancelada.";
+        }
     }
-  };
-  </script>
+</script>
 
 </body>
 </html>
