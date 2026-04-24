@@ -1,5 +1,4 @@
 import os
-import json
 from flask import Flask, request, jsonify, render_template
 import requests
 
@@ -12,7 +11,6 @@ APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
 ACTION = "login"
 VERIFY_URL = "https://developer.worldcoin.org/api/v2/verify"
 
-# archivo simple anti-duplicados
 DB_FILE = "nullifiers.txt"
 
 
@@ -22,30 +20,61 @@ DB_FILE = "nullifiers.txt"
 def load_nullifiers():
     if not os.path.exists(DB_FILE):
         return set()
-    with open(DB_FILE, "r") as f:
+
+    with open(DB_FILE, "r", encoding="utf-8") as f:
         return set(line.strip() for line in f.readlines())
 
 
 def save_nullifier(value):
-    with open(DB_FILE, "a") as f:
+    with open(DB_FILE, "a", encoding="utf-8") as f:
         f.write(str(value) + "\n")
 
 
 # =========================
-# WEB
+# PAGINAS
 # =========================
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
+@app.route("/buscador2.html")
+def buscador2():
+    return render_template("buscador2.html")
+
+
+@app.route("/enviarwld.html")
+def enviarwld():
+    return render_template("enviarwld.html")
+
+
+@app.route("/exchange.html")
+def exchange():
+    return render_template("exchange.html")
+
+
+@app.route("/faucets.html")
+def faucets():
+    return render_template("faucets.html")
+
+
+@app.route("/ganarchun.html")
+def ganarchun():
+    return render_template("ganarchun.html")
+
+
+@app.route("/glosario.html")
+def glosario():
+    return render_template("glosario.html")
+
+
 # =========================
-# VERIFY WORLD ID V4
+# WORLD ID VERIFY
 # =========================
 @app.route("/api/verify-proof", methods=["POST"])
 def verify_proof():
     try:
-        data = request.json
+        data = request.get_json()
 
         if not data:
             return jsonify({
@@ -53,11 +82,13 @@ def verify_proof():
                 "error": "No data"
             }), 400
 
-        # detectar nullifier en varias versiones
+        # detectar nullifier
+        proof_data = data.get("proof", {})
+
         nullifier = (
             data.get("nullifier_hash")
             or data.get("nullifier")
-            or data.get("proof", {}).get("nullifier_hash")
+            or proof_data.get("nullifier_hash")
         )
 
         if not nullifier:
@@ -75,10 +106,10 @@ def verify_proof():
                 "error": "Usuario ya verificado"
             }), 400
 
-        # payload oficial world id
+        # payload correcto
         payload = {
-            "app_id": app_7686f9027d3e3c0b53d987a3caf1e111,
-            "action": login,
+            "app_id": APP_ID,
+            "action": ACTION,
             "proof": data.get("proof"),
             "merkle_root": data.get("merkle_root"),
             "nullifier_hash": nullifier,
@@ -98,7 +129,6 @@ def verify_proof():
         print("WORLD RESPONSE:", result)
 
         if r.status_code == 200 and result.get("success") is True:
-
             save_nullifier(nullifier)
 
             return jsonify({
@@ -116,42 +146,20 @@ def verify_proof():
             "success": False,
             "error": str(e)
         }), 500
+
+
 # =========================
-# buscador
+# STATUS
 # =========================
-@app.route("/buscador2.html")
-def buscador():
-    return render_template("buscador2.html")
-# =========================
-# enviarwld
-# =========================
-@app.route("/enviarwld.html")
-def buscador():
-    return render_template("enviarwld.html")
-# =========================
-# exchange
-# =========================
-@app.route("/exchange.html")
-def buscador():
-    return render_template("exchange.html")
-# =========================
-# faucets
-# =========================
-@app.route("/faucets.html")
-def buscador():
-    return render_template("faucets.html")
-# =========================
-# ganarchun
-# =========================
-@app.route("/ganarchun.html")
-def buscador():
-    return render_template("ganarchun.html")
-# =========================
-# glosario
-# =========================
-@app.route("/glosario.html")
-def buscador():
-    return render_template("glosario.html")
+@app.route("/api/status")
+def status():
+    return jsonify({
+        "success": True,
+        "app": "CHC Flask",
+        "world_id": True
+    })
+
+
 # =========================
 # RUN
 # =========================
