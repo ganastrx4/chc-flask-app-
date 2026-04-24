@@ -24,20 +24,19 @@ text-align:center;
 border:1px solid #00bcd4;
 border-radius:24px;
 background:#0a0a0a;
-box-shadow:0 0 20px rgba(0,188,212,.20);
+box-shadow:0 0 20px rgba(0,188,212,.2);
 }
 
 h1{
+font-size:32px;
 color:#00bcd4;
 margin-bottom:5px;
-font-size:32px;
-letter-spacing:2px;
 }
 
 p{
+font-size:14px;
 color:#666;
 margin-bottom:28px;
-font-size:14px;
 }
 
 button{
@@ -45,17 +44,12 @@ width:100%;
 padding:16px;
 border:none;
 border-radius:50px;
+cursor:pointer;
 font-size:16px;
 font-weight:800;
-cursor:pointer;
-margin-bottom:14px;
 color:#fff;
 background:linear-gradient(90deg,#00bcd4,#9c27b0);
-transition:.2s;
-}
-
-button:active{
-transform:scale(.97);
+margin-bottom:14px;
 }
 
 .sec{
@@ -67,8 +61,8 @@ font-size:13px;
 #status{
 margin-top:14px;
 font-size:14px;
-font-weight:bold;
 color:#00bcd4;
+font-weight:bold;
 min-height:32px;
 line-height:1.4;
 }
@@ -83,12 +77,13 @@ line-height:1.4;
 <div class="card">
 
 <h1>CHC 🌍</h1>
-<p>Identidad Digital CharlyCoin</p>
+<p>World ID v4 Oficial</p>
 
 <button id="btnLogin">ENTRAR CON WORLD ID</button>
-<button id="btnSend" class="sec">ENVIAR 0.1 WLD</button>
 
-<div id="status">Iniciando MiniKit...</div>
+<button id="btnPay" class="sec">ENVIAR 0.1 WLD</button>
+
+<div id="status">Iniciando...</div>
 
 </div>
 
@@ -99,19 +94,17 @@ import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm
 const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
 
 const status = document.getElementById("status");
-const btnLogin = document.getElementById("btnLogin");
-const btnSend = document.getElementById("btnSend");
 
-function setStatus(txt,cls=""){
-status.className = cls;
-status.innerText = txt;
+function setStatus(t,c=""){
+status.className=c;
+status.innerText=t;
 }
 
 function entrar(){
 setStatus("¡Verificado! Entrando...","ok");
 setTimeout(()=>{
 window.location.href="buscador2.html";
-},700);
+},800);
 }
 
 async function init(){
@@ -122,83 +115,78 @@ await MiniKit.install(APP_ID);
 
 setStatus("MiniKit conectado ✅","ok");
 
-/* Escuchar respuesta asíncrona */
-if(MiniKit.subscribe){
-MiniKit.subscribe("walletAuth",(payload)=>{
-console.log("walletAuth subscribe:",payload);
-
-if(
-payload?.finalPayload ||
-payload?.payload ||
-payload?.status === "success"
-){
-entrar();
-}
-});
-}
-
 }catch(e){
 
 console.log(e);
-setStatus("Ábrelo desde World App","err");
+
+setStatus("Ábrelo en World App","err");
 
 }
 
 }
 
-/* LOGIN CON VENTANA NATIVA */
-btnLogin.onclick = async ()=>{
+/* LOGIN V4 */
+document.getElementById("btnLogin").onclick = async ()=>{
 
 try{
 
 setStatus("Abriendo World ID...");
 
-const reqId = "login-" + Date.now();
+const result = await MiniKit.verify({
 
-const result = await MiniKit.walletAuth({
+action:"login",
 
-nonce: Date.now().toString(),
-
-requestId: reqId,
-
-scope:["uniqueness"]
+signal:"charlycoin-user-" + Date.now()
 
 });
 
-console.log("walletAuth result:",result);
+console.log(result);
 
-/* algunas versiones responden directo */
+/* éxito */
 if(
 result?.finalPayload ||
-result?.payload ||
+result?.proof ||
+result?.nullifier_hash ||
 result?.status === "success"
 ){
-entrar();
-return;
-}
 
-/* otras responden después por subscribe */
-setStatus("Esperando confirmación...");
+/* opcional backend verify */
+/*
+await fetch("/api/verify-proof",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(result)
+});
+*/
+
+entrar();
+
+}else{
+
+setStatus("Cancelado");
+
+}
 
 }catch(e){
 
 console.log(e);
-setStatus("Login cancelado","err");
+
+setStatus("Error en verificación","err");
 
 }
 
 };
 
-/* PAGO NATIVO */
-btnSend.onclick = async ()=>{
+/* PAGO */
+document.getElementById("btnPay").onclick = async ()=>{
 
 try{
 
-setStatus("Abriendo wallet...");
+setStatus("Abriendo Wallet...");
 
-const pay = await MiniKit.pay({
+await MiniKit.pay({
 
-reference:"chc-" + Date.now(),
+reference:"pay-" + Date.now(),
 
 to:"0xdc178d65c502f9589bb1a35af08b5723f85ec168",
 
@@ -213,13 +201,12 @@ description:"Aporte CHC"
 
 });
 
-console.log(pay);
-
-setStatus("Solicitud enviada","ok");
+setStatus("Pago enviado ✅","ok");
 
 }catch(e){
 
 console.log(e);
+
 setStatus("Pago cancelado","err");
 
 }
