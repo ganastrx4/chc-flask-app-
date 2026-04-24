@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-    <title>CHC - CharlyCoin</title>
+    <title>CHC - World ID 4.0</title>
     <style>
         body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; }
         .card { width: 320px; padding: 40px 20px; text-align: center; border: 1px solid #00bcd4; border-radius: 24px; background: #0a0a0a; box-shadow: 0 0 20px rgba(0, 188, 212, 0.2); }
         h1 { color: #00bcd4; margin-bottom: 5px; font-size: 32px; }
         button { width: 100%; padding: 16px; border-radius: 50px; border: none; background: linear-gradient(90deg, #00bcd4, #9c27b0); color: #fff; font-weight: 800; cursor: pointer; font-size: 16px; margin-top: 20px; }
-        #status { margin-top: 20px; font-size: 14px; color: #00bcd4; }
+        #status { margin-top: 20px; font-size: 13px; color: #00bcd4; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>CHC 🌍</h1>
-    <p style="color:#666">World ID 4.0 Uniqueness</p>
-    <button id="btnLogin">VERIFICAR IDENTIDAD</button>
+    <p style="color:#666">Verificación Uniqueness v4</p>
+    <button id="btnLogin">VERIFICAR CON WORLD ID</button>
     <div id="status">Esperando MiniKit...</div>
 </div>
 
@@ -32,13 +32,19 @@
             await MiniKit.install(APP_ID);
             status.innerText = "MiniKit Conectado ✅";
 
-            // Suscripción para capturar el resultado del modal
+            // Escuchamos la respuesta del modal (IDKit Result)
             MiniKit.subscribe("walletAuth", (res) => {
                 if (res.finalPayload) {
-                    status.innerText = "¡Verificado! Entrando...";
-                    setTimeout(() => { window.location.href = "buscador2.html"; }, 500);
+                    console.log("Datos para el Backend:", res.finalPayload);
+                    status.innerText = "¡Prueba v4 generada con éxito!";
+                    
+                    // Aquí es donde el mapeo que pasaste entra en juego:
+                    // El payload ya trae el nullifier, proof, y signal_hash
+                    setTimeout(() => { 
+                        window.location.href = "buscador2.html"; 
+                    }, 800);
                 } else if (res.error) {
-                    status.innerText = "Error en el modal: " + res.error.message;
+                    status.innerText = "Error: " + res.error.message;
                 }
             });
         } catch (e) {
@@ -48,20 +54,22 @@
 
     document.getElementById("btnLogin").onclick = async () => {
         try {
-            status.innerText = "Abriendo confirmación...";
+            status.innerText = "Abriendo IDKit...";
             
-            // Basado en el contrato de Verifier v4 que pasaste:
-            // Necesitamos enviar 'action' y un 'nonce' claro.
+            // Según tu mapeo, necesitamos un nonce y un signalHash
+            // El signalHash suele ser el walletAddress o un string del usuario
+            const userSignal = "user_" + Date.now();
+
             await MiniKit.walletAuth({
-                nonce: Date.now().toString(), 
-                requestId: "login_chc",
+                nonce: Date.now().toString(), // nonce de nivel superior
+                requestId: "login_chc_v4",
                 scope: ["uniqueness"],
-                // Definimos la acción para que el modal sepa qué mostrar
-                action: "login-chc-v4", 
+                action: "login", // Esto se hashea a uint256 en el contrato
+                signal: userSignal // Esto genera el signalHash que pide tu mapeo
             });
 
         } catch (e) {
-            status.innerText = "Error al lanzar modal";
+            status.innerText = "Error al lanzar el modal";
         }
     };
 
