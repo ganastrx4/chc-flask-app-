@@ -1,221 +1,71 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>CHC - CharlyCoin</title>
-
-<style>
-body{
-margin:0;
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:#000;
-color:#fff;
-font-family:'Segoe UI',sans-serif;
-}
-
-.card{
-width:320px;
-padding:40px 20px;
-text-align:center;
-border:1px solid #00bcd4;
-border-radius:24px;
-background:#0a0a0a;
-box-shadow:0 0 20px rgba(0,188,212,.2);
-}
-
-h1{
-font-size:32px;
-color:#00bcd4;
-margin-bottom:5px;
-}
-
-p{
-font-size:14px;
-color:#666;
-margin-bottom:28px;
-}
-
-button{
-width:100%;
-padding:16px;
-border:none;
-border-radius:50px;
-cursor:pointer;
-font-size:16px;
-font-weight:800;
-color:#fff;
-background:linear-gradient(90deg,#00bcd4,#9c27b0);
-margin-bottom:14px;
-}
-
-.sec{
-background:#1a1a1a;
-border:1px solid #444;
-font-size:13px;
-}
-
-#status{
-margin-top:14px;
-font-size:14px;
-color:#00bcd4;
-font-weight:bold;
-min-height:32px;
-line-height:1.4;
-}
-
-.ok{color:#4caf50!important;}
-.err{color:#ff5252!important;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>CHC - CharlyCoin</title>
+    <style>
+        body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; }
+        .card { width: 320px; padding: 40px 20px; text-align: center; border: 1px solid #00bcd4; border-radius: 24px; background: #0a0a0a; box-shadow: 0 0 20px rgba(0, 188, 212, 0.2); }
+        h1 { color: #00bcd4; margin-bottom: 5px; font-size: 32px; }
+        button { width: 100%; padding: 16px; border-radius: 50px; border: none; background: linear-gradient(90deg, #00bcd4, #9c27b0); color: #fff; font-weight: 800; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        #status { margin-top: 20px; font-size: 14px; color: #00bcd4; }
+    </style>
 </head>
-
 <body>
 
 <div class="card">
-
-<h1>CHC 🌍</h1>
-<p>World ID v4 Oficial</p>
-
-<button id="btnLogin">ENTRAR CON WORLD ID</button>
-
-<button id="btnPay" class="sec">ENVIAR 0.1 WLD</button>
-
-<div id="status">Iniciando...</div>
-
+    <h1>CHC 🌍</h1>
+    <p style="color:#666">World ID 4.0 Uniqueness</p>
+    <button id="btnLogin">VERIFICAR IDENTIDAD</button>
+    <div id="status">Esperando MiniKit...</div>
 </div>
 
 <script type="module">
+    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
+    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const status = document.getElementById("status");
 
-const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    async function init() {
+        try {
+            await MiniKit.install(APP_ID);
+            status.innerText = "MiniKit Conectado ✅";
 
-const status = document.getElementById("status");
+            // Suscripción para capturar el resultado del modal
+            MiniKit.subscribe("walletAuth", (res) => {
+                if (res.finalPayload) {
+                    status.innerText = "¡Verificado! Entrando...";
+                    setTimeout(() => { window.location.href = "buscador2.html"; }, 500);
+                } else if (res.error) {
+                    status.innerText = "Error en el modal: " + res.error.message;
+                }
+            });
+        } catch (e) {
+            status.innerText = "Error de inicio";
+        }
+    }
 
-function setStatus(t,c=""){
-status.className=c;
-status.innerText=t;
-}
+    document.getElementById("btnLogin").onclick = async () => {
+        try {
+            status.innerText = "Abriendo confirmación...";
+            
+            // Basado en el contrato de Verifier v4 que pasaste:
+            // Necesitamos enviar 'action' y un 'nonce' claro.
+            await MiniKit.walletAuth({
+                nonce: Date.now().toString(), 
+                requestId: "login_chc",
+                scope: ["uniqueness"],
+                // Definimos la acción para que el modal sepa qué mostrar
+                action: "login-chc-v4", 
+            });
 
-function entrar(){
-setStatus("¡Verificado! Entrando...","ok");
-setTimeout(()=>{
-window.location.href="buscador2.html";
-},800);
-}
+        } catch (e) {
+            status.innerText = "Error al lanzar modal";
+        }
+    };
 
-async function init(){
-
-try{
-
-await MiniKit.install(APP_ID);
-
-setStatus("MiniKit conectado ✅","ok");
-
-}catch(e){
-
-console.log(e);
-
-setStatus("Ábrelo en World App","err");
-
-}
-
-}
-
-/* LOGIN V4 */
-document.getElementById("btnLogin").onclick = async ()=>{
-
-try{
-
-setStatus("Abriendo World ID...");
-
-const result = await MiniKit.verify({
-
-action:"login",
-
-signal:"charlycoin-user-" + Date.now()
-
-});
-
-console.log(result);
-
-/* éxito */
-if(
-result?.finalPayload ||
-result?.proof ||
-result?.nullifier_hash ||
-result?.status === "success"
-){
-
-/* opcional backend verify */
-/*
-await fetch("/api/verify-proof",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify(result)
-});
-*/
-
-entrar();
-
-}else{
-
-setStatus("Cancelado");
-
-}
-
-}catch(e){
-
-console.log(e);
-
-setStatus("Error en verificación","err");
-
-}
-
-};
-
-/* PAGO */
-document.getElementById("btnPay").onclick = async ()=>{
-
-try{
-
-setStatus("Abriendo Wallet...");
-
-await MiniKit.pay({
-
-reference:"pay-" + Date.now(),
-
-to:"0xdc178d65c502f9589bb1a35af08b5723f85ec168",
-
-tokens:[
-{
-symbol:"WLD",
-token_amount:"0.1"
-}
-],
-
-description:"Aporte CHC"
-
-});
-
-setStatus("Pago enviado ✅","ok");
-
-}catch(e){
-
-console.log(e);
-
-setStatus("Pago cancelado","err");
-
-}
-
-};
-
-init();
-
+    init();
 </script>
-
 </body>
 </html>
