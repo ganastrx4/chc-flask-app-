@@ -2,67 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>CHC - CharlyCoin 🌍</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>CHC - CharlyCoin</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: radial-gradient(circle at center, #0d1117, #000);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            color: #fff;
-            padding: 20px;
-        }
-        .card {
-            width: 100%;
-            max-width: 340px;
-            padding: 30px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .05);
-            border: 1px solid rgba(0, 188, 212, .4);
-            backdrop-filter: blur(15px);
-            text-align: center;
-            box-shadow: 0 0 40px rgba(0, 188, 212, 0.15);
-        }
-        h1 { color: #00bcd4; font-size: 32px; margin-bottom: 10px; }
-        .sub { color: #888; font-size: 14px; margin-bottom: 30px; }
-        button {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-            background: linear-gradient(90deg, #00bcd4, #9c27b0);
-            cursor: pointer;
-            margin-bottom: 15px;
-            transition: 0.2s;
-        }
-        button:active { transform: scale(0.96); }
-        #status {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #00bcd4;
-            min-height: 20px;
-        }
-        .success { color: #4caf50 !important; }
-        .error { color: #ff5252 !important; }
+        body { margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; color: #fff; font-family: sans-serif; }
+        .card { width: 320px; padding: 40px 20px; text-align: center; border: 1px solid #00bcd4; border-radius: 24px; background: #0a0a0a; }
+        button { width: 100%; padding: 16px; border-radius: 50px; border: none; background: #00bcd4; color: #000; font-weight: 800; cursor: pointer; font-size: 16px; }
+        #status { margin-top: 20px; font-size: 14px; color: #00bcd4; min-height: 20px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>CHC</h1>
-    <div class="sub">World ID 4.0 Verified App</div>
-    
-    <button id="btnLogin">ENTRAR</button>
-    <button id="btnSend" style="background: #222; border: 1px solid #444;">ENVIAR 0.1 WLD</button>
-    
-    <div id="status">Cargando MiniKit...</div>
+    <h1 style="margin-bottom: 10px;">CHC 🌍</h1>
+    <p style="color: #666; margin-bottom: 30px;">Identidad Digital Única</p>
+    <button id="btnLogin">ENTRAR AHORA</button>
+    <div id="status">Iniciando sistema...</div>
 </div>
 
 <script type="module">
@@ -71,73 +26,38 @@
     const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
     const status = document.getElementById("status");
 
-    // 1. Inicializar MiniKit
     async function init() {
         try {
+            // Pasamos el ID y forzamos la instalación
             await MiniKit.install(APP_ID);
             status.innerText = "MiniKit Conectado ✅";
             
-            // IMPORTANTE: Escuchamos la respuesta de la World App globalmente
-            MiniKit.subscribe("walletAuth", (response) => {
-                if (response.finalPayload) {
-                    handleSuccess();
-                } else if (response.error) {
-                    console.error("Error de World App:", response.error);
-                    status.innerText = "Error en validación";
-                    status.className = "error";
+            // Listener para capturar la respuesta
+            MiniKit.subscribe("walletAuth", (res) => {
+                if (res.finalPayload) {
+                    status.innerText = "¡Verificado! Entrando...";
+                    setTimeout(() => { window.location.href = "buscador2.html"; }, 500);
                 }
             });
-
         } catch (e) {
-            status.innerText = "Error: Úsalo dentro de World App";
-            status.className = "error";
+            status.innerText = "Error de carga";
         }
     }
 
-    // 2. Lógica de éxito
-    function handleSuccess() {
-        status.innerText = "¡Verificado! Redirigiendo...";
-        status.className = "success";
-        setTimeout(() => {
-            window.location.href = "buscador2.html";
-        }, 800);
-    }
-
-    // 3. Botón Login
     document.getElementById("btnLogin").onclick = async () => {
         try {
             status.innerText = "Abriendo World ID...";
             
-            // Nueva sintaxis directa sin .commands
-            const response = await MiniKit.walletAuth({
+            // Si MiniKit no está listo, re-intentamos instalar
+            if (!MiniKit.isInstalled) { await MiniKit.install(APP_ID); }
+
+            await MiniKit.walletAuth({
                 nonce: Date.now().toString(),
                 requestId: "login_chc",
                 scope: ["uniqueness"], 
             });
-
-            // En algunos casos la respuesta llega directo aquí
-            if (response && response.finalPayload) {
-                handleSuccess();
-            }
         } catch (e) {
-            status.innerText = "No se pudo abrir la App";
-            status.className = "error";
-        }
-    };
-
-    // 4. Botón Pago
-    document.getElementById("btnSend").onclick = async () => {
-        try {
-            status.innerText = "Procesando pago...";
-            await MiniKit.pay({
-                reference: "chc-" + Date.now(),
-                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
-                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
-                description: "Aporte CharlyCoin"
-            });
-            status.innerText = "Solicitud enviada";
-        } catch (e) {
-            status.innerText = "Pago cancelado";
+            status.innerText = "Error: Intenta de nuevo";
         }
     };
 
