@@ -123,6 +123,36 @@ def verify_proof():
 def buscador():
     return render_template("buscador2.html")
 # =========================
+# enviarwld
+# =========================
+@app.route("/enviarwld.html")
+def buscador():
+    return render_template("enviarwld.html")
+# =========================
+# exchange
+# =========================
+@app.route("/exchange.html")
+def buscador():
+    return render_template("exchange.html")
+# =========================
+# faucets
+# =========================
+@app.route("/faucets.html")
+def buscador():
+    return render_template("faucets.html")
+# =========================
+# ganarchun
+# =========================
+@app.route("/ganarchun.html")
+def buscador():
+    return render_template("ganarchun.html")
+# =========================
+# glosario
+# =========================
+@app.route("/glosario.html")
+def buscador():
+    return render_template("glosario.html")
+# =========================
 # RUN
 # =========================
 if __name__ == "__main__":
