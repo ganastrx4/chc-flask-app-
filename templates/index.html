@@ -38,6 +38,7 @@
             transition: transform 0.2s;
         }
         .btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn:disabled { background: #444; cursor: not-allowed; transform: scale(1); }
         #status { 
             margin-top: 20px; 
             font-size: 0.85rem; 
@@ -56,23 +57,23 @@
 </div>
 
 <script type="module">
-    // Importamos el SDK Core de World ID 4.0
     import { IDKit, orbLegacy } from "https://esm.sh/@worldcoin/idkit-core";
 
     const btn = document.getElementById('btn-verify');
     const status = document.getElementById('status');
 
-    // CONFIGURACIÓN - IMPORTANTE: Reemplaza TU_RP_ID_AQUI con el de tu portal
+    // CONFIGURACIÓN OFICIAL
     const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
     const RP_ID = "rp_aa5ead0710fce1dc"; 
     const ACTION = "login";
 
     btn.addEventListener('click', async () => {
         try {
-            status.innerText = "Solicitando firma de seguridad al servidor...";
+            status.style.color = "#00bcd4";
+            status.innerText = "Solicitando firma de seguridad...";
             btn.disabled = true;
 
-            // 1. Obtener la firma RP del backend (Generada en app.py con tu signer_key)
+            // 1. Obtener la firma del Backend (Step 3)
             const sigRes = await fetch("/api/rp-signature", { 
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
@@ -80,17 +81,12 @@
 
             if (!sigRes.ok) {
                 const errorData = await sigRes.json();
-                throw new Error(errorData.error || "Error al obtener firma del servidor");
+                throw new Error(errorData.error || "Error de conexión con el servidor");
             }
 
             const rpSig = await sigRes.json();
 
-            // Validación de seguridad para evitar el error de 'nonce' nulo
-            if (!rpSig || !rpSig.nonce) {
-                throw new Error("El servidor devolvió una firma vacía. Revisa la variable signer_key en Render.");
-            }
-
-            // 2. Iniciar el flujo de World ID 4.0 (IDKit Request)
+            // 2. Iniciar IDKit (Step 4)
             status.innerText = "Conectando con World ID... Abre tu App";
             
             const request = await IDKit.request({
@@ -106,11 +102,11 @@
                 environment: "production" 
             }).preset(orbLegacy({ signal: "user-session-1" }));
 
-            // 3. Esperar a que el usuario escanee el QR y confirme en su móvil
+            // 3. Esperar el escaneo del QR
             const idkitResponse = await request.pollUntilCompletion();
 
-            // 4. Enviar la prueba resultante al backend para la verificación final (Step 5)
-            status.innerText = "Validando identidad en la red World...";
+            // 4. Verificación Final y Detección de Duplicados (Step 5 y 6)
+            status.innerText = "Finalizando validación...";
             
             const verifyRes = await fetch("/api/verify-proof", {
                 method: "POST",
@@ -127,7 +123,8 @@
                     window.location.href = "buscador2.html";
                 }, 1500);
             } else {
-                throw new Error(verifyData.detail?.message || "La verificación falló en el servidor.");
+                // Captura el error de "Identidad duplicada" enviado por el servidor
+                throw new Error(verifyData.error || "La verificación falló.");
             }
 
         } catch (err) {
