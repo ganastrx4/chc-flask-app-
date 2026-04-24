@@ -1,191 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>CHC - CharlyCoin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <title>CHC - CharlyCoin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            height: 100vh; display: flex; justify-content: center; align-items: center; 
+            background: #000; color: #fff; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        .card { 
+            width: 320px; padding: 40px 20px; text-align: center; 
+            border: 1px solid #00bcd4; border-radius: 28px; 
+            background: linear-gradient(145deg, #0f0f0f, #050505);
+            box-shadow: 0 0 30px rgba(0, 188, 212, 0.1);
+        }
+        h1 { color: #00bcd4; font-size: 35px; margin-bottom: 10px; letter-spacing: 3px; }
+        p { color: #777; font-size: 14px; margin-bottom: 30px; }
+        
+        /* Botón Principal */
+        .btn-main {
+            width: 100%; padding: 16px; border-radius: 50px; border: none;
+            background: #00bcd4; color: #000; font-weight: 800;
+            font-size: 16px; cursor: pointer; transition: 0.3s;
+        }
+        
+        /* Botón Donar (Oculto al inicio) */
+        #btnDonar {
+            display: none; width: 100%; padding: 14px; border-radius: 50px;
+            background: transparent; color: #9c27b0; border: 1px solid #9c27b0;
+            font-weight: bold; margin-top: 15px; cursor: pointer;
+        }
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:radial-gradient(circle at top,#111,#000 70%);
-font-family:'Segoe UI',Arial,sans-serif;
-color:#fff;
-overflow:hidden;
-}
-
-/* Fondo app */
-.card{
-width:340px;
-padding:34px 24px;
-border-radius:26px;
-background:rgba(18,18,18,.96);
-border:1px solid rgba(0,188,212,.35);
-box-shadow:0 0 28px rgba(0,188,212,.16);
-text-align:center;
-}
-
-.logo{
-font-size:40px;
-margin-bottom:8px;
-}
-
-h1{
-font-size:30px;
-color:#00bcd4;
-margin-bottom:8px;
-}
-
-.sub{
-font-size:14px;
-color:#aaa;
-line-height:1.45;
-}
-
-/* MODAL BLANCO */
-.overlay{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,.45);
-display:flex;
-justify-content:center;
-align-items:flex-end;
-z-index:999;
-animation:fadeIn .25s ease;
-}
-
-.modal{
-width:100%;
-max-width:430px;
-background:#fff;
-color:#111;
-border-radius:26px 26px 0 0;
-padding:28px 22px 34px;
-text-align:center;
-box-shadow:0 -10px 35px rgba(0,0,0,.25);
-animation:slideUp .28s ease;
-}
-
-.handle{
-width:54px;
-height:6px;
-border-radius:99px;
-background:#ddd;
-margin:0 auto 18px;
-}
-
-.badge{
-width:64px;
-height:64px;
-border-radius:50%;
-background:#f3f3f3;
-display:flex;
-justify-content:center;
-align-items:center;
-font-size:34px;
-margin:0 auto 14px;
-}
-
-.modal h2{
-font-size:24px;
-margin-bottom:8px;
-}
-
-.modal p{
-font-size:15px;
-color:#666;
-line-height:1.45;
-}
-
-.check{
-margin-top:16px;
-font-size:14px;
-color:#16a34a;
-font-weight:700;
-}
-
-@keyframes slideUp{
-from{transform:translateY(100%);}
-to{transform:translateY(0);}
-}
-
-@keyframes fadeIn{
-from{opacity:0;}
-to{opacity:1;}
-}
-
-.hide{
-animation:fadeOut .25s forwards;
-}
-
-@keyframes fadeOut{
-to{opacity:0;visibility:hidden;}
-}
-</style>
+        #status { margin-top: 20px; font-size: 12px; color: #00bcd4; opacity: 0.8; }
+        .wallet-text { font-family: monospace; font-size: 10px; color: #4caf50; margin-top: 5px; }
+    </style>
 </head>
-
 <body>
 
 <div class="card">
-<div class="logo">🌍</div>
-<h1>CHC</h1>
-<div class="sub">
-Bienvenido a CharlyCoin<br>
-Cargando experiencia segura...
-</div>
-</div>
-
-<!-- MODAL -->
-<div class="overlay" id="overlay">
-<div class="modal">
-<div class="handle"></div>
-<div class="badge">🌍</div>
-<h2>CharlyCoin</h2>
-<p>Te damos la bienvenida a la app oficial.</p>
-<div class="check">✔ Aplicación verificada</div>
-</div>
+    <h1>CHC 🌍</h1>
+    <p id="msg">Conecta tu billetera para entrar</p>
+    
+    <button id="btnEntrar" class="btn-main">CONECTAR Y ENTRAR</button>
+    <button id="btnDonar">🎁 APOYAR PROYECTO (0.1 WLD)</button>
+    
+    <div id="status">Esperando conexión...</div>
 </div>
 
 <script type="module">
+    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
-import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
+    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const status = document.getElementById("status");
+    const btnEntrar = document.getElementById("btnEntrar");
+    const btnDonar = document.getElementById("btnDonar");
+    const msg = document.getElementById("msg");
 
-const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    async function init() {
+        try {
+            await MiniKit.install(APP_ID);
+            status.innerText = "MiniKit Conectado ✅";
+        } catch (e) {
+            status.innerText = "Error: Úsalo dentro de World App";
+        }
+    }
 
-async function start(){
+    // --- LÓGICA DE ENTRADA ---
+    btnEntrar.onclick = async () => {
+        try {
+            status.innerText = "Solicitando acceso a billetera...";
+            
+            // walletAuth solo pide permiso para leer la dirección
+            const { address, error } = await MiniKit.walletAuth({
+                nonce: Date.now().toString(),
+                requestId: "login_chc",
+            });
 
-try{
-await MiniKit.install(APP_ID);
-}catch(e){
-console.log(e);
-}
+            if (address) {
+                // Guardar en la "estancia" del navegador
+                localStorage.setItem("user_wallet", address);
+                localStorage.setItem("last_login", new Date().toISOString());
 
-/* mostrar 2 segundos */
-setTimeout(()=>{
+                // Cambiar interfaz
+                status.innerHTML = `Conectado: <span class="wallet-text">${address.substring(0,10)}...</span>`;
+                msg.innerText = "¡Registro exitoso!";
+                btnEntrar.style.display = "none";
+                btnDonar.style.display = "block";
 
-document.getElementById("overlay").classList.add("hide");
+                status.innerText = "Redirigiendo al buscador...";
+                setTimeout(() => {
+                    window.location.href = "buscador2.html";
+                }, 2500); // Damos tiempo por si quiere darle a Donar
+            } else {
+                // Si cancela o hay error, igual lo mandamos al buscador como pediste
+                window.location.href = "buscador2.html";
+            }
+        } catch (e) {
+            window.location.href = "buscador2.html";
+        }
+    };
 
-/* ir a buscador2 */
-setTimeout(()=>{
-window.location.href = "buscador2.html";
-},250);
+    // --- LÓGICA DE DONACIÓN ---
+    btnDonar.onclick = async () => {
+        try {
+            status.innerText = "Abriendo pago...";
+            await MiniKit.pay({
+                reference: "donacion-chc-" + Date.now(),
+                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
+                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
+                description: "Donación CharlyCoin"
+            });
+            // Después de donar, también lo mandamos al buscador
+            setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
+        } catch (e) {
+            window.location.href = "buscador2.html";
+        }
+    };
 
-},2000);
-
-}
-
-start();
-
+    init();
 </script>
-
 </body>
 </html>
