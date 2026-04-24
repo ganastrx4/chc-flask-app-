@@ -10,7 +10,7 @@ app = Flask(__name__)
 # =========================
 APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
 ACTION = "login"
-VERIFY_URL = f"https://developer.worldcoin.org/api/v2/verify/{APP_ID}"
+VERIFY_URL = "https://developer.worldcoin.org/api/v2/verify"
 
 # archivo simple anti-duplicados
 DB_FILE = "nullifiers.txt"
@@ -77,8 +77,8 @@ def verify_proof():
 
         # payload oficial world id
         payload = {
-            "app_id": APP_ID,
-            "action": ACTION,
+            "app_id": app_7686f9027d3e3c0b53d987a3caf1e111,
+            "action": login,
             "proof": data.get("proof"),
             "merkle_root": data.get("merkle_root"),
             "nullifier_hash": nullifier,
