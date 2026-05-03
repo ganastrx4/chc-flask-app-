@@ -3,116 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin - World ID</title>
-    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
-    <style>
-        body {
-            background: #080808;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .card {
-            background: #111;
-            padding: 30px;
-            border-radius: 20px;
-            width: 320px;
-            text-align: center;
-            border: 1px solid #222;
-        }
-        button {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            background: white;
-            color: black;
-            transition: 0.3s;
-        }
-        button:disabled { background: #444; color: #888; }
-    </style>
+    <title>Bienvenida a CharlyCoin</title>
+    <link rel="stylesheet" href="style.css"> <!-- Asegúrate de que este archivo esté correctamente vinculado -->
 </head>
 <body>
+    <div class="container">
+        <div class="gif-container">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo">
+        </div>
+        <div class="loading-bar">
+            <div class="progress-bar"></div>
+        </div>
 
-<div class="card">
-    <h2>CharlyCoin</h2>
-    <p>Verifica tu humanidad con World ID</p>
-    <button onclick="login()" id="btn">Conectar World ID</button>
-</div>
+        <!-- BOTÓN SIGN IN WITH WORLD ID -->
+        <div id="world-id-button"></div>
 
-<script>
-// URL de tu backend en Render
-const API = ""; // Déjalo vacío si el HTML se sirve desde el mismo servidor
+        <!-- Formulario para verificación de World ID -->
+        <form id="verifyForm">
+            <label for="worldId">World ID:</label>
+            <input type="text" id="worldId" name="worldId" required>
+            <button type="submit">Verificar World ID</button>
+        </form>
 
-window.addEventListener("load", () => {
-    if (window.MiniKit) {
-        window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
-    }
-});
+        <a href="/next-page" class="next-button">Siguiente</a>
+    </div>
 
-async function login() {
-    const btn = document.getElementById("btn");
-    btn.innerText = "Conectando...";
-    btn.disabled = true;
-
-    try {
-        if (window.MiniKit && window.MiniKit.isInstalled()) {
-            // 1. Obtener firma del backend
-            const rp = await fetch(API + "/api/rp-signature", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ action: "verify-account" })
-            }).then(r => r.json());
-
-            // 2. DISPARAR MODAL (walletAuth)
-            const { finalPayload } = await MiniKit.commands.walletAuth({
-                nonce: rp.nonce,
-                requestId: crypto.randomUUID(),
-                // CORRECCIÓN: Tu backend envía 'sig', no 'signature'
-                signature: rp.sig, 
-                expirationTime: new Date(rp.expires_at * 1000),
-                notBefore: new Date(rp.created_at * 1000),
-                statement: "Conectar mi World ID a CharlyCoin"
-            });
-
-            if (finalPayload) {
-                await verify(finalPayload);
+    <!-- Script de World ID -->
+    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/id"></script> <!-- Usando CDN -->
+    <script>
+        new WorldIDWidget({
+            action_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+            signal: "user_login",
+            enableTelemetry: true,
+            app_name: "CharlyCoin",
+            theme: "light",
+            containerId: "world-id-button",
+            onSuccess: (proof) => {
+                console.log("Verificación exitosa:", proof);
+                alert("¡Verificación exitosa!");
+            },
+            onError: (error) => {
+                console.error("Error en la verificación:", error);
+                alert("Error en la verificación");
             }
-        } else {
-            // Fallback para navegador normal
-            alert("Por favor, abre esta aplicación dentro de la World App.");
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Error de conexión con el servidor");
-    } finally {
-        btn.innerText = "Conectar World ID";
-        btn.disabled = false;
-    }
-}
+        });
 
-async function verify(payload) {
-    const res = await fetch(API + "/api/verify-proof", {
-        method: "POST",
-                headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
-    });
+        document.getElementById('verifyForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-    const result = await res.json();
+            const worldId = document.getElementById('worldId').value;
 
-    if (result.success) {
-        // Redirige a una de las páginas que tienes en tu lista de Flask
-        window.location.replace("/next_page.html");
-    } else {
-        alert("Verificación fallida: " + (result.error || "Intenta de nuevo"));
-    }
-}
-</script>
+            fetch('/api/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ world_id: worldId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta de la verificación:', data);
+                alert('Verificación completada');
+            })
+            .catch(error => {
+                console.error('Error en la verificación:', error);
+            });
+        });
+    </script>
 </body>
 </html>
