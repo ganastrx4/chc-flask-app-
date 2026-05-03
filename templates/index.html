@@ -126,7 +126,50 @@
             RP ID: rp_aa5ead0710fce1dc
         </div>
     </div>
+     <script>
+    // Inicialización de MiniKit con tu App ID verificado
+    window.addEventListener('load', () => {
+        if (window.MiniKit) {
+            window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
+        }
+    });
 
+    async function signInWithWorldID() {
+        try {
+            // Llama a tu backend para obtener la firma autorizada
+            const responseSignature = await fetch("/api/rp-signature", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "verify-account" }),
+            });
+            
+            const rpSig = await responseSignature.json();
+
+            // Comando Verify: Esto es lo que abre la ventana en World App
+            const { finalPayload } = await window.MiniKit.commands.verify({
+                app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+                action: "verify-account", // Debe coincidir con lo configurado en el Developer Portal
+                signal: "charlycoin_login", 
+                verification_level: "orb", 
+                rp_context: {
+                    rp_id: "rp_aa5ead0710fce1dc",
+                    nonce: rpSig.nonce,
+                    created_at: rpSig.created_at,
+                    expires_at: rpSig.expires_at,
+                    signature: rpSig.sig,
+                }
+            });
+            
+            // Si la verificación es exitosa, redirige a la siguiente página
+            if (finalPayload) {
+                window.location.href = 'next_page.html';
+            }
+        } catch (error) {
+            console.error("Error en el proceso de World ID:", error);
+            alert("No se pudo iniciar la verificación. Asegúrate de estar dentro de World App.");
+        }
+    }
+</script>
     <script>
         // Inicializar MiniKit con tu App ID
         window.addEventListener('load', () => {
