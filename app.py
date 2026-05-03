@@ -113,6 +113,68 @@ def verify_proof():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+
+# =====================================================
+# CONFIGURACIÓN DE LA MASTER WALLET (VÍA ENV)
+# =====================================================
+
+# Intentamos obtener la llave del entorno; si no existe, el servidor avisará
+MASTER_PRIVADA = os.environ.get("MASTER_PRIVADA")
+
+# Tu dirección pública (esta puede quedarse en el código, es segura de compartir)
+MASTER_PUBLICA = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee"
+
+# Verificación de seguridad al arrancar
+if not MASTER_PRIVADA:
+    print("⚠️ ADVERTENCIA: La variable MASTER_PRIVADA no está configurada en el entorno.")
+
+@app.route("/regalo_bienvenida", methods=["POST"])
+def regalo_bienvenida():
+    if not MASTER_PRIVADA:
+        return jsonify({"mensaje": "Error de configuración en el servidor"}), 500
+
+    data = request.get_json(force=True)
+    wallet_usuario = str(data.get("wallet", "")).strip()
+
+    if not wallet_usuario:
+        return jsonify({"mensaje": "Wallet de destino necesaria"}), 400
+
+    monto_regalo = 10.0 
+
+    # 1. Verificar saldo de la Master
+    saldo_master = saldo_wallet(MASTER_PUBLICA)
+    if saldo_master < monto_regalo:
+        return jsonify({"mensaje": "Sin fondos de regalo por ahora"}), 400
+
+    # 2. Crear el bloque con la autorización de la llave del entorno
+    ultimo = collection.find_one(sort=[("indice", -1)])
+    
+    nuevo_bloque = {
+        "indice": ultimo["indice"] + 1,
+        "timestamp": time.time(),
+        "transacciones": [{
+            "emisor": MASTER_PUBLICA,
+            "receptor": wallet_usuario,
+            "monto": monto_regalo,
+            # Usamos la llave que jalamos de os.environ
+            "autorizacion": hashlib.sha256(MASTER_PRIVADA.encode()).hexdigest()
+        }],
+        "nonce": "GIVEAWAY_ENV",
+        "hash_anterior": ultimo["hash"]
+    }
+    
+    nuevo_bloque["hash"] = calcular_hash(nuevo_bloque)
+
+    try:
+        collection.insert_one(nuevo_bloque)
+        return jsonify({
+            "ok": True, 
+            "monto": monto_regalo, 
+            "tx_hash": nuevo_bloque["hash"][:16]
+        })
+    except Exception as e:
+        return jsonify({"mensaje": "Error al insertar en la red"}), 500
+
 # =========================
 # STATUS
 # =========================
