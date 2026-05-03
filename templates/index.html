@@ -43,6 +43,7 @@
             margin-bottom: 1.5rem;
             box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
             border: 2px solid var(--accent-blue);
+            object-fit: cover;
         }
 
         h1 {
@@ -90,6 +91,7 @@
         }
 
         .btn-worldid:active { transform: scale(0.98); }
+        .btn-worldid:disabled { opacity: 0.7; cursor: not-allowed; }
 
         .footer-info {
             margin-top: 2rem;
@@ -125,7 +127,7 @@
     </div>
 
     <script>
-        // Inicialización única
+        // Instalación de MiniKit al cargar la página
         window.addEventListener('load', () => {
             if (window.MiniKit) {
                 window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
@@ -135,19 +137,22 @@
         async function signInWithWorldID() {
             const btn = document.getElementById('btn-login');
             btn.disabled = true;
-            btn.innerText = "Cargando...";
+            btn.innerText = "Preparando...";
 
             try {
-                // 1. Pedimos la firma a tu backend (donde está tu signer_key)
+                // 1. Paso Backend: Obtener firma autorizada para que World ID confíe en la petición
                 const resSig = await fetch("/api/rp-signature", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "verify-account" }),
+                    body: JSON.stringify({ action: "verify-account" }), // Debe coincidir con el backend
                 });
                 
+                if (!resSig.ok) throw new Error("Error obteniendo firma del servidor");
                 const rpSig = await resSig.json();
 
-                // 2. Abrimos la verificación de World ID
+                btn.innerText = "Esperando World ID...";
+
+                // 2. Paso World ID: Abre el popup emergente de verificación
                 const { finalPayload } = await window.MiniKit.commands.verify({
                     app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
                     action: "verify-account",
@@ -162,14 +167,27 @@
                     }
                 });
                 
-                // 3. Si el modal se cierra con éxito
+                // 3. Paso Validación y Redirección
                 if (finalPayload) {
-                    // Opcional: Enviar 'finalPayload' a tu ruta de /api/verify para validarlo
-                    window.location.href = 'next_page.html';
+                    btn.innerText = "Validando identidad...";
+                    
+                    // Enviamos la prueba al backend para registrar el nullifier (opcional pero recomendado)
+                    const verifyRes = await fetch("/api/verify-proof", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(finalPayload)
+                    });
+
+                    if (verifyRes.ok) {
+                        window.location.href = 'next_page.html';
+                    } else {
+                        const errorData = await verifyRes.json();
+                        alert("Error de validación: " + (errorData.error || "Intente de nuevo"));
+                    }
                 }
             } catch (error) {
-                console.error("Error:", error);
-                alert("Error al conectar. Asegúrate de abrir esto dentro de World App.");
+                console.error("Error en el flujo:", error);
+                alert("La verificación falló. Asegúrate de estar usando World App.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Verificar con World ID";
