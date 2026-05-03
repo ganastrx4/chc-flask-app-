@@ -29,7 +29,14 @@ def save_nullifier(value):
     with open(DB_FILE, "a", encoding="utf-8") as f:
         f.write(str(value) + "\n")
 
-
+# =========================
+# after_request
+# =========================
+@app.after_request
+def add_header(response):
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://world.org https://*.world.org"
+    return response
+    
 # =========================
 # PAGINAS
 # =========================
