@@ -49,7 +49,40 @@
     
     <div id="status">Esperando conexión...</div>
 </div>
+<div style="margin-top:20px;padding:15px;border:1px solid #333;">
+<h3>💱 Exchange CHC</h3>
 
+<input id="cantidad" type="number" placeholder="Cantidad" style="padding:8px;">
+<select id="tipo" style="padding:8px;">
+  <option value="comprar">Comprar CHC</option>
+  <option value="vender">Vender CHC</option>
+</select>
+
+<button onclick="hacerExchange()" style="padding:10px;">Ejecutar</button>
+
+<p id="res"></p>
+</div>
+
+<script>
+async function hacerExchange(){
+    const cantidad = document.getElementById("cantidad").value;
+    const tipo = document.getElementById("tipo").value;
+
+    const r = await fetch("/api/exchange", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({tipo, cantidad})
+    });
+
+    const d = await r.json();
+
+    if(tipo==="comprar"){
+        document.getElementById("res").innerText = "Recibes: " + d.chc + " CHC";
+    } else {
+        document.getElementById("res").innerText = "Recibes: " + d.wld + " WLD";
+    }
+}
+</script>
 <script type="module">
     import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
 
