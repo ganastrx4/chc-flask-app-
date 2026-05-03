@@ -43,6 +43,7 @@
             margin-bottom: 1.5rem;
             box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
             border: 2px solid var(--accent-blue);
+            object-fit: cover;
         }
 
         h1 {
@@ -90,6 +91,7 @@
         }
 
         .btn-worldid:active { transform: scale(0.98); }
+        .btn-worldid:disabled { background-color: #ccc; cursor: not-allowed; }
 
         .footer-info {
             margin-top: 2rem;
@@ -101,6 +103,7 @@
 <body>
 
     <div class="container">
+        <!-- Imagen de CharlyCoin Restaurada -->
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s320/CharlyCoin.JPG" 
              alt="CharlyCoin (CHC)" 
              class="logo">
@@ -125,32 +128,33 @@
     </div>
 
     <script>
-        // Inicialización única
+        // 1. Inicialización de MiniKit
         window.addEventListener('load', () => {
             if (window.MiniKit) {
                 window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
             }
         });
 
+        // 2. Función Unificada de Verificación
         async function signInWithWorldID() {
             const btn = document.getElementById('btn-login');
             btn.disabled = true;
-            btn.innerText = "Cargando...";
+            btn.innerText = "Iniciando...";
 
             try {
-                // 1. Pedimos la firma a tu backend (donde está tu signer_key)
-                const resSig = await fetch("/api/rp-signature", {
+                // A. Obtener firma del backend
+                const responseSignature = await fetch("/api/rp-signature", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ action: "verify-account" }),
                 });
                 
-                const rpSig = await resSig.json();
+                const rpSig = await responseSignature.json();
 
-                // 2. Abrimos la verificación de World ID
+                // B. Abrir modal de verificación de World ID
                 const { finalPayload } = await window.MiniKit.commands.verify({
                     app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                    action: "verify-account",
+                    action: "verify-account", 
                     signal: "charlycoin_login", 
                     verification_level: "orb", 
                     rp_context: {
@@ -162,14 +166,25 @@
                     }
                 });
                 
-                // 3. Si el modal se cierra con éxito
+                // C. Si tenemos el payload, lo mandamos a validar al backend
                 if (finalPayload) {
-                    // Opcional: Enviar 'finalPayload' a tu ruta de /api/verify para validarlo
-                    window.location.href = 'next_page.html';
+                    const verifyRes = await fetch("/api/verify-proof", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(finalPayload)
+                    });
+
+                    const result = await verifyRes.json();
+
+                    if (result.success) {
+                        window.location.href = 'next_page.html';
+                    } else {
+                        alert("Fallo en la validación: " + (result.error || "Error desconocido"));
+                    }
                 }
             } catch (error) {
-                console.error("Error:", error);
-                alert("Error al conectar. Asegúrate de abrir esto dentro de World App.");
+                console.error("Error en el proceso:", error);
+                alert("Asegúrate de abrir la aplicación desde la World App.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Verificar con World ID";
