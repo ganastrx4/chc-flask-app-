@@ -1,155 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>CHC - CharlyCoin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin - World ID Login</title>
+    
+    <!-- SDK de MiniKit para el modal de conexión -->
+    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+    <style>
+        :root {
+            --bg: #080808;
+            --card: #111;
+            --accent: #00d4ff;
+        }
 
-body{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-background:radial-gradient(circle at top,#111,#000 70%);
-font-family:'Segoe UI',Arial,sans-serif;
-color:#fff;
-overflow:hidden;
-}
+        body {
+            background: var(--bg);
+            color: white;
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-.card{
-width:340px;
-padding:34px 24px;
-border-radius:26px;
-background:rgba(18,18,18,.96);
-border:1px solid rgba(0,188,212,.35);
-box-shadow:0 0 28px rgba(0,188,212,.16);
-text-align:center;
-}
+        .login-card {
+            background: var(--card);
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            border: 1px solid #222;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
 
-.logo{
-font-size:42px;
-margin-bottom:10px;
-animation:pulse 1.2s infinite;
-}
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            margin-bottom: 20px;
+        }
 
-h1{
-font-size:30px;
-color:#00bcd4;
-margin-bottom:8px;
-}
+        h2 { margin: 10px 0; font-size: 24px; }
+        p { color: #888; font-size: 14px; margin-bottom: 30px; }
 
-.sub{
-font-size:14px;
-color:#aaa;
-line-height:1.45;
-}
+        .btn-connect {
+            background: white;
+            color: black;
+            border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
 
-#status{
-margin-top:14px;
-font-size:13px;
-color:#00bcd4;
-min-height:24px;
-}
+        .btn-connect:active { transform: scale(0.98); }
+        .btn-connect:disabled { background: #444; color: #777; cursor: not-allowed; }
 
-@keyframes pulse{
-0%{transform:scale(1);}
-50%{transform:scale(1.08);}
-100%{transform:scale(1);}
-}
-</style>
+        .status { margin-top: 15px; font-size: 12px; color: var(--accent); display: none; }
+    </style>
 </head>
-
 <body>
 
-<div class="card">
+<div class="login-card">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" class="logo">
+    <h2>CharlyCoin</h2>
+    <p>Conecta tu World ID para verificar que eres un humano real.</p>
+    
+    <button id="loginBtn" class="btn-connect" onclick="handleLogin()">
+        Conectar World ID
+    </button>
 
-<div class="logo">🌍</div>
-
-<h1>CHC</h1>
-
-<div class="sub">
-Bienvenido a CharlyCoin<br>
-Cargando experiencia segura...
+    <div id="statusLabel" class="status">Comunicando con World App...</div>
 </div>
 
-<div id="status">Iniciando...</div>
+<script>
+    // Inicialización de MiniKit
+    window.addEventListener("load", () => {
+        if (window.MiniKit) {
+            window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
+        }
+    });
 
-</div>
+    async function handleLogin() {
+        const btn = document.getElementById("loginBtn");
+        const status = document.getElementById("statusLabel");
 
-<script type="module">
+        btn.disabled = true;
+        btn.innerText = "Iniciando...";
+        status.style.display = "block";
 
-import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
+        try {
+            // 1. Obtener firma del backend (Ruta /api/rp-signature)
+            const sigResponse = await fetch("/api/rp-signature", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+            
+            const rp = await sigResponse.json();
 
-const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+            if (!rp.signature) throw new Error("No se pudo obtener la firma del servidor");
 
-const status = document.getElementById("status");
+            // 2. Ejecutar walletAuth para mostrar el modal de "Conectar"
+            const { finalPayload } = await window.MiniKit.commands.walletAuth({
+                nonce: rp.nonce,
+                requestId: crypto.randomUUID(),
+                signature: rp.signature, // Coincide con tu app.py actualizado
+                expirationTime: new Date(rp.expires_at * 1000),
+                notBefore: new Date(rp.created_at * 1000),
+                statement: "Iniciar sesión en CharlyCoin con mi prueba de humanidad",
+            });
 
-async function start(){
+            if (finalPayload) {
+                btn.innerText = "Verificando...";
+                
+                // 3. Enviar prueba al backend para iniciar sesión
+                const verifyResponse = await fetch("/api/verify-proof", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(finalPayload)
+                });
 
-try{
+                const result = await verifyResponse.json();
 
-status.innerText = "Conectando...";
-
-await MiniKit.install(APP_ID);
-
-status.innerText = "Verificando app...";
-
-/*
-ABRE LA VENTANA REAL DE PAGO
-pero monto 0 y texto neutro
-solo para mostrar que la app es válida
-*/
-
-await MiniKit.pay({
-
-reference:"welcome-" + Date.now(),
-
-to:"0xdc178d65c502f9589bb1a35af08b5723f85ec168",
-
-tokens:[
-{
-symbol:"WLD",
-token_amount:"0"
-}
-],
-
-description:"CharlyCoin"
-
-});
-
-/* si acepta o cierra */
-goNext();
-
-}catch(e){
-
-console.log(e);
-
-/* aunque cancele también pasa */
-goNext();
-
-}
-
-}
-
-function goNext(){
-
-status.innerText = "Entrando...";
-
-setTimeout(()=>{
-window.location.href = "buscador2.html";
-},700);
-
-}
-
-start();
-
+                if (result.success) {
+                    // Redirigir al panel protegido por @login_required
+                    window.location.replace("/panel.html");
+                } else {
+                    alert("Error en verificación: " + (result.error || "Prueba inválida"));
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error: Asegúrate de abrir la app desde World App.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Conectar World ID";
+            status.style.display = "none";
+        }
+    }
 </script>
 
 </body>
