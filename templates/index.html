@@ -2,224 +2,144 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-    <title>CHC - CharlyCoin</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            height: 100vh; display: flex; justify-content: center; align-items: center; 
-            background: #000; color: #fff; font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-        }
-        .card { 
-            width: 320px; padding: 40px 20px; text-align: center; 
-            border: 1px solid #00bcd4; border-radius: 28px; 
-            background: linear-gradient(145deg, #0f0f0f, #050505);
-            box-shadow: 0 0 30px rgba(0, 188, 212, 0.1);
-        }
-        h1 { color: #00bcd4; font-size: 35px; margin-bottom: 10px; letter-spacing: 3px; }
-        p { color: #777; font-size: 14px; margin-bottom: 30px; }
-        
-        /* Botón Principal */
-        .btn-main {
-            width: 100%; padding: 16px; border-radius: 50px; border: none;
-            background: #00bcd4; color: #000; font-weight: 800;
-            font-size: 16px; cursor: pointer; transition: 0.3s;
-        }
-        
-        /* Botón Donar (Oculto al inicio) */
-        #btnDonar {
-            display: none; width: 100%; padding: 14px; border-radius: 50px;
-            background: transparent; color: #9c27b0; border: 1px solid #9c27b0;
-            font-weight: bold; margin-top: 15px; cursor: pointer;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin - Acceso Seguro</title>
 
-        #status { margin-top: 20px; font-size: 12px; color: #00bcd4; opacity: 0.8; }
-        .wallet-text { font-family: monospace; font-size: 10px; color: #4caf50; margin-top: 5px; }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0d1117, #000);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #00bcd4;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 188, 212, 0.2);
+        }
+        h1 { color: #00bcd4; margin-bottom: 20px; }
+        .btn-wallet {
+            background: linear-gradient(90deg, #00bcd4, #9c27b0);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .btn-wallet:hover { transform: scale(1.03); filter: brightness(1.1); }
+        #status { margin-top: 20px; color: #00bcd4; font-weight: bold; min-height: 24px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>CHC 🌍</h1>
-    <p id="msg">Conecta tu billetera para entrar</p>
-    
-    <button id="btnEntrar" class="btn-main">CONECTAR Y ENTRAR</button>
-    <button id="btnDonar">🎁 APOYAR PROYECTO (0.1 WLD)</button>
-    
-    <div id="status">Esperando conexión...</div>
-</div>
-<div style="margin-top:20px;padding:15px;border:1px solid #333;">
-<h3>💱 Exchange CHC</h3>
+    <h1>CharlyCoin 🌍</h1>
+    <p>Autenticación Web3</p>
 
-<input id="cantidad" type="number" placeholder="Cantidad" style="padding:8px;">
-<select id="tipo" style="padding:8px;">
-  <option value="comprar">Comprar CHC</option>
-  <option value="vender">Vender CHC</option>
-</select>
+    <button class="btn-wallet" id="open-modal">Conectar Wallet</button>
 
-<button onclick="hacerExchange()" style="padding:10px;">Ejecutar</button>
-
-<p id="res"></p>
+    <p id="status"></p>
 </div>
 
-<script>
-async function hacerExchange(){
-    const cantidad = document.getElementById("cantidad").value;
-    const tipo = document.getElementById("tipo").value;
+<script type="module">
+    import { createAppKit } from "https://esm.sh/@reown/appkit";
+    import { Ethers5Adapter } from "https://esm.sh/@reown/appkit-adapter-ethers5";
+    import { mainnet, bsc } from "https://esm.sh/@reown/appkit/networks";
 
-    const r = await fetch("/api/exchange", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({tipo, cantidad})
+    // 1. Configuración de Reown
+    const projectId = "3f803ae6517b26dfcd2aee7e9faf5ebb"; // Tu ID proporcionado
+
+    const modal = createAppKit({
+        adapters: [new Ethers5Adapter()],
+        networks: [mainnet, bsc],
+        metadata: {
+            name: "CharlyCoin",
+            description: "Acceso seguro a CharlyCoin",
+            url: window.location.origin,
+            icons: ["https://avatars.githubusercontent.com/u/37784886"]
+        },
+        projectId,
+        features: { analytics: true }
     });
 
-    const d = await r.json();
+    // 2. Lógica de interacción
+    const statusText = document.getElementById('status');
+    const openModalBtn = document.getElementById('open-modal');
 
-    if(tipo==="comprar"){
-        document.getElementById("res").innerText = "Recibes: " + d.chc + " CHC";
-    } else {
-        document.getElementById("res").innerText = "Recibes: " + d.wld + " WLD";
-    }
-}
-</script>
-<script type="module">
-    import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js/+esm";
-
-    const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const status = document.getElementById("status");
-    const btnEntrar = document.getElementById("btnEntrar");
-    const btnDonar = document.getElementById("btnDonar");
-    const msg = document.getElementById("msg");
-
-    async function init() {
+    openModalBtn.addEventListener('click', async () => {
         try {
-            await MiniKit.install(APP_ID);
-            status.innerText = "MiniKit Conectado ✅";
-        } catch (e) {
-            status.innerText = "Error: Úsalo dentro de World App";
-        }
-    }
+            statusText.innerText = "Abriendo selector...";
+            
+            // Abre el modal de Reown
+            await modal.open();
 
-    // --- LÓGICA DE ENTRADA CON VERIFICACIÓN DE HUMANO ---
-    btnEntrar.onclick = async () => {
-        try {
-            status.innerText = "Verificando identidad con World ID...";
-
-            // 1. Solicitamos la prueba de humanidad (World ID)
-            const { commandResponse: verifyResponse, error: verifyError } = await MiniKit.commands.verify({
-                action: "login", // Debe coincidir con ACTION en app.py
-                signal: "user_login_" + Date.now(),
-            });
-
-            if (verifyError) {
-                console.error(verifyError);
-                status.innerText = "Error en verificación ❌";
-                return;
-            }
-
-            // 2. Enviamos la prueba a TU backend para validarla
-            status.innerText = "Validando en servidor...";
-            const response = await fetch("/api/verify-proof", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(verifyResponse),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                status.innerText = "¡Humano verificado! ✅";
-                msg.innerText = "Acceso concedido.";
-                
-                // 3. Opcional: Pedir la billetera después de verificar
-                const { address } = await MiniKit.walletAuth({
-                    nonce: Date.now().toString(),
-                    requestId: "login_chc",
-                });
-
+            // Esperar a que el usuario conecte
+            // Revisamos cada segundo si ya hay cuenta
+            const checkConnection = setInterval(async () => {
+                const address = modal.getAddress();
                 if (address) {
-                    localStorage.setItem("user_wallet", address);
+                    clearInterval(checkConnection);
+                    statusText.innerText = "Conectado. Preparando firma...";
+                    await firmarYValidar(address);
                 }
+            }, 1000);
 
-                btnEntrar.style.display = "none";
-                btnDonar.style.display = "block";
+        } catch (err) {
+            statusText.innerText = "Error al abrir modal";
+            console.error(err);
+        }
+    });
 
+    async function firmarYValidar(address) {
+        try {
+            // Usamos el proveedor de Reown para firmar
+            const provider = new ethers.providers.Web3Provider(modal.getWalletProvider());
+            const signer = provider.getSigner();
+            
+            const mensaje = "Acceso seguro CharlyCoin\nID: " + Math.floor(Math.random() * 1000000);
+            statusText.innerText = "Firma requerida en tu wallet...";
+            
+            const firma = await signer.signMessage(mensaje);
+            statusText.innerText = "Validando en servidor...";
+
+            const res = await fetch('/api/validar_billetera', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ address, firma, mensaje })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                statusText.innerText = "¡Acceso concedido!";
                 setTimeout(() => {
                     window.location.href = "buscador2.html";
-                }, 2000);
+                }, 1000);
             } else {
-                status.innerText = "Error: " + (result.error || "No verificado");
+                statusText.innerText = "Error: Firma inválida.";
             }
-
-        } catch (e) {
-            console.error(e);
-            status.innerText = "Error crítico. Reintentando...";
-            // Mantenemos tu fallback de enviarlo al buscador si algo falla
-            setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
-        }
-    };
-
-    // --- LÓGICA DE DONACIÓN ---
-    btnDonar.onclick = async () => {
-        try {
-            status.innerText = "Abriendo pago...";
-            const { commandResponse: payResponse, error: payError } = await MiniKit.commands.pay({
-                reference: "donacion-chc-" + Date.now(),
-                to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
-                tokens: [{ symbol: "WLD", token_amount: "0.1" }],
-                description: "Donación CharlyCoin"
-            });
-
-            if (payError) {
-                status.innerText = "Pago cancelado.";
-            } else {
-                status.innerText = "¡Gracias por tu apoyo! ❤️";
-                setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
-            }
-        } catch (e) {
-            window.location.href = "buscador2.html";
-        }
-    };
-
-    init();
-</script>
-    <script>
-async function iniciarApp() {
-    // 1. Revisar si el usuario ya tiene su llave
-    let miWallet = localStorage.getItem("mi_charly_wallet");
-
-    if (!miWallet) {
-        // Crear una dirección nueva aleatoria para el usuario
-        miWallet = "ch_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        localStorage.setItem("mi_charly_wallet", miWallet);
-
-        console.log("Generando nueva cuenta y solicitando regalo...");
-
-        // 2. Solicitar regalo de bienvenida al servidor
-        try {
-            const respuesta = await fetch("/regalo_bienvenida", {
-                method: "POST",
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ wallet: miWallet })
-            });
-            const resultado = await respuesta.json();
-            
-            if (resultado.ok) {
-                alert("¡Felicidades! Has recibido " + resultado.monto + " CHC de bienvenida.");
-            }
-        } catch (error) {
-            console.error("No se pudo obtener el regalo");
+        } catch (err) {
+            statusText.innerText = "Firma cancelada.";
+            console.error(err);
         }
     }
-
-    // 3. Cargar la wallet en el buscador para ver el saldo
-    document.getElementById("wallet-input").value = miWallet;
-    updateDashboard(); // Esta función ya existe en tu código para actualizar la tabla
-}
-
-// Ejecutar al cargar la página
-window.addEventListener('load', iniciarApp);
 </script>
+
 </body>
 </html>
