@@ -68,38 +68,62 @@
         }
     }
 
-    // --- LÓGICA DE ENTRADA ---
+    // --- LÓGICA DE ENTRADA CON VERIFICACIÓN DE HUMANO ---
     btnEntrar.onclick = async () => {
         try {
-            status.innerText = "Solicitando acceso a billetera...";
-            
-            // walletAuth solo pide permiso para leer la dirección
-            const { address, error } = await MiniKit.walletAuth({
-                nonce: Date.now().toString(),
-                requestId: "login_chc",
+            status.innerText = "Verificando identidad con World ID...";
+
+            // 1. Solicitamos la prueba de humanidad (World ID)
+            const { commandResponse: verifyResponse, error: verifyError } = await MiniKit.commands.verify({
+                action: "login", // Debe coincidir con ACTION en app.py
+                signal: "user_login_" + Date.now(),
             });
 
-            if (address) {
-                // Guardar en la "estancia" del navegador
-                localStorage.setItem("user_wallet", address);
-                localStorage.setItem("last_login", new Date().toISOString());
+            if (verifyError) {
+                console.error(verifyError);
+                status.innerText = "Error en verificación ❌";
+                return;
+            }
 
-                // Cambiar interfaz
-                status.innerHTML = `Conectado: <span class="wallet-text">${address.substring(0,10)}...</span>`;
-                msg.innerText = "¡Registro exitoso!";
+            // 2. Enviamos la prueba a TU backend para validarla
+            status.innerText = "Validando en servidor...";
+            const response = await fetch("/api/verify-proof", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(verifyResponse),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                status.innerText = "¡Humano verificado! ✅";
+                msg.innerText = "Acceso concedido.";
+                
+                // 3. Opcional: Pedir la billetera después de verificar
+                const { address } = await MiniKit.walletAuth({
+                    nonce: Date.now().toString(),
+                    requestId: "login_chc",
+                });
+
+                if (address) {
+                    localStorage.setItem("user_wallet", address);
+                }
+
                 btnEntrar.style.display = "none";
                 btnDonar.style.display = "block";
 
-                status.innerText = "Redirigiendo al buscador...";
                 setTimeout(() => {
                     window.location.href = "buscador2.html";
-                }, 2500); // Damos tiempo por si quiere darle a Donar
+                }, 2000);
             } else {
-                // Si cancela o hay error, igual lo mandamos al buscador como pediste
-                window.location.href = "buscador2.html";
+                status.innerText = "Error: " + (result.error || "No verificado");
             }
+
         } catch (e) {
-            window.location.href = "buscador2.html";
+            console.error(e);
+            status.innerText = "Error crítico. Reintentando...";
+            // Mantenemos tu fallback de enviarlo al buscador si algo falla
+            setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
         }
     };
 
@@ -107,14 +131,19 @@
     btnDonar.onclick = async () => {
         try {
             status.innerText = "Abriendo pago...";
-            await MiniKit.pay({
+            const { commandResponse: payResponse, error: payError } = await MiniKit.commands.pay({
                 reference: "donacion-chc-" + Date.now(),
                 to: "0xdc178d65c502f9589bb1a35af08b5723f85ec168",
                 tokens: [{ symbol: "WLD", token_amount: "0.1" }],
                 description: "Donación CharlyCoin"
             });
-            // Después de donar, también lo mandamos al buscador
-            setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
+
+            if (payError) {
+                status.innerText = "Pago cancelado.";
+            } else {
+                status.innerText = "¡Gracias por tu apoyo! ❤️";
+                setTimeout(() => { window.location.href = "buscador2.html"; }, 2000);
+            }
         } catch (e) {
             window.location.href = "buscador2.html";
         }
