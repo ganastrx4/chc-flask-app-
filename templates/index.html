@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin (CHC) - Portal de Verificación</title>
-    <!-- Cargando IDKit para el manejo de sesiones -->
-    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@latest/dist/idkit.js"></script>
+    <title>CharlyCoin (CHC) - Verificación Oficial</title>
+    <!-- Cargamos MiniKit, que es lo que tu backend espera -->
+    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
     <style>
         :root {
             --bg-dark: #080808;
@@ -37,12 +37,6 @@
             text-align: center;
         }
 
-        .logo-container {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 25px;
-        }
-
         .logo-img {
             width: 140px;
             height: 140px;
@@ -50,6 +44,7 @@
             border: 3px solid var(--accent);
             box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
             object-fit: cover;
+            margin-bottom: 25px;
         }
 
         .status-pill {
@@ -93,22 +88,15 @@
             transition: all 0.3s ease;
         }
 
-        .btn-verify:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
-        }
-
         .btn-verify:disabled {
             background: #333;
             color: #777;
-            cursor: not-allowed;
         }
 
         .footer-text {
             margin-top: 30px;
             font-size: 10px;
-            color: #333;
-            letter-spacing: 0.5px;
+            color: #444;
         }
     </style>
 </head>
@@ -117,17 +105,14 @@
     <div class="pro-card">
         <div class="status-pill">Producción Activa • World ID 4.0</div>
         
-        <div class="logo-container">
-            <!-- Imagen restaurada según tu link -->
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" 
-                 alt="CharlyCoin Logo" 
-                 class="logo-img">
-        </div>
+        <br>
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" 
+             alt="CharlyCoin" class="logo-img">
 
         <h1>CharlyCoin (CHC)</h1>
-        <p>Bienvenido a la gestión oficial de CharlyCoin. Utiliza tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.</p>
+        <p>Utiliza tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.</p>
 
-        <button class="btn-verify" id="main-btn" onclick="handleAuth()">
+        <button class="btn-verify" id="btn-login" onclick="signInWithWorldID()">
             Verificar con World ID
         </button>
 
@@ -138,81 +123,68 @@
     </div>
 
     <script>
-        const APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111";
+        // Inicialización de MiniKit (Igual que en tu app.py)
+        window.addEventListener('load', () => {
+            if (window.MiniKit) {
+                window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
+            }
+        });
 
-        async function handleAuth() {
-            const btn = document.getElementById('main-btn');
+        async function signInWithWorldID() {
+            const btn = document.getElementById('btn-login');
             btn.disabled = true;
-            btn.innerText = "Iniciando sesión...";
+            btn.innerText = "Iniciando...";
 
             try {
-                // Verificamos si ya existe una sesión guardada en el navegador
-                const savedSession = localStorage.getItem('chc_session_id');
+                // 1. LLAMADA A TU RUTA REAL EN PYTHON
+                const responseSignature = await fetch("/api/rp-signature", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "verify-account" }),
+                });
+                
+                const rpSig = await responseSignature.json();
 
-                if (savedSession) {
-                    console.log("Probando sesión existente...");
-                    await proveSession(savedSession);
-                } else {
-                    console.log("Creando nueva sesión...");
-                    const sessionId = await createSession();
-                    localStorage.setItem('chc_session_id', sessionId);
+                // 2. LANZAR EL POP-UP DE WORLD ID
+                const { finalPayload } = await window.MiniKit.commands.verify({
+                    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+                    action: "verify-account", 
+                    signal: "charlycoin_login", 
+                    verification_level: "orb", 
+                    rp_context: {
+                        rp_id: "rp_aa5ead0710fce1dc",
+                        nonce: rpSig.nonce,
+                        created_at: rpSig.created_at,
+                        expires_at: rpSig.expires_at,
+                        signature: rpSig.sig,
+                    }
+                });
+                
+                // 3. ENVIAR PRUEBA A TU RUTA DE VERIFICACIÓN EN PYTHON
+                if (finalPayload) {
+                    btn.innerText = "Verificando...";
+                    const verifyRes = await fetch("/api/verify-proof", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(finalPayload)
+                    });
+
+                    const result = await verifyRes.json();
+
+                    if (result.success) {
+                        // Redirige a la página que ya tienes en tu lista de 'paginas'
+                        window.location.href = '/next_page.html';
+                    } else {
+                        alert("Error: " + (result.error || "Fallo en la prueba"));
+                    }
                 }
-
-                // Si todo sale bien, pasamos a la siguiente página
-                window.location.href = "/next_page.html";
-
             } catch (error) {
                 console.error(error);
-                alert("Error de verificación: " + error.message);
+                alert("Error de conexión. Ábrelo desde la World App.");
+            } finally {
                 btn.disabled = false;
                 btn.innerText = "Verificar con World ID";
             }
-        }
-
-        // Lógica CreateSession usando IDKit
-        async function createSession() {
-            const rpContext = await fetch("/api/worldid/rp-context").then((r) => r.json());
-
-            const request = await IDKit.createSession({
-                app_id: APP_ID,
-                rp_context: rpContext,
-            }); // Constraints se manejan según la versión de la librería
-
-            const completion = await request.pollUntilCompletion({ timeout: 120000 });
-            if (!completion.success) throw new Error(completion.error);
-
-            const verify = await fetch("/api/worldid/verify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(completion.result),
-            }).then((r) => r.json());
-
-            if (!verify.success) throw new Error("Verification failed");
-
-            return completion.result.session_id;
-        }
-
-        // Lógica ProveSession
-        async function proveSession(sessionId) {
-            const rpContext = await fetch("/api/worldid/rp-context").then((r) => r.json());
-
-            const request = await IDKit.proveSession(sessionId, {
-                app_id: APP_ID,
-                rp_context: rpContext,
-            });
-
-            const completion = await request.pollUntilCompletion({ timeout: 120000 });
-            if (!completion.success) throw new Error(completion.error);
-
-            const verify = await fetch("/api/worldid/verify", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(completion.result),
-            }).then((r) => r.json());
-
-            if (!verify.success) throw new Error("Verification failed");
-
-            return verify;
         }
     </script>
 </body>
