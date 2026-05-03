@@ -5,6 +5,10 @@ from web3 import Web3
 import json
 import time
 import threading
+import uuid
+import hmac
+import hashlib
+
 
 BSC_API_KEY = os.environ.get("BSC_API_KEY")
 POOL_WALLET = "0xd4508db1adc48dea121f356b254a7155ddab36ae"
@@ -62,6 +66,37 @@ def detectar_bnb():
         print("Error BNB:", e)
 
 app = Flask(__name__)
+
+# Lee la clave directamente desde las variables de entorno de Render
+# Asegúrate de que en Render la llave se llame exactamente: signer_key
+SIGNER_KEY = os.environ.get('signer_key') 
+
+@app.route('/api/rp-signature', methods=['POST'])
+def get_signature():
+    if not SIGNER_KEY:
+        return jsonify({"error": "signer_key no configurada en Render"}), 500
+
+    data = request.json
+    action = data.get('action', 'verify-account')
+    
+    nonce = str(uuid.uuid4())
+    created_at = int(time.time())
+    expires_at = created_at + 3600  # Válido por 1 hora
+
+    # Generación de la firma HMAC-SHA256 exigida por World ID 4.0
+    message = f"{action}:{nonce}:{created_at}:{expires_at}"
+    signature = hmac.new(
+        bytes.fromhex(SIGNER_KEY),
+        message.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+
+    return jsonify({
+        "sig": signature,
+        "nonce": nonce,
+        "created_at": created_at,
+        "expires_at": expires_at
+    })
 
 APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
 ACTION = "login"
