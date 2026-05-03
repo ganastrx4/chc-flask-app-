@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        :root { --gold: #f1c40f; --iron: #bdc3c7; --bg: #0a0a0a; --green: #2ecc71; --red: #e74c3c; }
+        :root { --gold: #f1c40f; --iron: #bdc3c7; --bg: #0a0a0a; --green: #2ecc71; --red: #e74c3c; --wld: #ffffff; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }
         
-        /* Contenedor de Moneda */
         .coin-container { perspective: 1000px; width: 150px; height: 150px; margin: 20px auto; }
-        #coin { 
-            width: 100%; height: 100%; position: relative; 
-            transform-style: preserve-3d; 
-        }
-        /* Clase para activar el giro */
+        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
         .spinning { transition: transform 4s cubic-bezier(0.1, 0.5, 0.1, 1); }
 
         .side { 
@@ -24,24 +19,29 @@
         .cara { background: linear-gradient(135deg, var(--gold), #d4af37); color: black; }
         .aguila { background: linear-gradient(135deg, #333, #000); color: var(--gold); transform: rotateY(180deg); }
 
-        /* Panel de Apuestas */
-        .bet-panel { background: #1a1a1a; padding: 20px; border-radius: 15px; max-width: 400px; margin: 0 auto; border: 1px solid #333; }
+        .bet-panel, .exchange-panel { 
+            background: #1a1a1a; padding: 20px; border-radius: 15px; 
+            max-width: 400px; margin: 15px auto; border: 1px solid #333; 
+        }
+        
         .wallet-input { width: 90%; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: var(--green); font-family: monospace; font-size: 11px; margin-bottom: 15px; }
-        input[type="number"] { width: 60px; padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; }
+        input[type="number"] { width: 80px; padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; }
         
         .btn { padding: 12px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; margin: 5px; transition: 0.3s; }
         .btn-play { background: var(--gold); color: black; width: 100%; font-size: 1.1em; }
-        .btn-play:disabled { background: #555; cursor: not-allowed; }
+        .btn-buy { background: var(--green); color: black; flex: 1; }
+        .btn-sell { background: var(--red); color: white; flex: 1; }
         .btn-home { background: transparent; color: #888; text-decoration: none; font-size: 0.9em; }
 
-        #status { margin-top: 15px; min-height: 40px; font-weight: bold; }
-        .martingala-info { color: var(--iron); font-size: 0.8em; margin-top: 10px; }
+        .flex-row { display: flex; gap: 10px; margin-top: 10px; }
+        .small-text { font-size: 0.75em; color: #777; margin-top: 5px; display: block; }
+        #status, #ex-status { margin-top: 15px; min-height: 40px; font-weight: bold; font-size: 0.9em; }
     </style>
 </head>
 <body>
 
     <a href="https://binance-bot-2kbp.onrender.com/" class="btn-home">🏠 SALIR DE LA MESA</a>
-    <h2>CASINO CHARLYSCAN</h2>
+    <h2>CASINO & EXCHANGE CHC</h2>
     
     <div class="coin-container">
         <div id="coin">
@@ -50,24 +50,87 @@
         </div>
     </div>
 
+    <!-- PANEL DE JUEGO -->
     <div class="bet-panel">
-        <input type="text" id="userWallet" class="wallet-input" placeholder="Tu Dirección CharlyMiner..." />
-        
+        <input type="text" id="userWallet" class="wallet-input" placeholder="Dirección CharlyMiner (CHC)..." />
         <div style="margin-bottom: 15px;">
             <span>Apuesta CHC: </span>
             <input type="number" id="betAmount" value="1" min="1" max="10" />
         </div>
-
         <button id="playBtn" class="btn btn-play" onclick="procesarApuesta()">APOSTAR Y LANZAR</button>
-        
         <div id="status">Selecciona tu apuesta</div>
-        <div id="streakInfo" class="martingala-info">Racha de pérdidas: 0</div>
+    </div>
+
+    <!-- PANEL DE EXCHANGE -->
+    <div class="exchange-panel">
+        <h3 style="color: var(--gold); margin-top: 0;">💱 CAJERO WLD / CHC</h3>
+        <input type="text" id="wldWallet" class="wallet-input" value="0x2cFc85d8E48F8EAB294be644d9E25C3030863003" readonly title="Dirección de Recepción WLD" />
+        
+        <div style="margin-bottom: 10px;">
+            <input type="number" id="wldAmount" step="0.0001" min="0.0001" placeholder="WLD" oninput="calcularCambio()" />
+            <span style="font-size: 20px;"> ⇄ </span>
+            <input type="number" id="chcAmount" placeholder="CHC" readonly />
+        </div>
+
+        <div class="flex-row">
+            <button class="btn btn-buy" onclick="ejecutarSwap('BUY')">COMPRAR CHC</button>
+            <button class="btn btn-sell" onclick="ejecutarSwap('SELL')">VENDER CHC</button>
+        </div>
+        <span class="small-text">*Venta incluye 20% de comisión por red externa</span>
+        <div id="ex-status">Listo para cambiar</div>
     </div>
 
 <script>
-    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
     const NODO_URL = "https://binance-bot-hna7.onrender.com";
+    const CHC_MASTER = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
+    const WLD_MASTER = "0xd4508db1aDC48deA121f356B254a7155DDAB36Ae";
     
+    // Tasas de cambio
+    const RATE = 100000; // 1 WLD = 100,000 CHC
+    const FEE = 0.20;    // 20% Comisión de salida
+
+    function calcularCambio() {
+        const wld = document.getElementById('wldAmount').value;
+        document.getElementById('chcAmount').value = wld * RATE;
+    }
+
+    async function ejecutarSwap(tipo) {
+        const wldAmt = parseFloat(document.getElementById('wldAmount').value);
+        const userCHC = document.getElementById('userWallet').value.trim();
+        const exStatus = document.getElementById('ex-status');
+
+        if (!userCHC || wldAmt < 0.0001) return alert("Datos insuficientes.");
+
+        exStatus.innerText = "Procesando Swap en CharlyScan...";
+
+        try {
+            const response = await fetch(`${NODO_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: tipo,
+                    wld_amount: wldAmt,
+                    chc_address: userCHC,
+                    wld_address: WLD_MASTER,
+                    rate: RATE,
+                    fee: tipo === 'SELL' ? FEE : 0,
+                    node_logic: "MINT_IF_EMPTY" // Tu instrucción de sumar al supply si no hay saldo
+                })
+            });
+
+            const res = await response.json();
+            if(res.success) {
+                exStatus.innerHTML = `<span style="color:var(--green)">HASH: ${res.hash.substring(0,20)}...</span>`;
+                alert(`Operación Exitosa. Hash guardado en el historial del nodo.`);
+            } else {
+                exStatus.innerText = "Error: " + res.error;
+            }
+        } catch (e) {
+            exStatus.innerHTML = "<span style='color:var(--red)'>Error de conexión con el Nodo</span>";
+        }
+    }
+
+    // --- LÓGICA DE APUESTAS (TU CÓDIGO ANTERIOR REPARADO) ---
     let perdidasConsecutivas = 0;
     let maxApuesta = 10;
 
@@ -80,70 +143,42 @@
         const playBtn = document.getElementById('playBtn');
 
         if (wallet.length < 10) return alert("Ingresa tu dirección de minero.");
-        if (apuesta > maxApuesta) return alert(`Límite actual de apuesta: ${maxApuesta} CHC`);
-
-        // --- RESET DE ANIMACIÓN (Para que gire siempre igual) ---
+        
         playBtn.disabled = true;
         coin.classList.remove('spinning');
         coin.style.transform = `rotateY(0deg)`;
-        
-        // Pequeño delay para que el navegador registre el reset
         await new Promise(r => setTimeout(r, 50));
         
-        // --- LÓGICA DE PROBABILIDAD (60% Casa / 40% Usuario) ---
         const ganaUsuario = Math.random() > 0.60;
-        const totalRotation = 3600 + (ganaUsuario ? 0 : 180); // 3600 son 10 vueltas
+        const totalRotation = 3600 + (ganaUsuario ? 0 : 180);
         
         coin.classList.add('spinning');
         coin.style.transform = `rotateY(${totalRotation}deg)`;
-        status.innerText = "¡La suerte está echada!";
+        status.innerText = "Girando...";
 
         setTimeout(async () => {
             if (ganaUsuario) {
-                // EL USUARIO GANA
                 perdidasConsecutivas = 0;
                 maxApuesta = 10;
-                betInput.max = 10;
-                status.innerHTML = `<span style="color:var(--green)">¡GANASTE! +${apuesta} CHC</span>`;
-                await enviarTokens(MASTER_PUBLIC, wallet, apuesta);
+                status.innerHTML = `<span style="color:var(--green)">GANASTE +${apuesta} CHC</span>`;
+                await transaccionRapida(CHC_MASTER, wallet, apuesta);
             } else {
-                // LA CASA GANA
                 perdidasConsecutivas++;
-                status.innerHTML = `<span style="color:var(--red)">PERDISTE. -${apuesta} CHC enviado a la Casa.</span>`;
-                
-                // Lógica Martingala
-                if(perdidasConsecutivas < 5) {
-                    maxApuesta = 20;
-                    alert("¡Oportunidad de Martingala! Ahora puedes apostar hasta 20 CHC.");
-                } else {
-                    maxApuesta = 300;
-                    status.innerHTML += "<br><small>Nivel 5: Capacidad máxima 300 CHC</small>";
-                }
-                
-                betInput.max = maxApuesta;
-                await enviarTokens(wallet, MASTER_PUBLIC, apuesta);
+                status.innerHTML = `<span style="color:var(--red)">CASA GANA -${apuesta} CHC</span>`;
+                maxApuesta = perdidasConsecutivas >= 5 ? 300 : 20;
+                await transaccionRapida(wallet, CHC_MASTER, apuesta);
             }
-            
-            document.getElementById('streakInfo').innerText = `Racha de pérdidas: ${perdidasConsecutivas}`;
+            betInput.max = maxApuesta;
             playBtn.disabled = false;
         }, 4000);
     }
 
-    async function enviarTokens(emisor, receptor, monto) {
-        try {
-            await fetch(`${NODO_URL}/transferir`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    emisor: emisor,
-                    receptor: receptor,
-                    monto: monto,
-                    firma: "CASINO_CHARLY_SYSTEM"
-                })
-            });
-        } catch (e) {
-            console.log("Error de red, pero la apuesta fue procesada localmente.");
-        }
+    async function transaccionRapida(e, r, m) {
+        fetch(`${NODO_URL}/transferir`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emisor: e, receptor: r, monto: m, firma: "CASINO_SYS" })
+        });
     }
 </script>
 </body>
