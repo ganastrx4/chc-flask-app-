@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CharlyCoin (CHC) - Verificación Oficial</title>
-    <!-- SDK de MiniKit: El que realmente conecta con tu app.py -->
+    <!-- SDK de MiniKit: Necesario para el comando walletAuth -->
     <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
     <style>
         :root {
@@ -109,7 +109,7 @@
              alt="CharlyCoin Logo" class="logo-img">
 
         <h1>CharlyCoin (CHC)</h1>
-        <p>Verifica tu identidad humana para acceder a tu panel de control seguro y gestionar tus activos de CharlyCoin.</p>
+        <p>Conecta tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.</p>
 
         <button class="btn-verify" id="btn-login" onclick="signInWithWorldID()">
             Verificar con World ID
@@ -122,7 +122,7 @@
     </div>
 
     <script>
-        // Inicialización obligatoria de MiniKit
+        // Inicialización obligatoria de MiniKit con tu APP ID
         window.addEventListener('load', () => {
             if (window.MiniKit) {
                 window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
@@ -132,10 +132,10 @@
         async function signInWithWorldID() {
             const btn = document.getElementById('btn-login');
             btn.disabled = true;
-            btn.innerText = "Iniciando...";
+            btn.innerText = "Conectando...";
 
             try {
-                // 1. Obtener firma del backend (Ruta que ya tienes en app.py)
+                // 1. Obtener firma del backend para asegurar la conexión
                 const responseSignature = await fetch("/api/rp-signature", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -144,24 +144,19 @@
                 
                 const rpSig = await responseSignature.json();
 
-                // 2. Ejecutar comando de verificación de MiniKit
-                const { finalPayload } = await window.MiniKit.commands.verify({
-                    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                    action: "verify-account",
-                    signal: "charlycoin_login",
-                    verification_level: "orb",
-                    rp_context: {
-                        rp_id: "rp_aa5ead0710fce1dc",
-                        nonce: rpSig.nonce,
-                        created_at: rpSig.created_at,
-                        expires_at: rpSig.expires_at,
-                        signature: rpSig.sig,
-                    }
+                // 2. DISPARAR VENTANA "CONECTAR TU WORLD ID" (walletAuth)
+                // Esto genera el modal con el botón "Aprobar" que buscabas
+                const { finalPayload } = await window.MiniKit.commands.walletAuth({
+                    nonce: rpSig.nonce,
+                    requestId: "0",
+                    expirationTime: new Date(rpSig.expires_at * 1000),
+                    notBefore: new Date(rpSig.created_at * 1000),
+                    statement: "Conectar mi World ID a CharlyCoin para verificar mi humanidad",
                 });
                 
-                // 3. Validar la prueba en tu backend
+                // 3. Validar el resultado devuelto por World ID en tu servidor
                 if (finalPayload) {
-                    btn.innerText = "Verificando identidad...";
+                    btn.innerText = "Verificando...";
                     const verifyRes = await fetch("/api/verify-proof", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -171,14 +166,15 @@
                     const result = await verifyRes.json();
 
                     if (result.success) {
+                        // Éxito: Redirigir a la siguiente página
                         window.location.href = '/next_page.html';
                     } else {
-                        alert("Error: " + (result.error || "Fallo en la validación"));
+                        alert("Error de validación: " + (result.error || "Fallo en la prueba"));
                     }
                 }
             } catch (error) {
                 console.error("Error en el flujo:", error);
-                alert("Asegúrate de abrir la aplicación desde la World App.");
+                alert("Para conectar, abre esta página desde la World App.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Verificar con World ID";
