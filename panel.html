@@ -1,0 +1,23 @@
+<h2>Panel</h2>
+<div id="user"></div>
+<button onclick="logout()">Cerrar sesión</button>
+
+<script>
+const API = "https://binance-bot-2kbp.onrender.com";
+
+fetch(API + "/api/me")
+.then(r => r.json())
+.then(data => {
+    if (!data.logged) {
+        window.location.href = "/";
+    } else {
+        document.getElementById("user").innerText =
+            "Usuario: " + data.user.id;
+    }
+});
+
+function logout() {
+    fetch(API + "/api/logout", {method:"POST"})
+    .then(() => location.href = "/");
+}
+</script>
