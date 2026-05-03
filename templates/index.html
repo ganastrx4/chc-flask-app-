@@ -47,6 +47,11 @@ button {
 <script>
 
 // ==========================================
+// 🔗 TU BACKEND (IMPORTANTE)
+// ==========================================
+const API = "https://binance-bot-2kbp.onrender.com";
+
+// ==========================================
 // INIT MINIKIT
 // ==========================================
 window.addEventListener("load", () => {
@@ -61,7 +66,7 @@ window.addEventListener("load", () => {
 });
 
 // ==========================================
-// LOGIN HIBRIDO
+// LOGIN HÍBRIDO (PRO)
 // ==========================================
 async function login() {
 
@@ -72,21 +77,26 @@ async function login() {
     try {
 
         // ===============================
-        // 🔥 MODO WORLD APP
+        // 🔥 MODO WORLD APP (walletAuth REAL)
         // ===============================
         if (window.MiniKit) {
 
-            const sig = await fetch("/api/rp-signature", {
+            // 🔥 Obtener firma del backend
+            const rp = await fetch(API + "/api/rp-signature", {
                 method: "POST"
-            });
+            }).then(r => r.json());
 
-            const data = await sig.json();
-
+            // 🔥 DISPARA MODAL REAL (como ORO)
             const { finalPayload } = await MiniKit.commands.walletAuth({
-                nonce: data.nonce,
+                nonce: rp.nonce,
                 requestId: crypto.randomUUID(),
-                expirationTime: new Date(data.expires_at * 1000),
-                notBefore: new Date(data.created_at * 1000),
+
+                // 🔥 CLAVE PARA QUE NO FALLE
+                signature: rp.signature,
+
+                expirationTime: new Date(rp.expires_at * 1000),
+                notBefore: new Date(rp.created_at * 1000),
+
                 statement: "Login CharlyCoin"
             });
 
@@ -97,13 +107,12 @@ async function login() {
         }
 
         // ===============================
-        // 🌍 MODO WEB NORMAL
+        // 🌍 MODO WEB NORMAL (fallback)
         // ===============================
         else {
 
             localStorage.setItem("verify", "1");
 
-            // 🔥 TU LINK REAL
             const url = "https://worldcoin.org/verify?t=wld&i=cd209cbb-162b-4a11-adb7-5b3b1133ed34&k=FunGjCr3o%2Fm3zlUDif7q6jbxazyCgb9K6wd4vD8YFUY%3D";
 
             window.location.href = url;
@@ -119,11 +128,11 @@ async function login() {
 }
 
 // ==========================================
-// VERIFICAR BACKEND
+// 🔐 VERIFICAR BACKEND
 // ==========================================
 async function verify(payload) {
 
-    const res = await fetch("/api/verify-proof", {
+    const res = await fetch(API + "/api/verify-proof", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload)
@@ -139,7 +148,7 @@ async function verify(payload) {
 }
 
 // ==========================================
-// DETECTAR REGRESO (WEB)
+// 🔁 DETECTAR REGRESO (WEB)
 // ==========================================
 async function checkReturnFromWorld() {
 
@@ -150,7 +159,7 @@ async function checkReturnFromWorld() {
 
         localStorage.removeItem("verify");
 
-        await fetch("/api/verify-proof", {
+        await fetch(API + "/api/verify-proof", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ proof })
