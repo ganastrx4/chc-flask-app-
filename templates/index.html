@@ -1,185 +1,166 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin (CHC) - Verificación Oficial</title>
-    <!-- SDK de MiniKit: Necesario para el comando walletAuth -->
-    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
-    <style>
-        :root {
-            --bg-dark: #080808;
-            --card-bg: #111111;
-            --accent: #00d4ff;
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CharlyCoin - World ID</title>
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: 'Inter', -apple-system, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
+<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
 
-        .pro-card {
-            background: var(--card-bg);
-            width: 100%;
-            max-width: 380px;
-            padding: 40px 30px;
-            border-radius: 28px;
-            border: 1px solid #222;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            text-align: center;
-        }
-
-        .logo-img {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            border: 3px solid var(--accent);
-            box-shadow: 0 0 25px rgba(0, 212, 255, 0.4);
-            object-fit: cover;
-            margin-bottom: 25px;
-        }
-
-        .status-pill {
-            background: rgba(0, 212, 255, 0.15);
-            color: var(--accent);
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin: 10px 0;
-            background: linear-gradient(135deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            color: var(--text-dim);
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 35px;
-        }
-
-        .btn-verify {
-            background: #ffffff;
-            color: #000000;
-            border: none;
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-verify:disabled {
-            background: #333;
-            color: #777;
-        }
-
-        .footer-text {
-            margin-top: 30px;
-            font-size: 10px;
-            color: #444;
-        }
-    </style>
+<style>
+body {
+    background: #080808;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+.card {
+    background: #111;
+    padding: 30px;
+    border-radius: 20px;
+    width: 320px;
+    text-align: center;
+}
+button {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="pro-card">
-        <div class="status-pill">Producción Activa • World ID 4.0</div>
-        
-        <br>
-        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" 
-             alt="CharlyCoin Logo" class="logo-img">
+<div class="card">
+    <h2>CharlyCoin</h2>
+    <p>Verifica tu humanidad con World ID</p>
+    <button onclick="login()" id="btn">Conectar World ID</button>
+</div>
 
-        <h1>CharlyCoin (CHC)</h1>
-        <p>Conecta tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.</p>
+<script>
 
-        <button class="btn-verify" id="btn-login" onclick="signInWithWorldID()">
-            Verificar con World ID
-        </button>
+// ==========================================
+// INIT MINIKIT
+// ==========================================
+window.addEventListener("load", () => {
+    if (window.MiniKit) {
+        window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
+        console.log("MiniKit activo");
+    } else {
+        console.log("Modo navegador normal");
+    }
 
-        <div class="footer-text">
-            APP ID: app_7686f9027d3e3c0b53d987a3caf1e111<br>
-            RP ID: rp_aa5ead0710fce1dc
-        </div>
-    </div>
+    checkReturnFromWorld();
+});
 
-    <script>
-        // Inicialización obligatoria de MiniKit con tu APP ID
-        window.addEventListener('load', () => {
-            if (window.MiniKit) {
-                window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
+// ==========================================
+// LOGIN HIBRIDO
+// ==========================================
+async function login() {
+
+    const btn = document.getElementById("btn");
+    btn.innerText = "Conectando...";
+    btn.disabled = true;
+
+    try {
+
+        // ===============================
+        // 🔥 MODO WORLD APP
+        // ===============================
+        if (window.MiniKit) {
+
+            const sig = await fetch("/api/rp-signature", {
+                method: "POST"
+            });
+
+            const data = await sig.json();
+
+            const { finalPayload } = await MiniKit.commands.walletAuth({
+                nonce: data.nonce,
+                requestId: crypto.randomUUID(),
+                expirationTime: new Date(data.expires_at * 1000),
+                notBefore: new Date(data.created_at * 1000),
+                statement: "Login CharlyCoin"
+            });
+
+            if (finalPayload) {
+                await verify(finalPayload);
             }
+
+        }
+
+        // ===============================
+        // 🌍 MODO WEB NORMAL
+        // ===============================
+        else {
+
+            localStorage.setItem("verify", "1");
+
+            // 🔥 TU LINK REAL
+            const url = "https://worldcoin.org/verify?t=wld&i=cd209cbb-162b-4a11-adb7-5b3b1133ed34&k=FunGjCr3o%2Fm3zlUDif7q6jbxazyCgb9K6wd4vD8YFUY%3D";
+
+            window.location.href = url;
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert("Error en conexión");
+    }
+
+    btn.innerText = "Conectar World ID";
+    btn.disabled = false;
+}
+
+// ==========================================
+// VERIFICAR BACKEND
+// ==========================================
+async function verify(payload) {
+
+    const res = await fetch("/api/verify-proof", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+        window.location.replace("/panel.html");
+    } else {
+        alert("Falló verificación");
+    }
+}
+
+// ==========================================
+// DETECTAR REGRESO (WEB)
+// ==========================================
+async function checkReturnFromWorld() {
+
+    const params = new URLSearchParams(window.location.search);
+    const proof = params.get("proof");
+
+    if (proof || localStorage.getItem("verify")) {
+
+        localStorage.removeItem("verify");
+
+        await fetch("/api/verify-proof", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ proof })
         });
 
-        async function signInWithWorldID() {
-            const btn = document.getElementById('btn-login');
-            btn.disabled = true;
-            btn.innerText = "Conectando...";
+        window.location.replace("/panel.html");
+    }
+}
 
-            try {
-                // 1. Obtener firma del backend para asegurar la conexión
-                const responseSignature = await fetch("/api/rp-signature", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "verify-account" }),
-                });
-                
-                const rpSig = await responseSignature.json();
+</script>
 
-                // 2. DISPARAR VENTANA "CONECTAR TU WORLD ID" (walletAuth)
-                // Esto genera el modal con el botón "Aprobar" que buscabas
-                const { finalPayload } = await window.MiniKit.commands.walletAuth({
-                    nonce: rpSig.nonce,
-                    requestId: "0",
-                    expirationTime: new Date(rpSig.expires_at * 1000),
-                    notBefore: new Date(rpSig.created_at * 1000),
-                    statement: "Conectar mi World ID a CharlyCoin para verificar mi humanidad",
-                });
-                
-                // 3. Validar el resultado devuelto por World ID en tu servidor
-                if (finalPayload) {
-                    btn.innerText = "Verificando...";
-                    const verifyRes = await fetch("/api/verify-proof", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(finalPayload)
-                    });
-
-                    const result = await verifyRes.json();
-
-                    if (result.success) {
-                        // Éxito: Redirigir a la siguiente página
-                        window.location.href = '/next_page.html';
-                    } else {
-                        alert("Error de validación: " + (result.error || "Fallo en la prueba"));
-                    }
-                }
-            } catch (error) {
-                console.error("Error en el flujo:", error);
-                alert("Para conectar, abre esta página desde la World App.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Verificar con World ID";
-            }
-        }
-    </script>
 </body>
 </html>
