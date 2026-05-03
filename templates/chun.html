@@ -122,7 +122,20 @@
             document.getElementById('bridgeStatus').innerText = "Error en el envío.";
         }
     }
+    // Agrega esta constante a tu script
+const AUTH_KEY = "e52bcda04bcebb7dfebf42b2ddcfac46";
 
+// Úsala en tus funciones de envío (Bridge o Casino)
+async function enviarAlNodo(datos) {
+    await fetch(`${NODO_URL}/confirmar-compra`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': AUTH_KEY // Esto valida que eres tú quien envía los datos
+        },
+        body: JSON.stringify(datos)
+    });
+}
     // --- LÓGICA CASINO ---
     async function procesarApuesta() {
         const wallet = document.getElementById('userWallet').value.trim();
