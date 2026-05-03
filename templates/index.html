@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CharlyCoin (CHC) - Gestión de Activos</title>
+    <!-- Carga del SDK de MiniKit para interactuar con World App -->
+    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
     <style>
         :root {
             --primary-bg: #0a0a0c;
@@ -87,9 +89,8 @@
             gap: 10px;
         }
 
-        .btn-worldid:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-2px);
+        .btn-worldid:active {
+            transform: scale(0.98);
         }
 
         .footer-info {
@@ -102,7 +103,6 @@
 <body>
 
     <div class="container">
-        <!-- Imagen de CharlyCoin dirigida desde el enlace proporcionado -->
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s320/CharlyCoin.JPG" 
              alt="CharlyCoin (CHC)" 
              class="logo">
@@ -113,11 +113,11 @@
         
         <p>
             Bienvenido a la gestión oficial de <strong>CharlyCoin</strong>. 
-            Utiliza tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.
+            Verifica tu identidad humana para acceder.
         </p>
 
-        <!-- Botón de Acción -->
-        <button class="btn-worldid" onclick="window.location.href='#'">
+        <!-- El botón ahora llama a la función de login -->
+        <button class="btn-worldid" onclick="signInWithWorldID()">
             Verificar con World ID
         </button>
 
@@ -126,6 +126,30 @@
             RP ID: rp_aa5ead0710fce1dc
         </div>
     </div>
+
+    <script>
+        // Inicializar MiniKit con tu App ID
+        window.addEventListener('load', () => {
+            if (window.MiniKit) {
+                window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
+            }
+        });
+
+        async function signInWithWorldID() {
+            try {
+                // Esto abre la ventana de recepción de World App
+                const { finalPayload } = await window.MiniKit.commands.signInWithWallet();
+                
+                // Si el usuario se conecta correctamente, pasamos a la siguiente página
+                if (finalPayload) {
+                    window.location.href = 'next_page.html';
+                }
+            } catch (error) {
+                console.error("Error en el login:", error);
+                alert("Hubo un problema al conectar con World App. Intenta de nuevo.");
+            }
+        }
+    </script>
 
 </body>
 </html>
