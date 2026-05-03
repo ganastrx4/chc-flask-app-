@@ -1,41 +1,43 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CharlyCoin - World ID</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
-
-<style>
-body {
-    background: #080808;
-    color: white;
-    font-family: Arial;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-}
-.card {
-    background: #111;
-    padding: 30px;
-    border-radius: 20px;
-    width: 320px;
-    text-align: center;
-}
-button {
-    width: 100%;
-    padding: 15px;
-    border-radius: 12px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin - World ID</title>
+    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
+    <style>
+        body {
+            background: #080808;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #111;
+            padding: 30px;
+            border-radius: 20px;
+            width: 320px;
+            text-align: center;
+            border: 1px solid #222;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            background: white;
+            color: black;
+            transition: 0.3s;
+        }
+        button:disabled { background: #444; color: #888; }
+    </style>
 </head>
-
 <body>
 
 <div class="card">
@@ -45,131 +47,72 @@ button {
 </div>
 
 <script>
+// URL de tu backend en Render
+const API = ""; // Déjalo vacío si el HTML se sirve desde el mismo servidor
 
-// ==========================================
-// 🔗 TU BACKEND (IMPORTANTE)
-// ==========================================
-const API = "https://binance-bot-2kbp.onrender.com";
-
-// ==========================================
-// INIT MINIKIT
-// ==========================================
 window.addEventListener("load", () => {
     if (window.MiniKit) {
         window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
-        console.log("MiniKit activo");
-    } else {
-        console.log("Modo navegador normal");
     }
-
-    checkReturnFromWorld();
 });
 
-// ==========================================
-// LOGIN HÍBRIDO (PRO)
-// ==========================================
 async function login() {
-
     const btn = document.getElementById("btn");
     btn.innerText = "Conectando...";
     btn.disabled = true;
 
     try {
-
-        // ===============================
-        // 🔥 MODO WORLD APP (walletAuth REAL)
-        // ===============================
-        if (window.MiniKit) {
-
-            // 🔥 Obtener firma del backend
+        if (window.MiniKit && window.MiniKit.isInstalled()) {
+            // 1. Obtener firma del backend
             const rp = await fetch(API + "/api/rp-signature", {
-                method: "POST"
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ action: "verify-account" })
             }).then(r => r.json());
 
-            // 🔥 DISPARA MODAL REAL (como ORO)
+            // 2. DISPARAR MODAL (walletAuth)
             const { finalPayload } = await MiniKit.commands.walletAuth({
                 nonce: rp.nonce,
                 requestId: crypto.randomUUID(),
-
-                // 🔥 CLAVE PARA QUE NO FALLE
-                signature: rp.signature,
-
+                // CORRECCIÓN: Tu backend envía 'sig', no 'signature'
+                signature: rp.sig, 
                 expirationTime: new Date(rp.expires_at * 1000),
                 notBefore: new Date(rp.created_at * 1000),
-
-                statement: "Login CharlyCoin"
+                statement: "Conectar mi World ID a CharlyCoin"
             });
 
             if (finalPayload) {
                 await verify(finalPayload);
             }
-
+        } else {
+            // Fallback para navegador normal
+            alert("Por favor, abre esta aplicación dentro de la World App.");
         }
-
-        // ===============================
-        // 🌍 MODO WEB NORMAL (fallback)
-        // ===============================
-        else {
-
-            localStorage.setItem("verify", "1");
-
-            const url = "https://worldcoin.org/verify?t=wld&i=cd209cbb-162b-4a11-adb7-5b3b1133ed34&k=FunGjCr3o%2Fm3zlUDif7q6jbxazyCgb9K6wd4vD8YFUY%3D";
-
-            window.location.href = url;
-        }
-
     } catch (e) {
         console.error(e);
-        alert("Error en conexión");
+        alert("Error de conexión con el servidor");
+    } finally {
+        btn.innerText = "Conectar World ID";
+        btn.disabled = false;
     }
-
-    btn.innerText = "Conectar World ID";
-    btn.disabled = false;
 }
 
-// ==========================================
-// 🔐 VERIFICAR BACKEND
-// ==========================================
 async function verify(payload) {
-
     const res = await fetch(API + "/api/verify-proof", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+                headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload)
     });
 
     const result = await res.json();
 
     if (result.success) {
-        window.location.replace("/panel.html");
+        // Redirige a una de las páginas que tienes en tu lista de Flask
+        window.location.replace("/next_page.html");
     } else {
-        alert("Falló verificación");
+        alert("Verificación fallida: " + (result.error || "Intenta de nuevo"));
     }
 }
-
-// ==========================================
-// 🔁 DETECTAR REGRESO (WEB)
-// ==========================================
-async function checkReturnFromWorld() {
-
-    const params = new URLSearchParams(window.location.search);
-    const proof = params.get("proof");
-
-    if (proof || localStorage.getItem("verify")) {
-
-        localStorage.removeItem("verify");
-
-        await fetch(API + "/api/verify-proof", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ proof })
-        });
-
-        window.location.replace("/panel.html");
-    }
-}
-
 </script>
-
 </body>
 </html>
