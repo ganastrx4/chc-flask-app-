@@ -77,6 +77,16 @@
             padding: 15px;
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            justify-items: center;
+        }
+
+        /* Contenedor especial para el banner de FaucetPay para que no rompa el grid */
+        .banner-faucet {
+            grid-column: 1 / -1; /* Ocupa todo el ancho del grid */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
         }
 
         .app-icon {
@@ -167,10 +177,19 @@
     <!-- SECCIÓN FAUCETS -->
     <div class="section-title">FAUCETS DIARIOS</div>
     <div class="grid-container">
-        <a href="https://faucetpay.io/?r=1998768" class="app-icon" target="_blank">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjR_YEihcGJN2s1ZMOftf4n_ufWVtn9wDekroy5jr6pqvP5Rhsapes0TK45bA6-AEnBIId1PojmvAB81115H2odVDNayEM-E0SuXhjwgGy3HdzXHyA5-vD0S6Ta-RPN0SeM77buedzHr7uEM9duaR9o76Uk1nQUNyn0oQZU4QlkGOkLM8guPAJEl-iTWTP8/s1600-rw/faucetpay.JPG">
-            <span>FaucetPay</span>
-        </a>
+        
+        <!-- BANNER REFERRAL FAUCETPAY (REEMPLAZO DEL BOTÓN ANTERIOR) -->
+        <div class="banner-faucet">
+            <iframe 
+                src="https://api.fpadserver.com/referral-banners?size=300x250&clickTag=https://faucetpay.io/?r=1998768"
+                scrolling="no"
+                frameborder="0"
+                width="300"
+                height="250"
+                style="border:none; border-radius: 15px;">
+            </iframe>
+        </div>
+
         <a href="https://rollercoin.com/?r=kmwzgbqj" class="app-icon" target="_blank">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFuUXElY54f0fCeP6VDgcHeeTobyv-860wCOBIVY4M2MT_dNxzXMLDCgWgAxi8UtyVD_X1iR_WBcRAyE51ggXffB_GGNhnZsU0dkUwgUpiXEHVOC9XCE383cQAYuq7kpR6_iKVNA7h0HR9sEaprCfhENvDDaVFxqPxwDPOz150uq1SBk9gSmqA2L0rjAYc/s1600-rw/ROLLERCOIN.jpg">
             <span>RollerCoin</span>
