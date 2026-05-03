@@ -151,5 +151,42 @@
 
     init();
 </script>
+    <script>
+async function iniciarApp() {
+    // 1. Revisar si el usuario ya tiene su llave
+    let miWallet = localStorage.getItem("mi_charly_wallet");
+
+    if (!miWallet) {
+        // Crear una dirección nueva aleatoria para el usuario
+        miWallet = "ch_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("mi_charly_wallet", miWallet);
+
+        console.log("Generando nueva cuenta y solicitando regalo...");
+
+        // 2. Solicitar regalo de bienvenida al servidor
+        try {
+            const respuesta = await fetch("/regalo_bienvenida", {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ wallet: miWallet })
+            });
+            const resultado = await respuesta.json();
+            
+            if (resultado.ok) {
+                alert("¡Felicidades! Has recibido " + resultado.monto + " CHC de bienvenida.");
+            }
+        } catch (error) {
+            console.error("No se pudo obtener el regalo");
+        }
+    }
+
+    // 3. Cargar la wallet en el buscador para ver el saldo
+    document.getElementById("wallet-input").value = miWallet;
+    updateDashboard(); // Esta función ya existe en tu código para actualizar la tabla
+}
+
+// Ejecutar al cargar la página
+window.addEventListener('load', iniciarApp);
+</script>
 </body>
 </html>
