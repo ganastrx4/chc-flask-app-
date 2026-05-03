@@ -3,36 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin (CHC) - Gestión de Activos</title>
-    <!-- SDK de MiniKit -->
+    <title>CharlyCoin (CHC) - Verificación</title>
+    <!-- Usamos MiniKit que es el estándar para Mini Apps en World App -->
     <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
     <style>
         :root {
             --primary-bg: #0a0a0c;
-            --accent-purple: #8a2be2;
             --accent-blue: #00d4ff;
             --text-white: #ffffff;
-            --text-gray: #b0b0b0;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--primary-bg);
             color: var(--text-white);
-            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            text-align: center;
+            margin: 0;
         }
 
         .container {
             max-width: 400px;
             padding: 2rem;
-            background: linear-gradient(145deg, #141417, #0a0a0c);
+            background: #141417;
             border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
             border: 1px solid #222;
         }
 
@@ -41,36 +38,7 @@
             height: 150px;
             border-radius: 50%;
             margin-bottom: 1.5rem;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
             border: 2px solid var(--accent-blue);
-            object-fit: cover;
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            color: var(--text-gray);
-            font-size: 0.95rem;
-            line-height: 1.5;
-            margin-bottom: 2rem;
-        }
-
-        .status-badge {
-            display: inline-block;
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--accent-blue);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
         }
 
         .btn-worldid {
@@ -80,23 +48,8 @@
             padding: 14px 28px;
             border-radius: 12px;
             font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
             width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-worldid:active { transform: scale(0.98); }
-        .btn-worldid:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .footer-info {
-            margin-top: 2rem;
-            font-size: 0.7rem;
-            color: #444;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -104,55 +57,38 @@
 
     <div class="container">
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s320/CharlyCoin.JPG" 
-             alt="CharlyCoin (CHC)" 
-             class="logo">
-
-        <div class="status-badge">Producción Activa • World ID 4.0</div>
+             alt="CharlyCoin" class="logo">
 
         <h1>CharlyCoin (CHC)</h1>
-        
-        <p>
-            Bienvenido a la gestión oficial de <strong>CharlyCoin</strong>. 
-            Verifica tu identidad humana para acceder.
-        </p>
+        <p>Verifica tu identidad humana para acceder al panel seguro.</p>
 
-        <button class="btn-worldid" id="btn-login" onclick="signInWithWorldID()">
+        <button class="btn-worldid" id="btn-login" onclick="launchVerify()">
             Verificar con World ID
         </button>
-
-        <div class="footer-info">
-            APP ID: app_7686f9027d3e3c0b53d987a3caf1e111<br>
-            RP ID: rp_aa5ead0710fce1dc
-        </div>
     </div>
 
     <script>
-        // Instalación de MiniKit al cargar la página
+        // Inicialización crítica para que la World App reconozca la Mini App
         window.addEventListener('load', () => {
             if (window.MiniKit) {
                 window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
             }
         });
 
-        async function signInWithWorldID() {
+        async function launchVerify() {
             const btn = document.getElementById('btn-login');
-            btn.disabled = true;
-            btn.innerText = "Preparando...";
+            btn.innerText = "Abriendo World ID...";
 
             try {
-                // 1. Paso Backend: Obtener firma autorizada para que World ID confíe en la petición
-                const resSig = await fetch("/api/rp-signature", {
+                // 1. Obtener la firma de tu backend (Python)
+                const res = await fetch("/api/rp-signature", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "verify-account" }), // Debe coincidir con el backend
+                    body: JSON.stringify({ action: "verify-account" })
                 });
-                
-                if (!resSig.ok) throw new Error("Error obteniendo firma del servidor");
-                const rpSig = await resSig.json();
+                const sigData = await res.json();
 
-                btn.innerText = "Esperando World ID...";
-
-                // 2. Paso World ID: Abre el popup emergente de verificación
+                // 2. Ejecutar el comando que abre el pop-up nativo de la World App
                 const { finalPayload } = await window.MiniKit.commands.verify({
                     app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
                     action: "verify-account",
@@ -160,36 +96,21 @@
                     verification_level: "orb", 
                     rp_context: {
                         rp_id: "rp_aa5ead0710fce1dc",
-                        nonce: rpSig.nonce,
-                        created_at: rpSig.created_at,
-                        expires_at: rpSig.expires_at,
-                        signature: rpSig.sig,
+                        nonce: sigData.nonce,
+                        created_at: sigData.created_at,
+                        expires_at: sigData.expires_at,
+                        signature: sigData.sig,
                     }
                 });
-                
-                // 3. Paso Validación y Redirección
-                if (finalPayload) {
-                    btn.innerText = "Validando identidad...";
-                    
-                    // Enviamos la prueba al backend para registrar el nullifier (opcional pero recomendado)
-                    const verifyRes = await fetch("/api/verify-proof", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(finalPayload)
-                    });
 
-                    if (verifyRes.ok) {
-                        window.location.href = 'next_page.html';
-                    } else {
-                        const errorData = await verifyRes.json();
-                        alert("Error de validación: " + (errorData.error || "Intente de nuevo"));
-                    }
+                // 3. Si el usuario se verificó en el pop-up, pasar a la siguiente página
+                if (finalPayload) {
+                    window.location.href = '/next_page.html';
                 }
-            } catch (error) {
-                console.error("Error en el flujo:", error);
-                alert("La verificación falló. Asegúrate de estar usando World App.");
+            } catch (e) {
+                console.error(e);
+                alert("Para abrir la verificación, usa la World App.");
             } finally {
-                btn.disabled = false;
                 btn.innerText = "Verificar con World ID";
             }
         }
