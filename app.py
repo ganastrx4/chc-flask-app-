@@ -245,6 +245,30 @@ def headers(resp):
     return resp
 
 # ==========================================
+# 🌐 logout
+# ==========================================
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"success": True})
+
+
+# ==========================================
+# 🌐 route
+# ==========================================
+@app.route("/api/me")
+def me():
+    if "user_id" not in session:
+        return jsonify({"logged": False})
+
+    users = load_users()
+    user = users.get(session["user_id"])
+
+    return jsonify({
+        "logged": True,
+        "user": user
+    })
+# ==========================================
 # 🌐 PAGINAS
 # ==========================================
 @app.route("/")
