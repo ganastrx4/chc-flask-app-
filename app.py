@@ -2,6 +2,78 @@ import os
 from flask import Flask, request, jsonify, render_template
 import requests
 from web3 import Web3
+import json
+import time
+import threading
+
+BSC_API_KEY = os.environ.get("BSC_API_KEY")
+POOL_WALLET = "0xd4508db1adc48dea121f356b254a7155ddab36ae"
+
+HASH_FILE = "hashes_bnb.json"
+
+def load_hashes():
+    if not os.path.exists(HASH_FILE):
+        return set()
+    with open(HASH_FILE, "r") as f:
+        return set(json.load(f))
+
+def save_hash(h):
+    hashes = load_hashes()
+    hashes.add(h)
+    with open(HASH_FILE, "w") as f:
+        json.dump(list(hashes), f)
+def get_wld_price():
+    try:
+        r = requests.get("https://api.binance.com/api/v3/ticker/price?symbol=WLDUSDT").json()
+        return float(r["price"])
+    except:
+        return 1.0
+
+def detectar_bnb():
+    url = f"https://api.bscscan.com/api?module=account&action=txlist&address={POOL_WALLET}&sort=desc&apikey={BSC_API_KEY}"
+
+    hashes = load_hashes()
+
+    try:
+        data = requests.get(url).json()
+
+        for tx in data["result"]:
+            if tx["to"].lower() != POOL_WALLET.lower():
+                continue
+
+            hash_tx = tx["hash"]
+            monto = int(tx["value"]) / 10**18
+
+            if hash_tx in hashes:
+                continue
+
+            if monto < 0.001:
+                continue
+
+            if int(tx["confirmations"]) < 3:
+                continue
+
+            print(f"[💰] Depósito detectado: {monto} BNB")
+
+            # CONVERSIÓN A CHC
+            wld_price = get_wld_price()
+            chc = monto * wld_price * 100000
+
+            # ENVÍO A TU RED CHC
+            try:
+                requests.post("https://binance-bot-hna7.onrender.com/transferir", json={
+                    "emisor": "BNB_POOL",
+                    "receptor": "SISTEMA",
+                    "monto": chc,
+                    "firma": "BNB_BRIDGE"
+                }, timeout=10)
+            except:
+                pass
+
+            save_hash(hash_tx)
+
+    except Exception as e:
+        print("Error BNB:", e)
 
 app = Flask(__name__)
 
@@ -107,6 +179,38 @@ def verify_proof():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+# =========================
+# /api/exchange
+# =========================
+@app.route("/api/exchange", methods=["POST"])
+def exchange():
+    data = request.json
+    tipo = data.get("tipo")
+    cantidad = float(data.get("cantidad", 0))
+
+    wld_price = get_wld_price()
+
+    if tipo == "comprar":
+        chc = cantidad * 100000
+        return jsonify({"success": True, "chc": chc, "precio": wld_price})
+
+    elif tipo == "vender":
+        wld = cantidad / 100000
+        return jsonify({"success": True, "wld": wld, "precio": wld_price})
+
+    return jsonify({"success": False})
+
+
+# =========================
+# loop_bnb
+# =========================
+def loop_bnb():
+    while True:
+        detectar_bnb()
+        time.sleep(15)
+
+threading.Thread(target=loop_bnb, daemon=True).start()
 
 # =========================
 # STATUS (HÍBRIDO: TU APP + WORLD CHAIN)
