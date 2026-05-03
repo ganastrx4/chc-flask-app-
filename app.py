@@ -8,7 +8,50 @@ import threading
 import requests
 from flask import Flask, request, jsonify, render_template
 from web3 import Web3
+from functools import wraps
+from flask import session, redirect
 
+app.secret_key = os.environ.get("FLASK_SECRET", "super_secret_session_key")
+
+USERS_FILE = "users.json"
+
+# =========================
+# 📦 USERS (simple storage)
+# =========================
+def load_users():
+    if not os.path.exists(USERS_FILE):
+        return {}
+    with open(USERS_FILE, "r") as f:
+        return json.load(f)
+
+def save_users(users):
+    with open(USERS_FILE, "w") as f:
+        json.dump(users, f)
+
+def get_or_create_user(nullifier):
+    users = load_users()
+
+    if nullifier not in users:
+        users[nullifier] = {
+            "id": nullifier,
+            "created_at": int(time.time()),
+            "balance": 0
+        }
+        save_users(users)
+
+    return users[nullifier]
+
+
+# =========================
+# 🔐 LOGIN REQUIRED
+# =========================
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect("/")
+        return f(*args, **kwargs)
+    return wrapper
 # ==========================================
 # 🔐 CONFIG
 # ==========================================
@@ -87,8 +130,11 @@ def verify_proof():
 
         used = load_nullifiers()
 
-        if nullifier in used:
-            return jsonify({"success": False, "error": "Ya usado"}), 400
+        # 👇 opcional: permite login si ya existe
+        # if nullifier in used:
+        #     user = get_or_create_user(nullifier)
+        #     session["user_id"] = user["id"]
+        #     return jsonify({"success": True})
 
         payload = {
             "merkle_root": data.get("merkle_root"),
@@ -103,7 +149,15 @@ def verify_proof():
         result = r.json()
 
         if result.get("success"):
+
             save_nullifier(nullifier)
+
+            # 🔥 CREAR / OBTENER USUARIO
+            user = get_or_create_user(nullifier)
+
+            # 🔐 CREAR SESIÓN
+            session["user_id"] = user["id"]
+
             return jsonify({"success": True})
 
         return jsonify({"success": False, "error": result}), 400
@@ -222,6 +276,13 @@ def exchange():
 
     return jsonify({"success": True, "wld": cantidad / 100000, "precio": price})
 
+# ==========================================
+# 🚀 panel
+# ==========================================
+@app.route("/panel.html")
+@login_required
+def panel():
+    return render_template("panel.html")
 # ==========================================
 # 🚀 START
 # ==========================================
