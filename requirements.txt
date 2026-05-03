@@ -1,4 +1,4 @@
 flask
 requests
 gunicorn
-web3==6.11.1
+web3
