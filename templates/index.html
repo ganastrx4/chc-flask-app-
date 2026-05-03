@@ -4,71 +4,164 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bienvenida a CharlyCoin</title>
-    <link rel="stylesheet" href="style.css"> <!-- Asegúrate de que este archivo esté correctamente vinculado -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2f;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #2c2c3e;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+        }
+        input, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            background: #f39c12;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #e67e22; }
+        #cryptoInfo {
+            display: none;
+            margin-top: 20px;
+            background: #3a3a55;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #3a3a55;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background: #f39c12;
+            color: #000;
+        }
+        h3 { color: #f39c12; margin-top: 20px; }
+        .binance-link {
+            display: block;
+            margin-top: 20px;
+            color: #f39c12;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .grafica-link {
+            display: block;
+            margin-top: 20px;
+            color: #e67e22;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .grafica-link:hover {
+            color: #f39c12;
+        }
+        .gif-container img {
+            width: 100%;
+            height: auto;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .next-button, .grafica-link, .binance-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 10px 0;
+            display: inline-block;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f39c12;
+            transition: background-color 0.3s ease;
+        }
+        .next-button:hover, .grafica-link:hover, .binance-link:hover {
+            background: #e67e22;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="gif-container">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo">
         </div>
-        <div class="loading-bar">
-            <div class="progress-bar"></div>
-        </div>
 
-        <!-- BOTÓN SIGN IN WITH WORLD ID -->
-        <div id="world-id-button"></div>
+        <!-- Botón de World ID -->
+        <h2>Verifica tu identidad con World ID</h2>
+        <div id="world-id"></div>
 
-        <!-- Formulario para verificación de World ID -->
-        <form id="verifyForm">
-            <label for="worldId">World ID:</label>
-            <input type="text" id="worldId" name="worldId" required>
-            <button type="submit">Verificar World ID</button>
-        </form>
-
-        <a href="/next-page" class="next-button">Siguiente</a>
+        <!-- Enlaces de navegación -->
+        <a href="./ganarchun.html" class="next-button">GANAR CHUN</a>
+        <a href="./next_page.html" class="grafica-link">WLD Gráfica en Vivo</a>
+        <a href="./dados.html" class="next-button">DADOS</a>
+        <a href="./wdd.html" class="next-button">MULTIPLICA TU WDD</a>
+        <a href="./transacciones.html" class="next-button">Movimientos</a>
     </div>
 
-    <!-- Script de World ID -->
-    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/id"></script> <!-- Usando CDN -->
+    <a href="./tokenchc.html" target="_blank">
+        <button style="padding: 15px; font-size: 18px; border-radius: 10px; background-color: #6c47ff; color: white;">
+            ¡Apoya nuestro Token CHC en PUF y espera el PUMP!
+            <br> ¡Solo los débiles venden!
+        </button>
+    </a>
+
+    <!-- Script de World ID (IDKit CDN) -->
+    <script src="https://cdn.worldcoin.org/idkit/idkit.umd.min.js"></script>
     <script>
-        new WorldIDWidget({
-            action_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-            signal: "user_login",
-            enableTelemetry: true,
-            app_name: "CharlyCoin",
-            theme: "light",
-            containerId: "world-id-button",
-            onSuccess: (proof) => {
-                console.log("Verificación exitosa:", proof);
-                alert("¡Verificación exitosa!");
+        window.IDKit.init({
+            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID de Worldcoin
+            action: "login", // Nombre de tu acción configurada
+            signal: "", // Puedes usar identificadores únicos si quieres
+            credential_types: ["orb", "device"],
+            onSuccess: async (proof) => {
+                console.log("Prueba recibida:", proof);
+                
+                const response = await fetch("https://developer.worldcoin.org/api/v2/verify/app_7686f9027d3e3c0b53d987a3caf1e111", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        ...proof,
+                        action: "login"
+                    })
+                });
+
+                const result = await response.json();
+                if (result.verified) {
+                    alert("¡Verificación exitosa!");
+                } else {
+                    alert("Verificación fallida: " + (result.detail || "Intenta de nuevo."));
+                }
             },
             onError: (error) => {
                 console.error("Error en la verificación:", error);
-                alert("Error en la verificación");
+                alert("Error al verificar con World ID");
             }
         });
 
-        document.getElementById('verifyForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const worldId = document.getElementById('worldId').value;
-
-            fetch('/api/verify', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ world_id: worldId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Respuesta de la verificación:', data);
-                alert('Verificación completada');
-            })
-            .catch(error => {
-                console.error('Error en la verificación:', error);
-            });
-        });
+        // Montar el botón en el div
+        window.IDKit.mount("#world-id");
     </script>
 </body>
 </html>
