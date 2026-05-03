@@ -152,37 +152,52 @@
     }
 
     // --- LÓGICA DE BRIDGE (DETECCIÓN DE HASH) ---
-    async function conectarWeb3() {
-        if (window.ethereum) {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userExternalAccount = accounts[0];
-            alert("Conectado: " + userExternalAccount);
+    // Añade este script en tu <head> para cargar la compatibilidad universal
+// <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+// <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+
+const Web3Modal = window.Web3Modal.default;
+const WalletConnectProvider = window.WalletConnectProvider.default;
+
+let web3Modal;
+let provider;
+let web3;
+
+function init() {
+    // Configuración de opciones de billeteras (El menú que buscas)
+    const providerOptions = {
+        walletconnect: {
+            package: WalletConnectProvider,
+            options: {
+                // Aquí va tu Project ID de WalletConnect
+                infuraId: "TU_INFURA_ID_O_PROJECT_ID" 
+            }
         }
+    };
+
+    web3Modal = new Web3Modal({
+        cacheProvider: false, 
+        providerOptions,
+        theme: "dark"
+    });
+}
+
+async function conectarWeb3() {
+    try {
+        init();
+        // Esto abre el menú con MetaMask, Trust, Uniswap, etc.
+        provider = await web3Modal.connect();
+        web3 = new Web3(provider);
+        
+        const accounts = await web3.eth.getAccounts();
+        userExternalAccount = accounts[0];
+        
+        document.getElementById('bridgeStatus').innerText = "Conectado: " + userExternalAccount.substring(0,10) + "...";
+        alert("Billetera vinculada con éxito");
+    } catch(e) {
+        console.log("Conexión cancelada");
     }
-
-    function actualizarPool() {
-        const sel = document.getElementById('network');
-        document.getElementById('poolAddr').innerText = sel.options[sel.selectedIndex].getAttribute('data-addr');
-    }
-
-    async function enviarAPool() {
-        const amt = document.getElementById('sendAmount').value;
-        const pool = document.getElementById('poolAddr').innerText;
-        const walletCHC = document.getElementById('userWallet').value;
-
-        if (!userExternalAccount || !amt || !walletCHC) return alert("Conecta Wallet y llena todos los campos.");
-
-        const web3 = new Web3(window.ethereum);
-        try {
-            const tx = await web3.eth.sendTransaction({
-                from: userExternalAccount,
-                to: pool,
-                value: web3.utils.toWei(amt, 'ether')
-            });
-
-            if (tx.transactionHash) {
-                const registro = `#6948${tx.transactionHash.substring(2,20)}...${walletCHC.substring(0,10)}`;
-                document.getElementById('bridgeStatus').innerText = "HASH REGISTRADO: " + registro;
+}
                 
                 // Avisar al nodo
                 fetch(`${NODO_URL}/confirmar-compra`, {
