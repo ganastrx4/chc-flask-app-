@@ -1,116 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenido a CharlyCoin</title>
-    <style>
-        :root {
-            --bg: #050505;
-            --accent: #00d4ff;
-            --glass: rgba(255, 255, 255, 0.05);
-        }
-
-        body {
-            background-color: var(--bg);
-            color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .intro-container {
-            text-align: center;
-            animation: fadeIn 1.5s ease-out;
-            padding: 20px;
-            max-width: 400px;
-        }
-
-        .logo-glow {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            margin-bottom: 30px;
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
-            object-fit: cover;
-            animation: pulse 3s infinite;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin: 10px 0;
-            letter-spacing: 2px;
-            background: linear-gradient(to right, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            color: #aaa;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 40px;
-        }
-
-        .enter-button {
-            background: transparent;
-            color: white;
-            border: 1px solid var(--accent);
-            padding: 15px 40px;
-            font-size: 1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .enter-button:hover {
-            background: var(--accent);
-            color: #000;
-            box-shadow: 0 0 20px var(--accent);
-            transform: translateY(-3px);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
-            50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.5); }
-            100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Verificación World ID - CharlyCoin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@worldcoin/idkit@1.2.0/dist/idkit.umd.min.js"></script>
+  <style>
+    body {
+      background: #0d1117;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    button {
+      background: linear-gradient(135deg, #00bcd4, #2196f3);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(135deg, #2196f3, #00bcd4);
+    }
+  </style>
 </head>
 <body>
+  <h2>Verifica tu identidad con World ID</h2>
+  <div id="world-id-container"></div>
 
-    <div class="intro-container">
-        <!-- Imagen de CharlyCoin proporcionada -->
-        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" 
-             alt="CharlyCoin Logo" class="logo-glow">
-        
-        <h1>Bienvenido</h1>
-        <p>Estás ingresando al ecosistema de CharlyCoin. Gestión descentralizada y segura.</p>
+  <script>
+    // Tu app ID oficial de Worldcoin
+    const app_id = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const backend_url = "https://worldid-auth-fzky.onrender.com/api/verify"; 
+    const redirect_url = "https://ganastrx4.github.io/chc-flask-app-/buscador.html";
 
-        <a href="next_page.html" class="enter-button">Ingresar ahora</a>
-    </div>
+    // Inicializa el widget IDKit
+    const idkit = new window.IDKitWidget({
+      app_id: app_id,
+      action: "my_action", // Puedes cambiar el nombre si quieres usar diferentes acciones
+      signal: "verify_user",
+      theme: "dark",
+      verification_level: "orb",
+      onSuccess: async (response) => {
+        console.log("Proof recibido:", response);
 
-    <script>
-        // Opcional: Redirección automática después de 5 segundos si no hacen clic
-        /*
-        setTimeout(() => {
-            window.location.href = "next_page.html";
-        }, 5000);
-        */
-    </script>
+        try {
+          const res = await fetch(backend_url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
+
+          const data = await res.json();
+          console.log("Respuesta del backend:", data);
+
+          if (res.ok && data.success) {
+            alert("✅ Verificación completada. Redirigiendo...");
+            window.location.href = redirect_url;
+          } else {
+            alert("❌ Verificación fallida: " + (data.error || "Error desconocido"));
+          }
+        } catch (err) {
+          console.error("Error al verificar:", err);
+          alert("❌ Error conectando con el backend.");
+        }
+      },
+    });
+
+    // Renderiza el botón
+    const button = document.createElement("button");
+    button.textContent = "Verificar con World ID 🌐";
+    button.onclick = () => idkit.open();
+    document.getElementById("world-id-container").appendChild(button);
+  </script>
 </body>
 </html>
