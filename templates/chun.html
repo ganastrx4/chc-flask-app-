@@ -3,187 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyScan | Casino & Liquidity Pool Bridge</title>
+    <title>CharlyScan | Casino & Multi-Bridge</title>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
     <style>
-        :root { --gold: #f1c40f; --bg: #050505; --card: #121212; --accent: #2ecc71; --danger: #e74c3c; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+        :root { --gold: #f1c40f; --bg: #0a0a0a; --card: #161616; --green: #2ecc71; --red: #e74c3c; }
+        body { background: var(--bg); color: white; font-family: 'Courier New', monospace; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: var(--card); border: 1px solid #333; border-radius: 12px; padding: 25px; width: 100%; max-width: 500px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        h3 { color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 10px; margin-top: 0; }
         
-        /* Contenedores */
-        .card { background: var(--card); border: 1px solid #222; border-radius: 15px; padding: 20px; width: 100%; max-width: 480px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h3 { color: var(--gold); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        
-        /* Juego de la Moneda */
-        .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 15px auto; }
-        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.1, 0.5, 0.1, 1); }
-        .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid var(--gold); background: linear-gradient(135deg, var(--gold), #d4af37); color: black; }
-        .aguila { transform: rotateY(180deg); background: #333; color: var(--gold); }
+        /* Coin Style */
+        .coin-wrap { width: 100px; height: 100px; margin: 20px auto; perspective: 1000px; }
+        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 3s; }
+        .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; border: 4px solid var(--gold); }
+        .cara { background: var(--gold); color: black; }
+        .aguila { background: #222; color: var(--gold); transform: rotateY(180deg); }
 
-        /* Inputs y Botones */
         .input-group { margin-bottom: 15px; text-align: left; }
-        label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 8px; color: white; box-sizing: border-box; font-family: monospace; }
-        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-web3 { background: #3498db; color: white; margin-bottom: 15px; }
-        .btn-play { background: var(--gold); color: black; }
-        .btn-bridge { background: var(--accent); color: black; }
+        label { font-size: 12px; color: #aaa; margin-bottom: 5px; display: block; }
+        input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: var(--green); border-radius: 5px; box-sizing: border-box; }
         
-        .status { font-size: 12px; margin-top: 10px; color: var(--accent); font-weight: bold; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
+        .btn-play { background: var(--gold); color: black; }
+        .btn-buy { background: var(--green); color: black; }
+        
+        #log-status { font-size: 11px; background: #000; padding: 10px; border-radius: 5px; margin-top: 15px; color: #888; overflow-x: hidden; white-space: nowrap; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
-    <h2 style="letter-spacing: 2px;">CHARLY<span style="color:var(--gold)">SCAN</span> PROJECT</h2>
-
-    <!-- 1. JUEGO DE LA MONEDA -->
+    <!-- SECCIÓN CASINO -->
     <div class="card">
         <h3>🎰 CASINO CHC</h3>
-        <div class="coin-container">
+        <div class="coin-wrap">
             <div id="coin">
                 <div class="side cara">CHC</div>
                 <div class="side aguila">CASA</div>
             </div>
         </div>
         <div class="input-group">
-            <label>DIRECCIÓN CHC DEL USUARIO (RECIBE PREMIOS)</label>
-            <input type="text" id="userCHC" placeholder="Tu wallet CharlyScan...">
+            <label>ID BILLETERA CHARLYSCAN (USUARIO)</label>
+            <input type="text" id="chcUser" placeholder="93aab2b2ee274042d8..." value="">
         </div>
         <div class="input-group">
-            <label>APUESTA (1-300 CHC)</label>
-            <input type="number" id="betAmount" value="1">
+            <label>CANTIDAD APOSTADA</label>
+            <input type="number" id="bet" value="1" min="1">
         </div>
-        <button class="btn btn-play" onclick="lanzarMoneda()">APOSTAR Y LANZAR</button>
-        <div id="gameStatus" class="status" style="color: #888;">Introduce tu wallet para jugar</div>
+        <button class="btn btn-play" onclick="playGame()">APOSTAR Y LANZAR</button>
+        <div id="game-info" style="text-align:center; margin-top:10px;"></div>
     </div>
 
-    <!-- 2. BRIDGE POR TRANSFERENCIA DIRECTA -->
+    <!-- SECCIÓN BRIDGE / ENVÍO A POOL -->
     <div class="card">
         <h3>💱 ENVÍO A POOL (BUY CHC)</h3>
-        <button class="btn btn-web3" id="connectBtn" onclick="connectWeb3()">🔗 CONECTAR WALLET EXTERNA</button>
+        <button class="btn" style="background:#3498db; color:white;" onclick="connect()">🔗 CONECTAR WALLET EXTERNA</button>
         
-        <div class="input-group">
-            <label>RED DE ENVÍO (USER -> POOL)</label>
-            <select id="network" onchange="updatePool()">
+        <div class="input-group" style="margin-top:15px;">
+            <label>SELECCIONAR RED Y ASSET</label>
+            <select id="net" onchange="changePool()">
                 <option value="WLD" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">World Chain (WLD)</option>
                 <option value="BNB" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">BNB Chain (BNB)</option>
-                <option value="ETH" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">Ethereum (ETH)</option>
+                <option value="BTC" data-addr="bc1qg6d27ghf4v26sc87r06798j56qf6vjuxr3fzv4">Bitcoin (BTC)</option>
                 <option value="SOL" data-addr="CJrnbCpnYfU8p4L1KxWv8rZ5m1k7f9rZ5m1k7f9rZ8tx">Solana (SOL)</option>
             </select>
         </div>
 
         <div class="input-group">
-            <label>POOL DE RECEPCIÓN (CHARLYSCAN)</label>
-            <input type="text" id="poolAddr" value="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae" readonly style="color:var(--gold)">
+            <label>BILLETERA POOL (DESTINO)</label>
+            <input type="text" id="pool" value="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae" readonly>
         </div>
 
-        <div style="display: flex; gap: 10px;">
-            <div class="input-group" style="flex:1">
-                <label>ENVIAR CRIPTO</label>
-                <input type="number" id="sendAmt" step="0.001" placeholder="0.0" oninput="calcCHC(this.value)">
+        <div style="display:flex; gap:10px;">
+            <div class="input-group" style="flex:1;">
+                <label>ENVIAR MONEDA</label>
+                <input type="number" id="amt" step="0.0001" oninput="calc(this.value)">
             </div>
-            <div class="input-group" style="flex:1">
-                <label>RECIBES CHC</label>
-                <input type="text" id="receiveCHC" readonly placeholder="0">
+            <div class="input-group" style="flex:1;">
+                <label>OBTENER CHC</label>
+                <input type="text" id="chcRes" readonly placeholder="0">
             </div>
         </div>
 
-        <button class="btn btn-bridge" onclick="transferirAPool()">AUTORIZAR ENVÍO Y COMPRAR</button>
-        <div id="bridgeStatus" class="status">Detección de Hash activada</div>
+        <button class="btn btn-buy" onclick="sendToPool()">CONFIRMAR ENVÍO Y GENERAR HASH</button>
+        
+        <div id="log-status">Esperando transacción...</div>
     </div>
 
 <script>
     const NODO_URL = "https://binance-bot-hna7.onrender.com";
     const RATE = 100000;
-    let userExternalAccount = null;
+    let externalAcc = null;
 
-    // --- LÓGICA WEB3 ---
-    async function connectWeb3() {
+    async function connect() {
         if (window.ethereum) {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userExternalAccount = accounts[0];
-            document.getElementById('connectBtn').innerText = "✅ " + userExternalAccount.substring(0,10) + "...";
-            document.getElementById('connectBtn').style.background = "#2ecc71";
+            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            externalAcc = accs[0];
+            document.getElementById('log-status').innerText = "Wallet conectada: " + externalAcc;
         }
     }
 
-    function updatePool() {
-        const sel = document.getElementById('network');
-        document.getElementById('poolAddr').value = sel.options[sel.selectedIndex].getAttribute('data-addr');
+    function changePool() {
+        const s = document.getElementById('net');
+        document.getElementById('pool').value = s.options[s.selectedIndex].getAttribute('data-addr');
     }
 
-    function calcCHC(v) {
-        document.getElementById('receiveCHC').value = (v * RATE).toLocaleString() + " CHC";
+    function calc(v) {
+        document.getElementById('chcRes').value = (v * RATE) + " CHC";
     }
 
-    // --- FUNCIÓN DE ENVÍO DIRECTO ---
-    async function transferirAPool() {
-        const amount = document.getElementById('sendAmt').value;
-        const destPool = document.getElementById('poolAddr').value;
-        const chcWallet = document.getElementById('userCHC Wallet').value;
+    // --- BASE DE TRANSACCIÓN RECUPERADA ---
+    async function sendToPool() {
+        const amount = document.getElementById('amt').value;
+        const poolAddr = document.getElementById('pool').value;
+        const userCHC = document.getElementById('chcUser').value;
 
-        if (!userExternalAccount || !amount || !chcWallet) {
-            return alert("Completa: Conexión Wallet, Monto y Dirección CHC de destino.");
-        }
+        if (!externalAcc || !amount || !userCHC) return alert("Faltan datos o conexión.");
 
         try {
-            // 1. Detectar el envío desde la Wallet del Usuario a la Pool
             const web3 = new Web3(window.ethereum);
-            const weiValue = web3.utils.toWei(amount, 'ether');
+            const valWei = web3.utils.toWei(amount, 'ether');
 
-            document.getElementById('bridgeStatus').innerText = "Esperando firma de envío...";
-
+            // Ejecución del envío real a la billetera colocada
             const tx = await web3.eth.sendTransaction({
-                from: userExternalAccount,
-                to: destPool,
-                value: weiValue
+                from: externalAcc,
+                to: poolAddr,
+                value: valWei
             });
 
-            // 2. Al detectar el Hash de salida, notificamos al Nodo para que libere CHC
+            // Generación del Hash de bloque para el Nodo (Como tus registros #6948...)
             if (tx.transactionHash) {
-                document.getElementById('bridgeStatus').innerHTML = `ENVÍO DETECTADO: <br> <small>${tx.transactionHash}</small>`;
-                
-                await fetch(`${NODO_URL}/bridge-confirm`, {
+                const hashRegistro = `#6948${tx.transactionHash.substring(2,20)}...${userCHC.substring(0,10)}`;
+                document.getElementById('log-status').innerText = hashRegistro;
+
+                // Notificar al Nodo para que valide y entregue CHC
+                fetch(`${NODO_URL}/confirmar-pool`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         hash: tx.transactionHash,
-                        from: userExternalAccount,
-                        to: destPool,
-                        chc_dest: chcWallet,
-                        amount: amount,
-                        network: document.getElementById('network').value
+                        user: userCHC,
+                        monto: amount,
+                        pool: poolAddr,
+                        log: hashRegistro
                     })
                 });
-                alert("Pago detectado por el Pool. El Nodo está enviando tus CHC.");
+                alert("Envío exitoso. Hash registrado en el pool.");
             }
         } catch (e) {
-            document.getElementById('bridgeStatus').innerText = "Error en la transacción o usuario canceló.";
+            document.getElementById('log-status').innerText = "Error en envío.";
         }
     }
 
-    // --- JUEGO DE LA MONEDA ---
-    function lanzarMoneda() {
-        const wallet = document.getElementById('userCHC').value;
-        const bet = document.getElementById('betAmount').value;
-        const coin = document.getElementById('coin');
-        const status = document.getElementById('gameStatus');
+    function playGame() {
+        const u = document.getElementById('chcUser').value;
+        const b = document.getElementById('bet').value;
+        if(!u) return alert("Ingresa tu ID CHC");
 
-        if (!wallet) return alert("Ingresa tu wallet CHC para jugar.");
+        const win = Math.random() > 0.6;
+        const rot = 1800 + (win ? 0 : 180);
+        document.getElementById('coin').style.transform = `rotateY(${rot}deg)`;
 
-        status.innerText = "Lanzando...";
-        const gana = Math.random() > 0.5;
-        const rotation = 1800 + (gana ? 0 : 180);
-        
-        coin.style.transform = `rotateY(${rotation}deg)`;
-
-        setTimeout(async () => {
-            status.innerHTML = gana ? `<span style="color:var(--accent)">GANASTE +${bet} CHC</span>` : `<span style="color:var(--danger)">CASA GANA -${bet} CHC</span>`;
+        setTimeout(() => {
+            document.getElementById('game-info').innerHTML = win ? `<b style="color:var(--green)">GANASTE +${b} CHC</b>` : `<b style="color:var(--red)">CASA GANA -${b} CHC</b>`;
             
-            // Registrar en Nodo
-            fetch(`${NODO_URL}/casino-result`, {
+            fetch(`${NODO_URL}/casino-update`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user: wallet, amount: bet, win: gana })
+                body: JSON.stringify({ user: u, amount: b, win: win })
             });
         }, 3000);
     }
