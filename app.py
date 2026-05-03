@@ -234,6 +234,10 @@ def home():
 def buscador2():
     return render_template("buscador2.html")
 
+@app.route("/buscador.html")
+def buscador2():
+    return render_template("buscador.html")
+
 
 @app.route("/enviarwld.html")
 def enviarwld():
