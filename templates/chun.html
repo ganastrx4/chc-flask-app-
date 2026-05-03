@@ -3,138 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyScan | Multichain Bridge & Casino</title>
+    <title>CharlyScan | Casino & Liquidity Pool Bridge</title>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
     <style>
         :root { --gold: #f1c40f; --bg: #050505; --card: #121212; --accent: #2ecc71; --danger: #e74c3c; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
-        .card { background: var(--card); border: 1px solid #222; border-radius: 15px; padding: 20px; width: 100%; max-width: 450px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h3 { color: var(--gold); margin-top: 0; display: flex; justify-content: space-between; }
+        
+        /* Contenedores */
+        .card { background: var(--card); border: 1px solid #222; border-radius: 15px; padding: 20px; width: 100%; max-width: 480px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h3 { color: var(--gold); margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        /* Juego de la Moneda */
+        .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 15px auto; }
+        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 3s cubic-bezier(0.1, 0.5, 0.1, 1); }
+        .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid var(--gold); background: linear-gradient(135deg, var(--gold), #d4af37); color: black; }
+        .aguila { transform: rotateY(180deg); background: #333; color: var(--gold); }
+
+        /* Inputs y Botones */
         .input-group { margin-bottom: 15px; text-align: left; }
         label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; border-radius: 8px; color: white; box-sizing: border-box; font-family: monospace; }
-        input:focus { border-color: var(--gold); outline: none; }
-        /* El input de CHC ahora es editable y resalta en verde */
-        #userCHCWallet { border-color: var(--accent); color: var(--accent); }
-        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .btn-connect { background: #3498db; color: white; margin-bottom: 20px; max-width: 450px; }
-        .btn-buy { background: var(--accent); color: black; }
-        .btn-sell { background: var(--danger); color: white; }
-        .address-box { background: #000; padding: 10px; border-radius: 5px; font-size: 10px; color: var(--gold); border: 1px dashed #444; margin: 10px 0; word-break: break-all; }
-        .status { font-size: 12px; margin-top: 10px; color: #888; }
+        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-web3 { background: #3498db; color: white; margin-bottom: 15px; }
+        .btn-play { background: var(--gold); color: black; }
+        .btn-bridge { background: var(--accent); color: black; }
+        
+        .status { font-size: 12px; margin-top: 10px; color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h2 style="letter-spacing: 2px;">CHARLY<span style="color:var(--gold)">SCAN</span> PROJECT</h2>
 
-    <!-- 1. CONEXIÓN WEB3 (Solo para Redes Externas) -->
-    <button class="btn btn-connect" id="btnWeb3" onclick="connectExternalWallet()">
-        🔗 CONECTAR BILLETERA EXTERNA (METAMASK/TRUST)
-    </button>
-
-    <!-- 2. BILLETERA CHC (ID DEL JUEGO) -->
-    <div class="card" style="border: 1px solid var(--accent);">
-        <h3 style="color: var(--accent);">🆔 IDENTIDAD CHARLYSCAN</h3>
-        <div class="input-group">
-            <label>INGRESA TU DIRECCIÓN DE MINERO O NODO (PARA RECIBIR CHC)</label>
-            <input type="text" id="userCHCWallet" placeholder="Pega aquí tu dirección de CharlyScan..." />
+    <!-- 1. JUEGO DE LA MONEDA -->
+    <div class="card">
+        <h3>🎰 CASINO CHC</h3>
+        <div class="coin-container">
+            <div id="coin">
+                <div class="side cara">CHC</div>
+                <div class="side aguila">CASA</div>
+            </div>
         </div>
-        <div class="status">Esta billetera recibirá los CHC de tus compras y premios.</div>
+        <div class="input-group">
+            <label>DIRECCIÓN CHC DEL USUARIO (RECIBE PREMIOS)</label>
+            <input type="text" id="userCHC" placeholder="Tu wallet CharlyScan...">
+        </div>
+        <div class="input-group">
+            <label>APUESTA (1-300 CHC)</label>
+            <input type="number" id="betAmount" value="1">
+        </div>
+        <button class="btn btn-play" onclick="lanzarMoneda()">APOSTAR Y LANZAR</button>
+        <div id="gameStatus" class="status" style="color: #888;">Introduce tu wallet para jugar</div>
     </div>
 
-    <!-- 3. BRIDGE MULTICHAIN -->
+    <!-- 2. BRIDGE POR TRANSFERENCIA DIRECTA -->
     <div class="card">
-        <h3>💱 BRIDGE MULTICHAIN</h3>
+        <h3>💱 ENVÍO A POOL (BUY CHC)</h3>
+        <button class="btn btn-web3" id="connectBtn" onclick="connectWeb3()">🔗 CONECTAR WALLET EXTERNA</button>
+        
         <div class="input-group">
-            <label>RED DE PAGO (EXTERNA)</label>
-            <select id="netSelect" onchange="updateNet()">
-                <option value="ETH" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">Ethereum (ETH)</option>
-                <option value="BTC" data-addr="bc1qg6d27ghf4v26sc87r06798j56qf6vjuxr3fzv4">Bitcoin (BTC)</option>
-                <option value="SOL" data-addr="CJrnbCpnYfU8p4L1KxWv8rZ5m1k7f9rZ5m1k7f9rZ8tx">Solana (SOL)</option>
-                <option value="WLD" data-addr="0x2cFc85d8E48F8EAB294be644d9E25C3030863003">World Chain (WLD)</option>
+            <label>RED DE ENVÍO (USER -> POOL)</label>
+            <select id="network" onchange="updatePool()">
+                <option value="WLD" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">World Chain (WLD)</option>
                 <option value="BNB" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">BNB Chain (BNB)</option>
+                <option value="ETH" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">Ethereum (ETH)</option>
+                <option value="SOL" data-addr="CJrnbCpnYfU8p4L1KxWv8rZ5m1k7f9rZ5m1k7f9rZ8tx">Solana (SOL)</option>
             </select>
         </div>
 
-        <label>DIRECCIÓN DE DEPÓSITO DEL NODO:</label>
-        <div id="depositoAddr" class="address-box">0xd4508db1aDC48deA121f356B254a7155DDAB36Ae</div>
-
-        <div style="display: flex; gap: 10px;">
-            <div class="input-group" style="flex:1">
-                <label>ENVIAR (EXTERNO)</label>
-                <input type="number" id="amtIn" step="0.001" placeholder="0.0" oninput="calc(this.value)">
-            </div>
-            <div class="input-group" style="flex:1">
-                <label>RECIBIR (CHC)</label>
-                <input type="text" id="amtOut" readonly placeholder="0">
-            </div>
+        <div class="input-group">
+            <label>POOL DE RECEPCIÓN (CHARLYSCAN)</label>
+            <input type="text" id="poolAddr" value="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae" readonly style="color:var(--gold)">
         </div>
 
         <div style="display: flex; gap: 10px;">
-            <button class="btn btn-buy" onclick="handleSwap('BUY')">COMPRAR CHC</button>
-            <button class="btn btn-sell" onclick="handleSwap('SELL')">VENDER CHC</button>
+            <div class="input-group" style="flex:1">
+                <label>ENVIAR CRIPTO</label>
+                <input type="number" id="sendAmt" step="0.001" placeholder="0.0" oninput="calcCHC(this.value)">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>RECIBES CHC</label>
+                <input type="text" id="receiveCHC" readonly placeholder="0">
+            </div>
         </div>
-        <div id="bridgeStatus" class="status">Listo para operar.</div>
+
+        <button class="btn btn-bridge" onclick="transferirAPool()">AUTORIZAR ENVÍO Y COMPRAR</button>
+        <div id="bridgeStatus" class="status">Detección de Hash activada</div>
     </div>
 
 <script>
     const NODO_URL = "https://binance-bot-hna7.onrender.com";
-    const CHC_RATE = 100000;
-    let externalAccount = null;
+    const RATE = 100000;
+    let userExternalAccount = null;
 
-    // Conectar Wallet Externa (MetaMask, etc)
-    async function connectExternalWallet() {
+    // --- LÓGICA WEB3 ---
+    async function connectWeb3() {
         if (window.ethereum) {
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                externalAccount = accounts[0];
-                document.getElementById('btnWeb3').innerText = "✅ CONECTADO: " + externalAccount.substring(0,6) + "...";
-                document.getElementById('btnWeb3').style.background = "#2ecc71";
-            } catch (e) { alert("Error al conectar wallet externa"); }
-        } else { alert("Instala una billetera Web3 (MetaMask)"); }
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            userExternalAccount = accounts[0];
+            document.getElementById('connectBtn').innerText = "✅ " + userExternalAccount.substring(0,10) + "...";
+            document.getElementById('connectBtn').style.background = "#2ecc71";
+        }
     }
 
-    function updateNet() {
-        const sel = document.getElementById('netSelect');
-        document.getElementById('depositoAddr').innerText = sel.options[sel.selectedIndex].getAttribute('data-addr');
+    function updatePool() {
+        const sel = document.getElementById('network');
+        document.getElementById('poolAddr').value = sel.options[sel.selectedIndex].getAttribute('data-addr');
     }
 
-    function calc(v) {
-        document.getElementById('amtOut').value = Math.floor(v * CHC_RATE).toLocaleString() + " CHC";
+    function calcCHC(v) {
+        document.getElementById('receiveCHC').value = (v * RATE).toLocaleString() + " CHC";
     }
 
-    async function handleSwap(type) {
-        const chcWallet = document.getElementById('userCHCWallet').value.trim();
-        const amount = document.getElementById('amtIn').value;
-        const status = document.getElementById('bridgeStatus');
+    // --- FUNCIÓN DE ENVÍO DIRECTO ---
+    async function transferirAPool() {
+        const amount = document.getElementById('sendAmt').value;
+        const destPool = document.getElementById('poolAddr').value;
+        const chcWallet = document.getElementById('userCHC Wallet').value;
 
-        if (!chcWallet) return alert("Error: Ingresa tu billetera de CharlyScan (CHC) para saber a dónde enviar los fondos.");
-        if (!amount || amount <= 0) return alert("Ingresa un monto válido.");
-        if (type === 'BUY' && !externalAccount) return alert("Conecta tu billetera externa para confirmar el origen del pago.");
-
-        status.innerText = "Sincronizando con el nodo...";
+        if (!userExternalAccount || !amount || !chcWallet) {
+            return alert("Completa: Conexión Wallet, Monto y Dirección CHC de destino.");
+        }
 
         try {
-            // Intentar avisar al nodo
-            const response = await fetch(`${NODO_URL}/bridge-request`, {
+            // 1. Detectar el envío desde la Wallet del Usuario a la Pool
+            const web3 = new Web3(window.ethereum);
+            const weiValue = web3.utils.toWei(amount, 'ether');
+
+            document.getElementById('bridgeStatus').innerText = "Esperando firma de envío...";
+
+            const tx = await web3.eth.sendTransaction({
+                from: userExternalAccount,
+                to: destPool,
+                value: weiValue
+            });
+
+            // 2. Al detectar el Hash de salida, notificamos al Nodo para que libere CHC
+            if (tx.transactionHash) {
+                document.getElementById('bridgeStatus').innerHTML = `ENVÍO DETECTADO: <br> <small>${tx.transactionHash}</small>`;
+                
+                await fetch(`${NODO_URL}/bridge-confirm`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        hash: tx.transactionHash,
+                        from: userExternalAccount,
+                        to: destPool,
+                        chc_dest: chcWallet,
+                        amount: amount,
+                        network: document.getElementById('network').value
+                    })
+                });
+                alert("Pago detectado por el Pool. El Nodo está enviando tus CHC.");
+            }
+        } catch (e) {
+            document.getElementById('bridgeStatus').innerText = "Error en la transacción o usuario canceló.";
+        }
+    }
+
+    // --- JUEGO DE LA MONEDA ---
+    function lanzarMoneda() {
+        const wallet = document.getElementById('userCHC').value;
+        const bet = document.getElementById('betAmount').value;
+        const coin = document.getElementById('coin');
+        const status = document.getElementById('gameStatus');
+
+        if (!wallet) return alert("Ingresa tu wallet CHC para jugar.");
+
+        status.innerText = "Lanzando...";
+        const gana = Math.random() > 0.5;
+        const rotation = 1800 + (gana ? 0 : 180);
+        
+        coin.style.transform = `rotateY(${rotation}deg)`;
+
+        setTimeout(async () => {
+            status.innerHTML = gana ? `<span style="color:var(--accent)">GANASTE +${bet} CHC</span>` : `<span style="color:var(--danger)">CASA GANA -${bet} CHC</span>`;
+            
+            // Registrar en Nodo
+            fetch(`${NODO_URL}/casino-result`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    type: type,
-                    chc_dest: chcWallet,
-                    ext_wallet: externalAccount || "MANUAL_PAY",
-                    net: document.getElementById('netSelect').value,
-                    amount: amount
-                })
+                body: JSON.stringify({ user: wallet, amount: bet, win: gana })
             });
-            
-            alert("Solicitud registrada. El nodo validará el Hash en la red una vez realices el envío.");
-        } catch (err) {
-            // Si el nodo falla, mostramos una instrucción clara para no detener al usuario
-            console.warn("Nodo offline, usando respaldo local.");
-            status.innerHTML = `<b style="color:var(--gold)">AVISO:</b> Realiza el envío a la dirección mostrada y guarda tu comprobante. El nodo procesará tu dirección CHC automáticamente al detectar el pago.`;
-        }
+        }, 3000);
     }
 </script>
 </body>
