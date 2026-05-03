@@ -229,6 +229,15 @@ def headers(resp):
 def home():
     return render_template("index.html")
 
+@app.route("/next_page.html")
+def home():
+    return render_template("next_page.html")
+
+@app.route("/chun.html")
+def home():
+    return render_template("chun.html")
+
+
 @app.route("/panel.html")
 @login_required
 def panel():
