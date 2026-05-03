@@ -222,20 +222,78 @@ def headers(resp):
     resp.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://*.world.org"
     return resp
 
-# ==========================================
-# 🌐 PAGINAS
-# ==========================================
+# =========================
+# PAGINAS
+# =========================
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/next_page.html")
-def home():
-    return render_template("next_page.html")
+
+@app.route("/buscador2.html")
+def buscador2():
+    return render_template("buscador2.html")
+
+
+@app.route("/enviarwld.html")
+def enviarwld():
+    return render_template("enviarwld.html")
+
+
+@app.route("/exchange.html")
+def exchange():
+    return render_template("exchange.html")
+
+
+@app.route("/graficachcwld.html")
+def graficachcwld():
+    return render_template("graficachcwld.html")
+
+
+@app.route("/charlycoinapp.html")
+def charlycoinapp():
+    return render_template("charlycoinapp.html")
+
+
+@app.route("/chcoin.html")
+def chcoin():
+    return render_template("chcoin.html")
+
+
+@app.route("/faucets.html")
+def faucets():
+    return render_template("faucets.html")
+
 
 @app.route("/chun.html")
-def home():
+def chun():
     return render_template("chun.html")
+
+
+@app.route("/next_page.html")
+def next_page():
+    return render_template("next_page.html")
+
+
+@app.route("/index.html")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/ganarchun.html")
+def ganarchun():
+    return render_template("ganarchun.html")
+
+
+@app.route("/glosario.html")
+def glosario():
+    return render_template("glosario.html")
+
+
+@app.route("/wdd.html")
+def wdd():
+    return render_template("wdd.html")
+
 
 
 @app.route("/panel.html")
