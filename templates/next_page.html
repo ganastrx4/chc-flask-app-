@@ -2,91 +2,90 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WLD Precio Ligero</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>CharlyCoin App - Pro</title>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f8ff;
-      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0b0e11; /* Color oscuro estilo Binance */
+      color: #eaecef;
+      padding: 10px;
+      padding-bottom: 80px;
     }
     .container {
       max-width: 600px;
       margin: auto;
-      background: white;
+      background: #181a20;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    h1, .btn-timeframe, #price {
-      text-align: center;
-    }
+    h1 { font-size: 1.2rem; text-align: center; color: #f0b90b; margin-bottom: 20px; }
+    
+    /* Gráfica Ligera */
     #price {
-      font-size: 1.5rem;
-      color: #28a745;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .btn-timeframe {
-      margin: 3px;
-      font-size: 0.85rem;
-    }
-    canvas {
-      margin-top: 15px;
-      width: 100% !important;
-      height: 250px !important;
-    }
-    .link-box {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 10px;
-      background-color: #e3f2fd;
       text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .link-box a {
+      font-size: 2rem;
+      color: #02c076;
       font-weight: bold;
-      text-decoration: none;
-      color: #007bff;
+      margin-bottom: 5px;
     }
-    .link-box a:hover {
-      color: #0056b3;
+    .btn-timeframe { margin: 2px; font-size: 0.75rem; background: #2b3139; border: none; color: #848e9c; }
+    .btn-timeframe:hover { background: #f0b90b; color: #000; }
+    canvas { width: 100% !important; height: 180px !important; }
+
+    /* Bot de Binance Integrado */
+    .bot-frame {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #444;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    /* Botones de Navegación Limpios */
+    .action-box {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-custom {
+      background: linear-gradient(90deg, #f0b90b, #f8d33a);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      text-align: center;
     }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <h1>Precio de WLD/USDT</h1>
-    <div id="price">Cargando...</div>
-
+    <h1>CHARLYCOIN TERMINAL 🚀</h1>
+    
+    <!-- PRECIO Y GRÁFICA -->
+    <div id="price">...</div>
     <div class="text-center mb-2">
-      <button class="btn btn-primary btn-timeframe" onclick="loadChart('1m')">1 Min</button>
-      <button class="btn btn-primary btn-timeframe" onclick="loadChart('5m')">5 Min</button>
-      <button class="btn btn-primary btn-timeframe" onclick="loadChart('15m')">15 Min</button>
-      <button class="btn btn-primary btn-timeframe" onclick="loadChart('1h')">1 Hora</button>
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('1m')">1M</button>
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('15m')">15M</button>
+      <button class="btn btn-primary btn-timeframe" onclick="loadChart('1h')">1H</button>
     </div>
-
     <canvas id="lightChart"></canvas>
 
-    <div class="link-box">
-      GRAFICAS
-      <a href="./exchange.html" class="btn btn-outline-primary w-100 mb-2">🎲 exchange 📈</a>
-      <a href="./graficachcwld.html" class="btn btn-outline-primary w-100 mb-2">📈 BOT ESTADISTICO</a>      
-      <a href="./charlycoinapp.html" class="btn btn-outline-primary w-100 mb-2">💎 CHARLYCOINAPP💎 </a>
-      EARN - GANAR
-      <a href="./chcoin.html" class="btn btn-outline-primary w-100">🏆 CHCOIN -COMPRA Y VENTA</a>
-      <a href="./ganarchun.html" class="btn btn-outline-primary w-100">🏆 Ganar CHUN y CHC</a>
-      COMPRAS TOKENS 
-      <a href="./faucets.html" class="btn btn-outline-primary w-100">🤑FAUCET💲</a>
-       <a href="./buscador2.html" class="btn btn-outline-primary w-100">📦 buscador de Criptomonedas</a>
-      BOT IA TAREAS
-      <a href="./glosario.html" class="btn btn-outline-primary w-100 mb-2">🎡 GLOSARIO</a>
-      
-      
-      
+    <!-- INTEGRACIÓN DEL BOT DE BINANCE -->
+    <h1 style="margin-top:25px; font-size: 1rem;">BINANCE LIVE SCANNER</h1>
+    <iframe src="https://binance-bot-hna7.onrender.com/" class="bot-frame"></iframe>
+
+    <!-- SOLO LOS BOTONES QUE PEDISTE -->
+    <div class="action-box">
+       <a href="./ganarchun.html" class="btn-custom">🏆 GANAR CHUN Y CHC</a>
     </div>
   </div>
 
@@ -97,14 +96,14 @@
     function fetchPrice() {
       $.getJSON("https://api.binance.com/api/v3/ticker/price?symbol=WLDUSDT", function (data) {
         let price = parseFloat(data.price).toFixed(4);
-        $("#price").text(`${price} USDT`);
+        $("#price").text(`$${price}`);
       });
     }
 
     function loadChart(interval) {
       currentInterval = interval;
-      $.getJSON(`https://api.binance.com/api/v3/klines?symbol=WLDUSDT&interval=${interval}&limit=10`, function (data) {
-        const labels = data.map(c => new Date(c[0]).toLocaleTimeString());
+      $.getJSON(`https://api.binance.com/api/v3/klines?symbol=WLDUSDT&interval=${interval}&limit=15`, function (data) {
+        const labels = data.map(c => new Date(c[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
         const prices = data.map(c => parseFloat(c[4]));
 
         const config = {
@@ -112,24 +111,18 @@
           data: {
             labels: labels,
             datasets: [{
-              label: `WLD (${interval})`,
               data: prices,
-              borderColor: '#007bff',
-              backgroundColor: 'rgba(0,123,255,0.1)',
-              tension: 0.4,
-              fill: true,
-              pointRadius: 2
+              borderColor: '#f0b90b',
+              borderWidth: 2,
+              tension: 0.3,
+              fill: false,
+              pointRadius: 0
             }]
           },
           options: {
             responsive: true,
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              x: { display: false },
-              y: { beginAtZero: false }
-            }
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { grid: { color: '#2b3139' } } }
           }
         };
 
@@ -138,76 +131,35 @@
         } else {
           chart.data.labels = labels;
           chart.data.datasets[0].data = prices;
-          chart.data.datasets[0].label = `WLD (${interval})`;
           chart.update();
         }
       });
     }
 
-    // Inicial
     fetchPrice();
-    loadChart(currentInterval);
-    setInterval(() => {
-      fetchPrice();
-      loadChart(currentInterval);
-    }, 30000); // cada 30 segundos
+    loadChart('1m');
+    setInterval(() => { fetchPrice(); loadChart(currentInterval); }, 10000);
   </script>
 
-  </br> </br> </br>
+  <!-- BARRA INFERIOR DE NAVEGACIÓN -->
+  <nav class="bottom-nav">
+    <a href="./enviarwld.html" class="nav-item"><span>DONA</span></a>
+    <a href="./next_page.html" class="nav-item"><span>GRAFICA</span></a>
+    <a href="./chun.html" class="nav-item"><span>RECLAMA</span></a>
+  </nav>
 
- <nav class="bottom-nav">
-    <a href="./enviarwld.html" class="nav-item">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-4 0h4" />
-        </svg>
-        <span>DONA</span>
-    </a>
-    <a href="./next_page.html" class="nav-item">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M12 8c-1.657 0-3 1.343-3 3a3 3 0 006 0c0-1.657-1.343-3-3-3zm0 9c-4.418 0-8-1.79-8-4v1c0 2.21 3.582 4 8 4s8-1.79 8-4v-1c0 2.21-3.582 4-8 4z" />
-        </svg>
-        <span>GRAFICA</span>
-    </a>
-    <a href="./chun.html" class="nav-item">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M5.121 17.804A9 9 0 0112 15a9 9 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <span>RECLAMA</span>
-    </a>
-</nav>
-
-<!-- ESTILOS PARA BARRA INFERIOR -->
-<style>
+  <style>
     .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: #2c2c3e;
-        border-top: 1px solid #444;
-        display: flex;
-        justify-content: space-around;
-        padding: 10px 0;
-        z-index: 9999;
+      position: fixed;
+      bottom: 0; left: 0; width: 100%;
+      background-color: #181a20;
+      border-top: 1px solid #2b3139;
+      display: flex; justify-content: space-around;
+      padding: 15px 0; z-index: 999;
     }
-    .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: white;
-        text-decoration: none;
-        font-size: 12px;
-        transition: color 0.3s;
-    }
-    .nav-item:hover {
-        color: #f39c12;
-    }
-    .nav-icon {
-        width: 24px;
-        height: 24px;
-        margin-bottom: 5px;
-    }
-</style>
-    
+    .nav-item { color: #848e9c; text-decoration: none; font-size: 14px; font-weight: bold; }
+    .nav-item:hover { color: #f0b90b; }
+  </style>
+
 </body>
 </html>
