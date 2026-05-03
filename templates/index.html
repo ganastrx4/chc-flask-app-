@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CharlyCoin (CHC) - Verificación Oficial</title>
-    <!-- Cargamos MiniKit, que es lo que tu backend espera -->
+    <!-- SDK de MiniKit: El que realmente conecta con tu app.py -->
     <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
     <style>
         :root {
@@ -18,7 +18,7 @@
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -54,7 +54,6 @@
             border-radius: 50px;
             font-size: 11px;
             font-weight: 800;
-            letter-spacing: 1px;
             text-transform: uppercase;
             margin-bottom: 20px;
             display: inline-block;
@@ -107,10 +106,10 @@
         
         <br>
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" 
-             alt="CharlyCoin" class="logo-img">
+             alt="CharlyCoin Logo" class="logo-img">
 
         <h1>CharlyCoin (CHC)</h1>
-        <p>Utiliza tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.</p>
+        <p>Verifica tu identidad humana para acceder a tu panel de control seguro y gestionar tus activos de CharlyCoin.</p>
 
         <button class="btn-verify" id="btn-login" onclick="signInWithWorldID()">
             Verificar con World ID
@@ -123,7 +122,7 @@
     </div>
 
     <script>
-        // Inicialización de MiniKit (Igual que en tu app.py)
+        // Inicialización obligatoria de MiniKit
         window.addEventListener('load', () => {
             if (window.MiniKit) {
                 window.MiniKit.install('app_7686f9027d3e3c0b53d987a3caf1e111');
@@ -136,7 +135,7 @@
             btn.innerText = "Iniciando...";
 
             try {
-                // 1. LLAMADA A TU RUTA REAL EN PYTHON
+                // 1. Obtener firma del backend (Ruta que ya tienes en app.py)
                 const responseSignature = await fetch("/api/rp-signature", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -145,12 +144,12 @@
                 
                 const rpSig = await responseSignature.json();
 
-                // 2. LANZAR EL POP-UP DE WORLD ID
+                // 2. Ejecutar comando de verificación de MiniKit
                 const { finalPayload } = await window.MiniKit.commands.verify({
                     app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-                    action: "verify-account", 
-                    signal: "charlycoin_login", 
-                    verification_level: "orb", 
+                    action: "verify-account",
+                    signal: "charlycoin_login",
+                    verification_level: "orb",
                     rp_context: {
                         rp_id: "rp_aa5ead0710fce1dc",
                         nonce: rpSig.nonce,
@@ -160,9 +159,9 @@
                     }
                 });
                 
-                // 3. ENVIAR PRUEBA A TU RUTA DE VERIFICACIÓN EN PYTHON
+                // 3. Validar la prueba en tu backend
                 if (finalPayload) {
-                    btn.innerText = "Verificando...";
+                    btn.innerText = "Verificando identidad...";
                     const verifyRes = await fetch("/api/verify-proof", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -172,15 +171,14 @@
                     const result = await verifyRes.json();
 
                     if (result.success) {
-                        // Redirige a la página que ya tienes en tu lista de 'paginas'
                         window.location.href = '/next_page.html';
                     } else {
-                        alert("Error: " + (result.error || "Fallo en la prueba"));
+                        alert("Error: " + (result.error || "Fallo en la validación"));
                     }
                 }
             } catch (error) {
-                console.error(error);
-                alert("Error de conexión. Ábrelo desde la World App.");
+                console.error("Error en el flujo:", error);
+                alert("Asegúrate de abrir la aplicación desde la World App.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Verificar con World ID";
