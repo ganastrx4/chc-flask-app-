@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Usuario</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
+        <h1 class="text-2xl font-bold mb-4 text-center">¡Bienvenido, {{ nombre }}!</h1>
+        <p class="mb-6 text-center text-gray-600">Has sido verificado con éxito. Puedes comenzar a usar la app.</p>
+        
+        <div class="flex flex-col gap-4">
+            <a href="/depositar" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-center">
+                Hacer Depósito
+            </a>
+            <a href="/jugar" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-center">
+                Jugar
+            </a>
+        </div>
+
+        <p class="mt-6 text-center text-sm text-gray-400">
+            <a href="/" class="underline hover:text-gray-600">Cerrar sesión</a>
+        </p>
+    </div>
+</body>
+</html>
