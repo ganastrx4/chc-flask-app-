@@ -248,6 +248,10 @@ def enviarwld():
 def exchange():
     return render_template("exchange.html")
 
+@app.route("/bola2.html")
+def bola2():
+    return render_template("bola2.html")
+
 
 @app.route("/graficachcwld.html")
 def graficachcwld():
