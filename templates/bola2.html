@@ -1,172 +1,156 @@
-import os
-from flask import Flask, request, jsonify, render_template
-import requests
-from web3 import Web3
-import json
-import time
-import threading
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyScan | Casino & Bridge Professional</title>
+    <!-- LIBRERÍAS PARA WEB3 MÓVIL Y PC -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <style>
+        :root { --gold: #f1c40f; --bg: #0a0a0a; --card: #161616; --green: #2ecc71; --red: #e74c3c; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }
+        .card { background: var(--card); border: 1px solid #333; border-radius: 15px; padding: 20px; max-width: 450px; margin: 15px auto; }
+        .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 20px auto; }
+        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+        .spinning { transition: transform 4s cubic-bezier(0.1, 0.5, 0.1, 1); }
+        .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid var(--gold); }
+        .cara { background: var(--gold); color: black; }
+        .aguila { background: #333; color: var(--gold); transform: rotateY(180deg); }
+        .wallet-input { width: 90%; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: var(--green); font-family: monospace; font-size: 11px; margin-bottom: 15px; }
+        input[type="number"], select { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; width: 80%; }
+        .btn { padding: 12px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; margin: 5px; width: 95%; }
+        .btn-play { background: var(--gold); color: black; }
+        .btn-bridge { background: var(--green); color: black; }
+        .info { color: #888; font-size: 0.75em; margin-top: 10px; word-break: break-all; }
+    </style>
+</head>
+<body>
 
-BSC_API_KEY = os.environ.get("BSC_API_KEY")
-POOL_WALLET = "0xd4508db1adc48dea121f356b254a7155ddab36ae"
-HASH_FILE = "hashes_bnb.json"
+    <a href="https://binance-bot-2kbp.onrender.com/" style="color:#666; text-decoration:none; font-size:0.8em;">🏠 SALIR</a>
+    <h2>CASINO & BRIDGE CHARLYSCAN</h2>
 
-def load_hashes():
-    if not os.path.exists(HASH_FILE):
-        return set()
-    with open(HASH_FILE, "r") as f:
-        return set(json.load(f))
+    <!-- CASINO -->
+    <div class="card">
+        <div class="coin-container"><div id="coin"><div class="side cara">CHC</div><div class="side aguila">CASA</div></div></div>
+        <input type="text" id="userWallet" class="wallet-input" placeholder="Dirección CharlyMiner..." />
+        <div><span>Apuesta: </span><input type="number" id="betAmount" value="1" min="1" max="300" /></div>
+        <button id="playBtn" class="btn btn-play" onclick="procesarApuesta()">APOSTAR Y LANZAR</button>
+        <div id="status">Selecciona tu apuesta</div>
+    </div>
 
-def save_hash(h):
-    hashes = load_hashes()
-    hashes.add(h)
-    with open(HASH_FILE, "w") as f:
-        json.dump(list(hashes), f)
+    <!-- BRIDGE -->
+    <div class="card" style="border-top: 2px solid var(--green);">
+        <h3 style="color:var(--green);">📥 COMPRAR CHC (POOL)</h3>
+        <button class="btn" style="background:#3498db; color:white;" onclick="conectarWeb3()">🔗 CONECTAR MULTI-WALLET (MÓVIL/PC)</button>
+        <select id="network" onchange="actualizarPool()" style="margin-top:10px;">
+            <option value="BNB" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">BNB Chain</option>
+            <option value="WLD" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">World Chain</option>
+        </select>
+        <div class="info">POOL: <span id="poolAddr">0xd4508db1aDC48deA121f356B254a7155DDAB36Ae</span></div>
+        <input type="number" id="sendAmount" step="0.0001" placeholder="Monto a enviar..." style="margin-top:10px;">
+        <button class="btn btn-bridge" onclick="enviarAPool()">CONFIRMAR ENVÍO Y GENERAR HASH</button>
+        <div id="bridgeStatus" class="info">Esperando transacción...</div>
+    </div>
 
-def get_wld_price():
-    try:
-        r = requests.get("https://api.binance.com/api/v3/ticker/price?symbol=WLDUSDT").json()
-        return float(r["price"])
-    except:
-        return 1.0
+<script>
+    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
+    const NODO_URL = "https://binance-bot-hna7.onrender.com";
+    
+    let web3;
+    let userExternalAccount = null;
 
-def detectar_bnb():
-    url = f"https://api.bscscan.com/api?module=account&action=txlist&address={POOL_WALLET}&sort=desc&apikey={BSC_API_KEY}"
-    hashes = load_hashes()
-    try:
-        data = requests.get(url).json()
-        for tx in data["result"]:
-            if tx["to"].lower() != POOL_WALLET.lower():
-                continue
-            hash_tx = tx["hash"]
-            monto = int(tx["value"]) / 10**18
-            if hash_tx in hashes:
-                continue
-            if monto < 0.001:
-                continue
-            if int(tx["confirmations"]) < 3:
-                continue
-            print(f"[💰] Deposito detectado: {monto} BNB")
-            wld_price = get_wld_price()
-            chc = monto * wld_price * 100000
-            try:
-                requests.post("https://binance-bot-hna7.onrender.com/transferir", json={
-                    "emisor": "BNB_POOL",
-                    "receptor": "SISTEMA",
-                    "monto": chc,
-                    "firma": "BNB_BRIDGE"
-                }, timeout=10)
-            except:
-                pass
-            save_hash(hash_tx)
-    except Exception as e:
-        print("Error BNB:", e)
+    // --- CONEXIÓN WEB3 MODAL (PARA CELULARES) ---
+    async function conectarWeb3() {
+        const providerOptions = {
+            walletconnect: {
+                package: window.WalletConnectProvider.default,
+                options: { infuraId: "8043bb2cf99347b1bf59be0d49e048c0" } // ID genérico para pruebas
+            }
+        };
+        const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions, theme: "dark" });
+        try {
+            const provider = await web3Modal.connect();
+            web3 = new Web3(provider);
+            const accounts = await web3.eth.getAccounts();
+            userExternalAccount = accounts[0];
+            document.getElementById('bridgeStatus').innerText = "Conectado: " + userExternalAccount;
+        } catch(e) { alert("Conexión cancelada"); }
+    }
 
-app = Flask(__name__)
+    // --- ENVIAR A POOL Y GENERAR HASH #6949 ---
+    async function enviarAPool() {
+        const amt = document.getElementById('sendAmount').value;
+        const pool = document.getElementById('poolAddr').innerText;
+        const walletCHC = document.getElementById('userWallet').value;
 
-APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
-ACTION = "login"
-VERIFY_URL = "https://developer.worldcoin.org/api/v2/verify"
-DB_FILE = "nullifiers.txt"
+        if (!userExternalAccount || !amt || !walletCHC) return alert("Falta Conexión, Monto o Wallet CHC");
 
-WORLDCHAIN_RPC = "https://worldchain-mainnet.g.alchemy.com/v2/39Stwe7kZcWw8bQj6T0a7UIOgU7fq9P5"
-w3 = Web3(Web3.HTTPProvider(WORLDCHAIN_RPC))
+        try {
+            document.getElementById('bridgeStatus').innerText = "Procesando en Blockchain...";
+            
+            // 1. Ejecutar transacción
+            const tx = await web3.eth.sendTransaction({
+                from: userExternalAccount,
+                to: pool,
+                value: web3.utils.toWei(amt, 'ether')
+            });
 
-def load_nullifiers():
-    if not os.path.exists(DB_FILE):
-        return set()
-    with open(DB_FILE, "r", encoding="utf-8") as f:
-        return set(line.strip() for line in f.readlines())
-
-def save_nullifier(value):
-    with open(DB_FILE, "a", encoding="utf-8") as f:
-        f.write(str(value) + "\n")
-
-@app.after_request
-def add_header(response):
-    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://world.org https://*.world.org"
-    return response
-
-@app.route("/")
-@app.route("/index.html")
-def home():
-    return render_template("index.html")
-
-paginas = [
-    "buscador2.html", "enviarwld.html", "exchange.html", 
-    "graficachcwld.html", "charlycoinapp.html", "chcoin.html", 
-    "faucets.html", "chun.html", "next_page.html", 
-    "ganarchun.html", "glosario.html", "wdd.html"
-]
-
-def create_route(page):
-    endpoint = f"route_{page.replace('.html', '')}"
-    @app.route(f"/{page}", endpoint=endpoint)
-    def v(): return render_template(page)
-
-for p in paginas:
-    create_route(p)
-
-@app.route("/api/verify-proof", methods=["POST"])
-def verify_proof():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"success": False, "error": "No data"}), 400
-        proof_data = data.get("proof", {})
-        nullifier = data.get("nullifier_hash") or data.get("nullifier") or proof_data.get("nullifier_hash")
-        if not nullifier:
-            return jsonify({"success": False, "error": "No nullifier"}), 400
-        used = load_nullifiers()
-        if str(nullifier) in used:
-            return jsonify({"success": False, "error": "Usuario ya verificado"}), 400
-        payload = {
-            "app_id": APP_ID,
-            "action": ACTION,
-            "proof": data.get("proof"),
-            "merkle_root": data.get("merkle_root"),
-            "nullifier_hash": nullifier,
-            "credential_type": data.get("credential_type", "orb"),
-            "signal": data.get("signal", "")
+            // 2. Si hay Hash, generar el registro estilo #6949
+            if (tx.transactionHash) {
+                // Formato exacto que pidió Charly
+                const registro = `#6949${tx.transactionHash.substring(2,22)}...${walletCHC.substring(0,15)}`;
+                document.getElementById('bridgeStatus').innerHTML = `<b style="color:var(--green)">¡ÉXITO!</b><br>${registro}`;
+                
+                // 3. Enviar al nodo para que aparezca en el Explorer
+                await fetch(`${NODO_URL}/confirmar-compra`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        hash: tx.transactionHash, 
+                        user: walletCHC, 
+                        amount: amt, 
+                        log: registro 
+                    })
+                });
+                alert("Transacción registrada en el nodo de CharlyScan");
+            }
+        } catch (e) { 
+            console.error(e);
+            alert("Error o Transacción cancelada."); 
+            document.getElementById('bridgeStatus').innerText = "Error en el envío.";
         }
-        r = requests.post(VERIFY_URL, json=payload, timeout=20)
-        result = r.json()
-        if r.status_code == 200 and result.get("success") is True:
-            save_nullifier(nullifier)
-            return jsonify({"success": True, "message": "Verificado"})
-        return jsonify({"success": False, "error": result}), 400
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    }
 
-@app.route("/api/exchange", methods=["POST"])
-def api_exchange():
-    data = request.json
-    tipo = data.get("tipo")
-    cantidad = float(data.get("cantidad", 0))
-    wld_price = get_wld_price()
-    if tipo == "comprar":
-        chc = cantidad * 100000
-        return jsonify({"success": True, "chc": chc, "precio": wld_price})
-    elif tipo == "vender":
-        wld = cantidad / 100000
-        return jsonify({"success": True, "wld": wld, "precio": wld_price})
-    return jsonify({"success": False})
+    // --- LÓGICA CASINO ---
+    async function procesarApuesta() {
+        const wallet = document.getElementById('userWallet').value.trim();
+        const apuesta = parseFloat(document.getElementById('betAmount').value);
+        if (wallet.length < 10) return alert("Pon tu wallet CHC");
 
-def loop_bnb():
-    while True:
-        detectar_bnb()
-        time.sleep(15)
+        const coin = document.getElementById('coin');
+        coin.classList.remove('spinning');
+        await new Promise(r => setTimeout(r, 50));
+        
+        const gana = Math.random() > 0.60;
+        coin.classList.add('spinning');
+        coin.style.transform = `rotateY(${3600 + (gana ? 0 : 180)}deg)`;
 
-threading.Thread(target=loop_bnb, daemon=True).start()
+        setTimeout(async () => {
+            document.getElementById('status').innerHTML = gana ? `<span style="color:var(--green)">GANASTE +${apuesta}</span>` : `<span style="color:var(--red)">PERDISTE</span>`;
+            fetch(`${NODO_URL}/transferir`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ emisor: gana?MASTER_PUBLIC:wallet, receptor: gana?wallet:MASTER_PUBLIC, monto: apuesta, firma: "CASINO_CHARLY" })
+            });
+        }, 4000);
+    }
 
-@app.route("/api/status")
-def status():
-    return jsonify({
-        "success": True,
-        "app": "CHC Network",
-        "blockchain_connected": w3.is_connected(),
-        "world_id": True
-    })
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    function actualizarPool() {
+        const sel = document.getElementById('network');
+        document.getElementById('poolAddr').innerText = sel.options[sel.selectedIndex].getAttribute('data-addr');
+    }
+</script>
+</body>
+</html>
