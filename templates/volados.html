@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CharlyCoin (CHC) - Gestión de Activos</title>
+    <style>
+        :root {
+            --primary-bg: #0a0a0c;
+            --accent-purple: #8a2be2;
+            --accent-blue: #00d4ff;
+            --text-white: #ffffff;
+            --text-gray: #b0b0b0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-white);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 400px;
+            padding: 2rem;
+            background: linear-gradient(145deg, #141417, #0a0a0c);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #222;
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            border: 2px solid var(--accent-blue);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent-blue);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .btn-worldid {
+            background-color: var(--text-white);
+            color: #000;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-worldid:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .footer-info {
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Imagen de CharlyCoin dirigida desde el enlace proporcionado -->
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s320/CharlyCoin.JPG" 
+             alt="CharlyCoin (CHC)" 
+             class="logo">
+
+        <div class="status-badge">Producción Activa • World ID 4.0</div>
+
+        <h1>CharlyCoin (CHC)</h1>
+        
+        <p>
+            Bienvenido a la gestión oficial de <strong>CharlyCoin</strong>. 
+            Utiliza tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.
+        </p>
+
+        <!-- Botón de Acción -->
+        <button class="btn-worldid" onclick="window.location.href='#'">
+            Verificar con World ID
+        </button>
+
+        <div class="footer-info">
+            APP ID: app_7686f9027d3e3c0b53d987a3caf1e111<br>
+            RP ID: rp_aa5ead0710fce1dc
+        </div>
+    </div>
+
+</body>
+</html>
