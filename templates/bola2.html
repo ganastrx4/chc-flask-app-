@@ -3,153 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyScan | Casino & Bridge Professional</title>
-    <!-- LIBRERÍAS PARA WEB3 MÓVIL Y PC -->
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
-    <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
-    <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <title>Casino CharlyScan | World ID</title>
+    
+    <!-- SDK PARA CONECTAR A WORLD APP -->
+    <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.1.0/dist/index.global.js"></script>
+
     <style>
         :root { --gold: #f1c40f; --bg: #0a0a0a; --card: #161616; --green: #2ecc71; --red: #e74c3c; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }
         .card { background: var(--card); border: 1px solid #333; border-radius: 15px; padding: 20px; max-width: 450px; margin: 15px auto; }
+        
         .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 20px auto; }
         #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
         .spinning { transition: transform 4s cubic-bezier(0.1, 0.5, 0.1, 1); }
         .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid var(--gold); }
-        .cara { background: var(--gold); color: black; }
-        .aguila { background: #333; color: var(--gold); transform: rotateY(180deg); }
+        .cara { background: linear-gradient(135deg, var(--gold), #d4af37); color: black; }
+        .aguila { background: linear-gradient(135deg, #333, #000); color: var(--gold); transform: rotateY(180deg); }
+
         .wallet-input { width: 90%; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: var(--green); font-family: monospace; font-size: 11px; margin-bottom: 15px; }
-        input[type="number"], select { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; width: 80%; }
-        .btn { padding: 12px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; margin: 5px; width: 95%; }
-        .btn-play { background: var(--gold); color: black; }
-        .btn-bridge { background: var(--green); color: black; }
-        .info { color: #888; font-size: 0.75em; margin-top: 10px; word-break: break-all; }
+        input[type="number"] { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; width: 80px; }
+        
+        .btn { padding: 12px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; margin: 5px; width: 95%; transition: 0.3s; }
+        .btn-play { background: var(--gold); color: black; font-size: 1.1em; }
+        .btn-world { background: white; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        
+        .status { margin-top: 15px; min-height: 40px; font-weight: bold; }
+        .info { color: #888; font-size: 0.75em; }
     </style>
 </head>
 <body>
 
-    <a href="https://binance-bot-2kbp.onrender.com/" style="color:#666; text-decoration:none; font-size:0.8em;">🏠 SALIR</a>
-    <h2>CASINO & BRIDGE CHARLYSCAN</h2>
+    <a href="/" style="color:#666; text-decoration:none; font-size:0.8em;">🏠 SALIR</a>
+    <h2>CASINO & WORLD ID</h2>
 
-    <!-- CASINO -->
     <div class="card">
-        <div class="coin-container"><div id="coin"><div class="side cara">CHC</div><div class="side aguila">CASA</div></div></div>
-        <input type="text" id="userWallet" class="wallet-input" placeholder="Dirección CharlyMiner..." />
-        <div><span>Apuesta: </span><input type="number" id="betAmount" value="1" min="1" max="300" /></div>
-        <button id="playBtn" class="btn btn-play" onclick="procesarApuesta()">APOSTAR Y LANZAR</button>
-        <div id="status">Selecciona tu apuesta</div>
-    </div>
+        <!-- BOTÓN DE CONEXIÓN A WORLD APP -->
+        <button id="world-id-button" class="btn btn-world">
+            <img src="https://worldcoin.org/icons/logo-dark.svg" width="20"> 
+            CONECTAR WORLD APP
+        </button>
 
-    <!-- BRIDGE -->
-    <div class="card" style="border-top: 2px solid var(--green);">
-        <h3 style="color:var(--green);">📥 COMPRAR CHC (POOL)</h3>
-        <button class="btn" style="background:#3498db; color:white;" onclick="conectarWeb3()">🔗 CONECTAR MULTI-WALLET (MÓVIL/PC)</button>
-        <select id="network" onchange="actualizarPool()" style="margin-top:10px;">
-            <option value="BNB" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">BNB Chain</option>
-            <option value="WLD" data-addr="0xd4508db1aDC48deA121f356B254a7155DDAB36Ae">World Chain</option>
-        </select>
-        <div class="info">POOL: <span id="poolAddr">0xd4508db1aDC48deA121f356B254a7155DDAB36Ae</span></div>
-        <input type="number" id="sendAmount" step="0.0001" placeholder="Monto a enviar..." style="margin-top:10px;">
-        <button class="btn btn-bridge" onclick="enviarAPool()">CONFIRMAR ENVÍO Y GENERAR HASH</button>
-        <div id="bridgeStatus" class="info">Esperando transacción...</div>
+        <div class="coin-container">
+            <div id="coin">
+                <div class="side cara">CHC<br>CARA</div>
+                <div class="side aguila">CASA<br>ÁGUILA</div>
+            </div>
+        </div>
+
+        <input type="text" id="userWallet" class="wallet-input" placeholder="Tu Dirección CharlyMiner..." />
+        
+        <div style="margin-bottom: 15px;">
+            <span>Apuesta: </span>
+            <input type="number" id="betAmount" value="1" min="1" max="10" />
+        </div>
+
+        <button id="playBtn" class="btn btn-play" onclick="procesarApuesta()">APOSTAR Y LANZAR</button>
+        
+        <div id="status" class="status">¡Suerte, Charly!</div>
+        <div id="streakInfo" class="info">Racha de pérdidas: 0</div>
     </div>
 
 <script>
     const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
     const NODO_URL = "https://binance-bot-hna7.onrender.com";
     
-    let web3;
-    let userExternalAccount = null;
+    let perdidasConsecutivas = 0;
+    let maxApuesta = 10;
 
-    // --- CONEXIÓN WEB3 MODAL (PARA CELULARES) ---
-    async function conectarWeb3() {
-        const providerOptions = {
-            walletconnect: {
-                package: window.WalletConnectProvider.default,
-                options: { infuraId: "8043bb2cf99347b1bf59be0d49e048c0" } // ID genérico para pruebas
-            }
-        };
-        const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions, theme: "dark" });
-        try {
-            const provider = await web3Modal.connect();
-            web3 = new Web3(provider);
-            const accounts = await web3.eth.getAccounts();
-            userExternalAccount = accounts[0];
-            document.getElementById('bridgeStatus').innerText = "Conectado: " + userExternalAccount;
-        } catch(e) { alert("Conexión cancelada"); }
-    }
-
-    // --- ENVIAR A POOL Y GENERAR HASH #6949 ---
-    async function enviarAPool() {
-        const amt = document.getElementById('sendAmount').value;
-        const pool = document.getElementById('poolAddr').innerText;
-        const walletCHC = document.getElementById('userWallet').value;
-
-        if (!userExternalAccount || !amt || !walletCHC) return alert("Falta Conexión, Monto o Wallet CHC");
-
-        try {
-            document.getElementById('bridgeStatus').innerText = "Procesando en Blockchain...";
-            
-            // 1. Ejecutar transacción
-            const tx = await web3.eth.sendTransaction({
-                from: userExternalAccount,
-                to: pool,
-                value: web3.utils.toWei(amt, 'ether')
-            });
-
-            // 2. Si hay Hash, generar el registro estilo #6949
-            if (tx.transactionHash) {
-                // Formato exacto que pidió Charly
-                const registro = `#6949${tx.transactionHash.substring(2,22)}...${walletCHC.substring(0,15)}`;
-                document.getElementById('bridgeStatus').innerHTML = `<b style="color:var(--green)">¡ÉXITO!</b><br>${registro}`;
-                
-                // 3. Enviar al nodo para que aparezca en el Explorer
-                await fetch(`${NODO_URL}/confirmar-compra`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        hash: tx.transactionHash, 
-                        user: walletCHC, 
-                        amount: amt, 
-                        log: registro 
-                    })
-                });
-                alert("Transacción registrada en el nodo de CharlyScan");
-            }
-        } catch (e) { 
-            console.error(e);
-            alert("Error o Transacción cancelada."); 
-            document.getElementById('bridgeStatus').innerText = "Error en el envío.";
+    // --- CONFIGURACIÓN DEL BOTÓN DE WORLD APP ---
+    IDKit.init({
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
+        action: "login",
+        onSuccess: (result) => {
+            document.getElementById('status').innerText = "✅ ¡World ID Conectado!";
+            document.getElementById('world-id-button').innerHTML = "✅ CONECTADO";
         }
-    }
+    });
 
-    // --- LÓGICA CASINO ---
+    document.getElementById('world-id-button').onclick = () => {
+        IDKit.open(); // Abre la World App
+    };
+
+    // --- LÓGICA DE JUEGO (PRIMERA VERSIÓN) ---
     async function procesarApuesta() {
         const wallet = document.getElementById('userWallet').value.trim();
-        const apuesta = parseFloat(document.getElementById('betAmount').value);
-        if (wallet.length < 10) return alert("Pon tu wallet CHC");
-
+        const betInput = document.getElementById('betAmount');
+        const apuesta = parseFloat(betInput.value);
+        const status = document.getElementById('status');
         const coin = document.getElementById('coin');
+
+        if (wallet.length < 10) return alert("Ingresa tu dirección.");
+        if (apuesta > maxApuesta) return alert("Límite excedido");
+
+        document.getElementById('playBtn').disabled = true;
         coin.classList.remove('spinning');
+        coin.style.transform = `rotateY(0deg)`;
         await new Promise(r => setTimeout(r, 50));
         
-        const gana = Math.random() > 0.60;
+        const ganaUsuario = Math.random() > 0.60;
+        const totalRotation = 3600 + (ganaUsuario ? 0 : 180);
+        
         coin.classList.add('spinning');
-        coin.style.transform = `rotateY(${3600 + (gana ? 0 : 180)}deg)`;
+        coin.style.transform = `rotateY(${totalRotation}deg)`;
 
         setTimeout(async () => {
-            document.getElementById('status').innerHTML = gana ? `<span style="color:var(--green)">GANASTE +${apuesta}</span>` : `<span style="color:var(--red)">PERDISTE</span>`;
-            fetch(`${NODO_URL}/transferir`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ emisor: gana?MASTER_PUBLIC:wallet, receptor: gana?wallet:MASTER_PUBLIC, monto: apuesta, firma: "CASINO_CHARLY" })
-            });
+            if (ganaUsuario) {
+                perdidasConsecutivas = 0;
+                maxApuesta = 10;
+                status.innerHTML = `<span style="color:var(--green)">GANASTE +${apuesta} CHC</span>`;
+                await enviarTokens(MASTER_PUBLIC, wallet, apuesta);
+            } else {
+                perdidasConsecutivas++;
+                status.innerHTML = `<span style="color:var(--red)">PERDISTE -${apuesta} CHC</span>`;
+                
+                // Martingala
+                if(perdidasConsecutivas < 5) {
+                    maxApuesta = 20;
+                } else {
+                    maxApuesta = 300;
+                    status.innerHTML += "<br><small>¡MODO 300 CHC!</small>";
+                }
+                betInput.max = maxApuesta;
+                await enviarTokens(wallet, MASTER_PUBLIC, apuesta);
+            }
+            document.getElementById('streakInfo').innerText = `Racha de pérdidas: ${perdidasConsecutivas}`;
+            document.getElementById('playBtn').disabled = false;
         }, 4000);
     }
 
-    function actualizarPool() {
-        const sel = document.getElementById('network');
-        document.getElementById('poolAddr').innerText = sel.options[sel.selectedIndex].getAttribute('data-addr');
+    async function enviarTokens(emisor, receptor, monto) {
+        try {
+            await fetch(`${NODO_URL}/transferir`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    emisor: emisor,
+                    receptor: receptor,
+                    monto: monto,
+                    firma: "CASINO_WORLD_APP"
+                })
+            });
+        } catch (e) { console.log("Error de nodo"); }
     }
 </script>
 </body>
