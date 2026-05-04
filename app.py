@@ -229,7 +229,9 @@ def headers(resp):
 def home():
     return render_template("index.html")
 
-
+@app.route("/volados.html")
+def volados():
+    return render_template("volados.html")
 
 
 @app.route("/buscador2.html")
