@@ -116,10 +116,19 @@
             Utiliza tu World ID para verificar que eres un humano real y acceder a tu panel de control seguro.
         </p>
 
-        <!-- Botón de Acción -->
-        <button class="btn-worldid" onclick="window.location.href='#'">
-            Verificar con World ID
-        </button>
+        <button class="btn-worldid" onclick="verificar()">
+    Verificar con World ID
+</button>
+
+<script>
+function verificar() {
+    alert("Verificando identidad...");
+    
+    setTimeout(() => {
+        window.location.href = "bola2.html";
+    }, 1500); // espera 1.5 segundos
+}
+</script>
 
         <div class="footer-info">
             APP ID: app_7686f9027d3e3c0b53d987a3caf1e111<br>
