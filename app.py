@@ -232,9 +232,9 @@ def home():
 
 
 
-@app.route("/buscador.html")
+@app.route("/buscador2.html")
 def buscador2():
-    return render_template("buscador.html")
+    return render_template("buscador2.html")
 
 
 @app.route("/enviarwld.html")
