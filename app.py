@@ -288,6 +288,10 @@ def index():
 def ganarchun():
     return render_template("ganarchun.html")
 
+@app.route("/reclamarchun.html")
+def reclamarchun():
+    return render_template("reclamarchun.html")
+
 
 @app.route("/glosario.html")
 def glosario():
