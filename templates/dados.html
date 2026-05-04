@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso CharlyCoin</title>
+  
+  <script src="https://developer.worldcoin.org/idkit.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0d1117, #000);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: "Poppins", sans-serif;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #00bcd4;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h2 {
+      color: #aaa;
+      font-weight: 400;
+      animation: fadeIn 2s ease-in-out;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    /* Botón de World ID mejorado */
+    .btn-verify {
+      background: linear-gradient(90deg, #00bcd4, #9c27b0);
+      border: none;
+      color: white;
+      padding: 15px 35px;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 30px;
+      display: none; /* Se muestra después de la carga */
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+    }
+
+    .btn-verify:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
+    }
+
+    .loader {
+      border: 6px solid #222;
+      border-top: 6px solid #00bcd4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
+      margin-top: 25px;
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      position: absolute;
+      bottom: 20px;
+      color: #555;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>CharlyCoin 🌍</h1>
+  <h2 id="status-text">Iniciando sistema de seguridad...</h2>
+  
+  <div id="loader" class="loader"></div>
+
+  <button id="world-id-button" class="btn-verify">
+    🚀 Verificar Identidad Humana
+  </button>
+
+  <footer>© 2026 CharlyCoin - World Chain Ecosystem</footer>
+
+  <script>
+    // 1. Simulación de carga inicial
+    setTimeout(() => {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('status-text').innerText = 'Identidad requerida para ingresar';
+      document.getElementById('world-id-button').style.display = 'block';
+    }, 2000);
+
+    // 2. Configuración de IDKit (World ID)
+    window.onload = function() {
+      if (typeof IDKit !== 'undefined') {
+        console.log("IDKit cargado correctamente.");
+
+        IDKit.init({
+          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
+          action: "login",
+          onSuccess: (result) => {
+            console.log("¡Verificación exitosa!", result);
+            
+            // 3. Notificar a tu servidor Flask local
+            fetch('http://127.0.0.1:5000/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(result)
+            })
+            .then(response => {
+              // Una vez que Flask responde, vamos al buscador
+              window.location.href = "buscador.html"; 
+            })
+            .catch(err => {
+              console.error("Flask no respondió, pero la verificación fue real:", err);
+              window.location.href = "buscador.html";
+            });
+          },
+          onError: (error) => {
+            console.error("Error de World ID:", error);
+          }
+        });
+
+        // 4. Activar el botón
+        document.getElementById("world-id-button").onclick = () => {
+          IDKit.open();
+        };
+
+      } else {
+        console.error("Error crítico: No se pudo cargar IDKit de los servidores de Worldcoin.");
+        document.getElementById('status-text').innerText = 'Error de conexión con World ID';
+        document.getElementById('status-text').style.color = '#ff4444';
+      }
+    };
+  </script>
+
+</body>
+</html>
