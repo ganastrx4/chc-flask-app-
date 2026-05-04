@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino CharlyScan | World ID</title>
+    <title>Casino CharlyScan | World ID & Verifier</title>
     
-    <!-- SDK PARA CONECTAR A WORLD APP -->
     <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.1.0/dist/index.global.js"></script>
 
     <style>
@@ -21,23 +20,25 @@
         .aguila { background: linear-gradient(135deg, #333, #000); color: var(--gold); transform: rotateY(180deg); }
 
         .wallet-input { width: 90%; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: var(--green); font-family: monospace; font-size: 11px; margin-bottom: 15px; }
-        input[type="number"] { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; width: 80px; }
+        input[type="number"], .hash-input { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; }
+        .hash-input { width: 90%; margin-bottom: 10px; font-size: 10px; color: var(--gold); }
         
         .btn { padding: 12px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; margin: 5px; width: 95%; transition: 0.3s; }
         .btn-play { background: var(--gold); color: black; font-size: 1.1em; }
         .btn-world { background: white; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .btn-verify { background: var(--green); color: black; margin-top: 10px; }
         
         .status { margin-top: 15px; min-height: 40px; font-weight: bold; }
         .info { color: #888; font-size: 0.75em; }
+        hr { border: 0; border-top: 1px dashed #333; margin: 20px 0; }
     </style>
 </head>
 <body>
 
     <a href="/" style="color:#666; text-decoration:none; font-size:0.8em;">🏠 SALIR</a>
-    <h2>CASINO & WORLD ID</h2>
+    <h2>CASINO & VERIFICADOR</h2>
 
     <div class="card">
-        <!-- BOTÓN DE CONEXIÓN A WORLD APP -->
         <button id="world-id-button" class="btn btn-world">
             <img src="https://worldcoin.org/icons/logo-dark.svg" width="20"> 
             CONECTAR WORLD APP
@@ -58,9 +59,16 @@
         </div>
 
         <button id="playBtn" class="btn btn-play" onclick="procesarApuesta()">APOSTAR Y LANZAR</button>
-        
         <div id="status" class="status">¡Suerte, Charly!</div>
-        <div id="streakInfo" class="info">Racha de pérdidas: 0</div>
+        
+        <hr>
+
+        <!-- CAJA DE COMPROBACIÓN DE HASH -->
+        <h3 style="color:var(--green); font-size: 0.9em;">COMPROBAR PAGO (BNB/WLD)</h3>
+        <p class="info">Pega el Hash de tu pago a 0xd4508db1adc48dea121f356b254a7155ddab36ae</p>
+        <input type="text" id="txHash" class="hash-input" placeholder="0x9b70d15b3053aa527ebe8663186d8e0cc..." />
+        <button class="btn btn-verify" onclick="verificarTransaccion()">VERIFICAR Y RECLAMAR CHC</button>
+        <div id="verifyResult" class="info" style="margin-top:10px;">El sistema validará que el Hash no haya sido usado antes.</div>
     </div>
 
 <script>
@@ -70,9 +78,8 @@
     let perdidasConsecutivas = 0;
     let maxApuesta = 10;
 
-    // --- CONFIGURACIÓN DEL BOTÓN DE WORLD APP ---
     IDKit.init({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
+        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
         action: "login",
         onSuccess: (result) => {
             document.getElementById('status').innerText = "✅ ¡World ID Conectado!";
@@ -80,11 +87,40 @@
         }
     });
 
-    document.getElementById('world-id-button').onclick = () => {
-        IDKit.open(); // Abre la World App
-    };
+    document.getElementById('world-id-button').onclick = () => { IDKit.open(); };
 
-    // --- LÓGICA DE JUEGO (PRIMERA VERSIÓN) ---
+    // --- NUEVA FUNCIÓN DE VERIFICACIÓN DE HASH ---
+    async function verificarTransaccion() {
+        const hash = document.getElementById('txHash').value.trim();
+        const userWallet = document.getElementById('userWallet').value.trim();
+        const resultDiv = document.getElementById('verifyResult');
+
+        if (!hash || !userWallet) return alert("Ingresa el Hash y tu Wallet CharlyMiner.");
+
+        resultDiv.innerText = "Consultando con el nodo...";
+
+        try {
+            const response = await fetch(`${NODO_URL}/verificar-pago`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    hash: hash,
+                    receptor_final: userWallet,
+                    billetera_pool: "0xd4508db1adc48dea121f356b254a7155ddab36ae"
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                resultDiv.innerHTML = `<span style="color:var(--green)">✅ PAGO VÁLIDO: Se han enviado ${data.monto_chc} CHC a tu cuenta.</span>`;
+            } else {
+                resultDiv.innerHTML = `<span style="color:var(--red)">❌ ERROR: ${data.message}</span>`;
+            }
+        } catch (e) {
+            resultDiv.innerText = "Error al conectar con el nodo verificador.";
+        }
+    }
+
     async function procesarApuesta() {
         const wallet = document.getElementById('userWallet').value.trim();
         const betInput = document.getElementById('betAmount');
@@ -115,18 +151,11 @@
             } else {
                 perdidasConsecutivas++;
                 status.innerHTML = `<span style="color:var(--red)">PERDISTE -${apuesta} CHC</span>`;
-                
-                // Martingala
-                if(perdidasConsecutivas < 5) {
-                    maxApuesta = 20;
-                } else {
-                    maxApuesta = 300;
-                    status.innerHTML += "<br><small>¡MODO 300 CHC!</small>";
-                }
+                if(perdidasConsecutivas < 5) { maxApuesta = 20; } 
+                else { maxApuesta = 300; status.innerHTML += "<br><small>¡MODO 300 CHC!</small>"; }
                 betInput.max = maxApuesta;
                 await enviarTokens(wallet, MASTER_PUBLIC, apuesta);
             }
-            document.getElementById('streakInfo').innerText = `Racha de pérdidas: ${perdidasConsecutivas}`;
             document.getElementById('playBtn').disabled = false;
         }, 4000);
     }
