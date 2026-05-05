@@ -80,7 +80,7 @@
       segundos++;
       
       // Lógica de crecimiento de CHC: 1 CHC cada 100 segundos
-      if (segundos % 100 === 0) {
+      if (segundos % 2 === 0) {
         chcGanados++;
         document.getElementById('chcCount').innerText = chcGanados;
         enviarAlNodo(wallet, 1); // Envía directo al nodo
