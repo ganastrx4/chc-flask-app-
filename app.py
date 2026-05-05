@@ -221,7 +221,54 @@ def loop_bnb():
 def headers(resp):
     resp.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://*.world.org"
     return resp
+# ==========================================
+# ✅ VERIFICADOR DE PAGOS (CONEXIÓN CON EL HTML)
+# ==========================================
+@app.route("/verificar-pago", methods=["POST"])
+def verificar_pago_usuario():
+    try:
+        data = request.json
+        hash_cliente = data.get("hash")
+        billetera_receptor = data.get("receptor_final")
 
+        if not hash_cliente or not billetera_receptor:
+            return jsonify({"success": False, "message": "Datos incompletos"}), 400
+
+        # 1. Evitar que usen el mismo hash dos veces
+        hashes_usados = load_hashes()
+        if hash_cliente in hashes_usados:
+            return jsonify({"success": False, "message": "Este pago ya fue reclamado"}), 400
+
+        # 2. Consultar BscScan para verificar que el pago es real
+        url_scan = f"https://api.bscscan.com/api?module=account&action=txlist&address={POOL_WALLET}&apikey={BSC_API_KEY}"
+        response = http.get(url_scan).json()
+        
+        tx_valida = False
+        if response.get("status") == "1":
+            for tx in response.get("result", []):
+                # Verificamos que el hash coincida y que el destino sea tu POOL_WALLET
+                if tx["hash"].lower() == hash_cliente.lower() and tx["to"].lower() == POOL_WALLET.lower():
+                    tx_valida = True
+                    break
+
+        if tx_valida:
+            # 3. Guardar hash para que no se repita
+            save_hash(hash_cliente)
+            
+            # 4. Aquí podrías disparar el envío de CHC desde tu nodo
+            # Por ahora, confirmamos el éxito al frontend
+            print(f"💰 Pago validado! Enviando CHC a: {billetera_receptor}")
+            
+            return jsonify({
+                "success": True, 
+                "message": "¡Pago verificado con éxito!",
+                "monto_chc": 10  # O la cantidad que definas por pago
+            })
+        else:
+            return jsonify({"success": False, "message": "No se encontró el pago en la pool"}), 404
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 # =========================
 # PAGINAS
 # =========================
