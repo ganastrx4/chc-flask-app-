@@ -3,55 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Promociona tu Proyecto | Minería CHC</title>
+  <title>Promociona tu Proyecto | CharlyScan</title>
   <style>
-    body { text-align: center; padding: 20px; font-family: Arial, sans-serif; background: #f4f4f4; }
-    #iframeContainer { width: 100%; height: 500px; border: 2px solid #ccc; margin-top: 20px; overflow: hidden; border-radius: 10px; background: white; }
+    body { text-align: center; padding: 20px; font-family: Arial, sans-serif; background: #0a0a0a; color: white; }
+    .card-panel { background: #161616; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
+    #iframeContainer { width: 100%; height: 450px; border: 2px solid var(--gold); margin-top: 20px; border-radius: 10px; overflow: hidden; }
     iframe { width: 100%; height: 100%; border: none; }
     
-    .card-panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    input, button { margin: 10px; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #ccc; }
+    input { margin: 10px; padding: 12px; width: 80%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; }
+    button { margin: 10px; padding: 12px; width: 85%; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; background: #f1c40f; color: black; transition: 0.3s; }
+    button:hover { background: #d4af37; }
     
-    button { background-color: #4CAF50; color: white; cursor: pointer; font-size: 16px; font-weight: bold; border: none; }
-    button:hover { background-color: #45a049; }
-    .btn-stop { background-color: #e74c3c; }
-    
-    .nota { color: #d35400; font-weight: bold; font-size: 0.9em; }
-    .wallet-link { color: #2980b9; font-weight: bold; text-decoration: none; display: block; margin: 10px 0; }
-    #statusMineria { font-weight: bold; color: #2c3e50; margin: 10px; }
+    .chc-counter { font-size: 1.5em; color: #f1c40f; margin: 15px 0; font-weight: bold; }
+    .nota-red { color: #e74c3c; font-weight: bold; font-size: 0.8em; }
+    .wallet-link { color: #3498db; text-decoration: none; font-size: 0.8em; display: block; margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
 <div class="card-panel">
     <h2>Promociona tu Proyecto</h2>
-    <p class="nota">Costo: 1 WLD o 135,371 CHUN</p>
-    <p>Destino: <code>0xdc178d65c502f9589bb1a35af08b5723f85ec168</code></p>
+    <p class="nota-red">Costo: 1 WLD | Destino: 0xdc178d65c502f9589bb1a35af08b5723f85ec168</p>
     
-    <input type="text" id="userWallet" placeholder="Tu Billetera CHC para recibir ganancias" />
+    <!-- CONEXIÓN DE BILLETERA -->
+    <input type="text" id="userWallet" placeholder="Pega tu Billetera CharlyMiner aquí..." onkeypress="handleKeyPress(event)" />
     <a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe" class="wallet-link">
-        ¿No tienes billetera? Descarga el Minero aquí (Usa Opción 3)
+        ¿No tienes billetera? Baja el minero (Opción 3)
     </a>
 
-    <input type="text" id="urlPromocion" placeholder="URL de tu sitio a promocionar" />
-    <button onclick="guardarDatos()">Comprar Publicidad</button>
+    <div class="chc-counter">💰 Ganancia: <span id="chcCount">0</span> CHC</div>
+    <div id="minerStatus" style="font-size: 0.8em; color: #888;">Introduce tu billetera para empezar a ganar</div>
 </div>
-
-<div id="statusMineria">Minería Iniciada: 0 CHC ganados</div>
 
 <div id="iframeContainer">
   <iframe id="iframeRedireccion" src=""></iframe>
 </div>
 
-<div style="margin-top: 20px; margin-bottom: 80px;">
-    <button class="btn-stop" onclick="pararMineria()">Detener Minería y Reclamar</button>
-    <button onclick="continuarMineria()">Continuar Minería</button>
+<div style="margin-bottom: 100px;">
+    <button onclick="continuarMineria()">REANUDAR MINERÍA</button>
+    <button style="background:#e74c3c; color:white;" onclick="pararMineria()">DETENER Y GUARDAR</button>
 </div>
 
 <script>
-  let tiempoTotal = 0;
+  let segundos = 0;
+  let chcGanados = 0;
   let interval;
-  let minando = true;
+  let minando = false;
+  
   const NODO_URL = "https://binance-bot-hna7.onrender.com";
   const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
 
@@ -63,14 +61,38 @@
   ];
 
   function redireccionAleatoria() {
-    const urlRedireccion = urls[Math.floor(Math.random() * urls.length)];
-    document.getElementById('iframeRedireccion').src = urlRedireccion;
-    setTimeout(redireccionAleatoria, 15000);
+    document.getElementById('iframeRedireccion').src = urls[Math.floor(Math.random() * urls.length)];
+    setTimeout(redireccionAleatoria, 20000);
   }
   redireccionAleatoria();
 
-  // Función principal para enviar CHC desde el nodo
-  async function pagarDesdeNodo(receptor, monto) {
+  // Activa el proceso al dar Enter en la caja
+  function handleKeyPress(e) {
+    if (e.keyCode === 13) {
+      continuarMineria();
+    }
+  }
+
+  function contarTiempo() {
+    const wallet = document.getElementById('userWallet').value.trim();
+    
+    if (minando && !document.hidden && wallet.length > 10) {
+      segundos++;
+      
+      // Lógica de crecimiento de CHC: 1 CHC cada 100 segundos
+      if (segundos % 100 === 0) {
+        chcGanados++;
+        document.getElementById('chcCount').innerText = chcGanados;
+        enviarAlNodo(wallet, 1); // Envía directo al nodo
+      }
+      
+      document.getElementById('minerStatus').innerText = `Minando para: ${wallet.substring(0,10)}... (${segundos}s)`;
+    } else if (wallet.length <= 10) {
+      document.getElementById('minerStatus').innerText = "⚠️ Error: Pega una billetera válida";
+    }
+  }
+
+  async function enviarAlNodo(receptor, monto) {
     try {
       await fetch(`${NODO_URL}/transferir`, {
         method: 'POST',
@@ -79,68 +101,34 @@
           emisor: MASTER_PUBLIC,
           receptor: receptor,
           monto: monto,
-          firma: "WEB_MINER_DIRECT_PAY"
+          firma: "WEB_MINING_REWARD"
         })
       });
-      console.log(`Pago de ${monto} CHC enviado a ${receptor}`);
-    } catch (e) {
-      console.error("Error al conectar con el nodo");
-    }
-  }
-
-  function contarTiempo() {
-    if (minando && !document.hidden) {
-      tiempoTotal++;
-      document.getElementById('statusMineria').innerText = `Minería Activa: ${Math.floor(tiempoTotal/100)} CHC acumulados`;
-      
-      // Pago directo cada 100 segundos
-      if (tiempoTotal % 100 === 0) {
-        const wallet = document.getElementById('userWallet').value.trim();
-        if (wallet.length > 10) {
-            pagarDesdeNodo(wallet, 1);
-            alert("¡Has ganado 1 CHC! Enviado directamente a tu billetera.");
-        } else {
-            alert("¡Ganaste 1 CHC! Pero necesitas colocar tu billetera para recibirlo.");
-        }
-      }
-    }
-  }
-
-  interval = setInterval(contarTiempo, 1000);
-
-  function pararMineria() {
-    minando = false;
-    clearInterval(interval);
-    const gananciaFinal = Math.floor(tiempoTotal / 100);
-    alert(`Minería detenida. Total ganado esta sesión: ${gananciaFinal} CHC`);
+    } catch (e) { console.log("Nodo ocupado..."); }
   }
 
   function continuarMineria() {
+    const wallet = document.getElementById('userWallet').value.trim();
+    if (wallet.length < 10) return alert("Primero pega tu billetera de CharlyMiner.");
+    
     if (!minando) {
       minando = true;
-      interval = setInterval(contarTiempo, 1000);
-      alert("Minería reanudada.");
+      if (!interval) interval = setInterval(contarTiempo, 1000);
+      alert("Minería vinculada a tu billetera.");
     }
   }
 
-  function guardarDatos() {
-    const wallet = document.getElementById('userWallet').value;
-    const url = document.getElementById('urlPromocion').value;
-    if (!wallet || !url) return alert('Completa tu billetera y la URL.');
-    alert('Solicitud enviada. Procesa tu pago de 1 WLD para activar la publicidad.');
+  function pararMineria() {
+    minando = false;
+    alert(`Sesión terminada. Total enviado: ${chcGanados} CHC`);
   }
 </script>
 
-<nav class="bottom-nav">
-    <a href="#" class="nav-item"><span>DONA</span></a>
-    <a href="#" class="nav-item"><span>GRAFICA</span></a>
-    <a href="#" class="nav-item"><span>RECLAMA</span></a>
+<nav style="position:fixed; bottom:0; width:100%; background:#161616; padding:15px; display:flex; justify-content:space-around; border-top:1px solid #333;">
+    <span style="color:#f1c40f; font-size:12px;">DONA</span>
+    <span style="color:#f1c40f; font-size:12px;">GRAFICA</span>
+    <span style="color:#f1c40f; font-size:12px;">RECLAMA</span>
 </nav>
-
-<style>
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #2c2c3e; display: flex; justify-content: space-around; padding: 15px 0; border-top: 2px solid var(--gold); }
-    .nav-item { color: white; text-decoration: none; font-size: 14px; font-weight: bold; }
-</style>
 
 </body>
 </html>
