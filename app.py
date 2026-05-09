@@ -175,6 +175,26 @@ def logout():
     return jsonify({"success": True})
 
 # ==========================================
+# ⚡ FUNCIÓN ANTIDORMIR (SELF-PING)
+# ==========================================
+def mantenerme_despierto():
+    # Esperamos a que la app suba
+    time.sleep(30)
+    # Cambia esta URL por la URL real de tu app en Render
+    url_app = "https://binance-bot-hna7.onrender.com/" 
+    
+    while True:
+        try:
+            # Hace una petición simple a la home
+            r = requests.get(url_app, timeout=10)
+            print(f"⏰ Self-Ping exitoso: {r.status_code}")
+        except Exception as e:
+            print(f"❌ Error en Self-Ping: {e}")
+        
+        # Espera 10 minutos (600 segundos) antes de volver a pinguear
+        time.sleep(600)
+
+# ==========================================
 # 💰 BNB DETECTOR
 # ==========================================
 def load_hashes():
@@ -369,5 +389,6 @@ def panel():
 # ==========================================
 if __name__ == "__main__":
     threading.Thread(target=loop_bnb, daemon=True).start()
+    threading.Thread(target=mantenerme_despierto, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
