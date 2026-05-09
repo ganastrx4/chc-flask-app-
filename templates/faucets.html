@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin App</title>
+    <title>CharlyCoin App | Multi-Explorador</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -20,47 +20,74 @@
             background-color: var(--dark);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 20px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
+        /* --- NAVEGACIÓN DENTRO DE LA APP --- */
+        #app-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            z-index: 1000;
+            display: none; /* Oculto por defecto */
+            flex-direction: column;
+        }
+
+        .viewer-bar {
+            background: #1a1a1a;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .nav-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .nav-btn:hover { background: #444; }
+        .nav-btn.home { border: 1px solid var(--accent); color: var(--accent); }
+
+        #external-frame {
+            width: 100%;
+            flex-grow: 1;
+            border: none;
+        }
+
+        /* --- ESTILOS ORIGINALES --- */
         .app-container {
             max-width: 500px;
-            width: 100%;
+            width: 90%;
         }
 
-        .app-header {
-            text-align: center;
-            padding: 20px 0;
-        }
-
+        .app-header { text-align: center; padding: 10px 0; }
         .logo-main {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
-            margin-bottom: 15px;
         }
 
-        h1 {
-            font-size: 24px;
-            margin: 10px 0;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
-        }
+        h1 { font-size: 22px; color: var(--primary); text-align: center; margin: 10px 0;}
+        .tagline { font-size: 13px; color: #888; text-align: center; margin-bottom: 20px; }
 
-        .tagline {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        /* --- SECCIÓN MINERO CORREGIDA --- */
         .miner-section {
             background: linear-gradient(145deg, #252525, #1a1a1a);
             padding: 20px;
@@ -68,75 +95,37 @@
             border: 1px solid #333;
             text-align: center;
             margin: 20px 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .miner-title {
-            color: var(--accent);
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .miner-banner-img {
-            width: 100%;
-            max-width: 400px;
-            height: auto;
-            border-radius: 15px;
-            margin: 15px 0;
-            border: 1px solid #444;
-            transition: transform 0.3s;
-        }
-
-        .miner-banner-img:hover {
-            transform: scale(1.02);
-        }
+        .miner-title { color: var(--accent); font-weight: 700; margin-bottom: 5px; }
+        .miner-banner-img { width: 100%; border-radius: 15px; margin: 15px 0; border: 1px solid #444; }
 
         .btn-download {
             background: var(--accent);
             color: black;
-            padding: 12px 25px;
+            padding: 12px 20px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 800;
             display: inline-block;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px var(--gold-glow);
-            transition: all 0.3s;
         }
 
-        .btn-download:active {
-            transform: scale(0.95);
-        }
-
-        /* --- RESTO DE ESTILOS --- */
         .section-title {
             font-size: 16px;
             font-weight: 700;
-            margin: 25px 0 15px 10px;
+            margin: 25px 0 15px 0;
             color: var(--accent);
-            text-align: left;
             border-left: 4px solid var(--accent);
             padding-left: 10px;
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             background: var(--card);
             padding: 15px;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            justify-items: center;
-        }
-
-        .banner-faucet {
-            grid-column: 1 / -1;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
         }
 
         .app-icon {
@@ -144,32 +133,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: transform 0.2s;
         }
 
         .app-icon img {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             border-radius: 12px;
             background: white;
-            padding: 5px;
-            object-fit: contain;
+            padding: 4px;
         }
 
-        .app-icon span {
-            font-size: 10px;
-            color: #bbb;
-            margin-top: 5px;
-            text-align: center;
-        }
+        .app-icon span { font-size: 10px; color: #bbb; margin-top: 5px; }
 
-        .text-links {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-        }
-
+        .text-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
         .chip {
             background: #333;
             padding: 8px 15px;
@@ -177,31 +153,36 @@
             text-decoration: none;
             color: white;
             font-size: 12px;
-            border: 1px solid #444;
         }
 
         .main-btn {
             background: linear-gradient(135deg, #2d2c2c 0%, #000 100%);
             color: white;
-            padding: 15px 30px;
+            padding: 15px;
             border-radius: 50px;
             text-decoration: none;
             display: flex;
-            align-items: center;
             justify-content: center;
             font-weight: bold;
             margin: 20px 0;
             border: 1px solid #555;
         }
 
-        .rating {
-            color: #f1c40f;
-            font-size: 18px;
-            margin-top: 10px;
-        }
+        .rating { color: #f1c40f; font-size: 18px; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
+
+<!-- VENTANA EXPLORADOR INTERNO -->
+<div id="app-viewer">
+    <div class="viewer-bar">
+        <button class="nav-btn" onclick="closeViewer()">⬅ ATRÁS</button>
+        <button class="nav-btn home" onclick="closeViewer()">🏠 INICIO</button>
+        <!-- Cambia este link por tu página de Volados -->
+        <button class="nav-btn" onclick="openInViewer('./graficachcwld.html')">🎲 VOLADOS</button>
+    </div>
+    <iframe id="external-frame" src=""></iframe>
+</div>
 
 <div class="app-container">
     
@@ -211,12 +192,12 @@
         <div class="tagline">"Tu moneda, tu futuro digital"</div>
     </div>
 
-    <!-- SECCIÓN MINERO ACOMODADA -->
+    <!-- SECCIÓN MINERO -->
     <div class="miner-section">
         <div class="miner-title">MINA CHC BAJO LA RED CHARLYSCAN</div>
         <div class="tagline" style="margin-bottom: 0;">¡Descarga y listo!</div>
         
-        <a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe" target="_blank">
+        <a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe">
             <img src="https://blogger.googleusercontent.com/img/a/AVvXsEj8OER2LyfejLPNhJcnddzl-o-1dA7G5tCphv6hKiiZd1YsIiSgOqGyq5PsUIfck4lBfPX3GvWrbxiUwLKRcDDFnfRYrrODwMIBFQJSJv9nTz8tIXOJdkVuJvFLt9A6o_Dpb9cAL5wNvHcHzHF6Y4ghJx-XD2P0409vM1AHjfxZMJv6pEx7MuacmE9WA7hx=w518-h170" class="miner-banner-img" alt="Miner Banner">
         </a>
         
@@ -226,33 +207,22 @@
         </a>
     </div>
 
-    <a href="https://binance-bot-hna7.onrender.com/" class="main-btn" target="_blank">
+    <button onclick="openInViewer('https://binance-bot-hna7.onrender.com/')" class="main-btn" style="width: 100%; cursor: pointer;">
         ACCEDER A CHARLYSCAN →
-    </a>
+    </button>
 
     <!-- SECCIÓN FAUCETS -->
     <div class="section-title">FAUCETS DIARIOS</div>
     <div class="grid-container">
-        <div class="banner-faucet">
-            <iframe 
-                src="https://api.fpadserver.com/referral-banners?size=300x250&clickTag=https://faucetpay.io/?r=1998768"
-                scrolling="no"
-                frameborder="0"
-                width="300"
-                height="250"
-                style="border:none; border-radius: 15px;">
-            </iframe>
-        </div>
-
-        <a href="https://rollercoin.com/?r=kmwzgbqj" class="app-icon" target="_blank">
+        <a href="javascript:void(0)" onclick="openInViewer('https://rollercoin.com/?r=kmwzgbqj')" class="app-icon">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFuUXElY54f0fCeP6VDgcHeeTobyv-860wCOBIVY4M2MT_dNxzXMLDCgWgAxi8UtyVD_X1iR_WBcRAyE51ggXffB_GGNhnZsU0dkUwgUpiXEHVOC9XCE383cQAYuq7kpR6_iKVNA7h0HR9sEaprCfhENvDDaVFxqPxwDPOz150uq1SBk9gSmqA2L0rjAYc/s1600-rw/ROLLERCOIN.jpg">
             <span>RollerCoin</span>
         </a>
-        <a href="https://r.honeygain.me/CHARLE186A" class="app-icon" target="_blank">
+        <a href="javascript:void(0)" onclick="openInViewer('https://r.honeygain.me/CHARLE186A')" class="app-icon">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgj3pYbgjQGl7L06NH51wwry_ymyuDc_JDkwN7R4V7qk3dPH_UWxYiTJTS9CfGRLdqMeYsRGjnEN0x9qeFHv1MUA9keE9ZBgYY9fLD985BLEHiixek3UtIBR9F8vPOg_dFR5jn-8wfCjMHL6fOebhGcdd9e6Ry_H5Dw-hrgB41W4lSQidPACNzWrn48D5ti/s1600-rw/honeygain.JPG">
             <span>Honeygain</span>
         </a>
-        <a href="https://cryptotabbrowser.com/22953090" class="app-icon" target="_blank">
+        <a href="javascript:void(0)" onclick="openInViewer('https://cryptotabbrowser.com/22953090')" class="app-icon">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRJ_llD9o9rAcnsKGDZGF_R65rKB9hEnd8kChRs-ApybS5K6UyyE-so1r2paeA5R1RHs9hii8qPGacdWp3xqd2NF3RqZ-Y0n1qI_S_bnPbQKbWOGWvK0SWB40GnRSk7agmNhjhcyu4hKMUtgNcAPG5Gt4sN2aedepKf5-bvLRG5n1w442fyO06kKXrpnoV/s1600-rw/cripto%20tab.JPG">
             <span>CryptoTab</span>
         </a>
@@ -261,33 +231,48 @@
     <!-- SECCIÓN HERRAMIENTAS -->
     <div class="section-title">TOOLS & BYPASS</div>
     <div class="grid-container">
-        <a href="https://chromewebstore.google.com/detail/nopecha-captcha-solver/dknlfmjaanfblgfdfebhijalfmhmjjjo" class="app-icon" target="_blank">
+        <a href="javascript:void(0)" onclick="openInViewer('https://chromewebstore.google.com/detail/nopecha-captcha-solver/dknlfmjaanfblgfdfebhijalfmhmjjjo')" class="app-icon">
             <img src="https://lh3.googleusercontent.com/vvZqJ9lXxa9R0AQbjz5kSqsKcY4X1JPx0_Doehq1YKoMejBOJUSwvLNBR58OOfexU-tlZoGPWKA26g24ic7c6gA9_h4=s60-rw">
             <span>Nopecha</span>
         </a>
-        <a href="https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm" class="app-icon" target="_blank">
+        <a href="javascript:void(0)" onclick="openInViewer('https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm')" class="app-icon">
             <img src="https://lh3.googleusercontent.com/rrgyVBVte7CfjjeTU-rCHDKba7vtq-yn3o8-10p5b6QOj_2VCDAO3VdggV5fUnugbG2eDGPPjoJ9rsiU_tUZBExgLGc=s60-rw">
             <span>uBlock</span>
         </a>
     </div>
 
-    <!-- SECCIÓN PTC & LINKS -->
+    <!-- SECCIÓN PTC -->
     <div class="section-title">MULTICURRENCY FAUCETS</div>
     <div class="text-links">
-        <a href="https://claimfreecoins.io/tether-faucet/?r=charly4k2019@gmail.com" class="chip">USDT</a>
-        <a href="https://claimfreecoins.io/solana-faucet/?r=charly4k2019@gmail.com" class="chip">SOL</a>
-        <a href="https://claimfreecoins.io/dogecoin-faucet/?r=charly4k2019@gmail.com" class="chip">DOGE</a>
-        <a href="https://claimfreecoins.io/tron-faucet/?r=charly4k2019@gmail.com" class="chip">TRX</a>
-        <a href="https://claimfreecoins.io/toncoin-faucet/?r=charly4k2019@gmail.com" class="chip">TON</a>
+        <a href="javascript:void(0)" onclick="openInViewer('https://claimfreecoins.io/tether-faucet/?r=charly4k2019@gmail.com')" class="chip">USDT</a>
+        <a href="javascript:void(0)" onclick="openInViewer('https://claimfreecoins.io/solana-faucet/?r=charly4k2019@gmail.com')" class="chip">SOL</a>
+        <a href="javascript:void(0)" onclick="openInViewer('https://claimfreecoins.io/dogecoin-faucet/?r=charly4k2019@gmail.com')" class="chip">DOGE</a>
+        <a href="javascript:void(0)" onclick="openInViewer('https://claimfreecoins.io/tron-faucet/?r=charly4k2019@gmail.com')" class="chip">TRX</a>
+        <a href="javascript:void(0)" onclick="openInViewer('https://claimfreecoins.io/toncoin-faucet/?r=charly4k2019@gmail.com')" class="chip">TON</a>
     </div>
 
     <div style="text-align: center; margin-top: 40px; border-top: 1px solid #333; padding-top: 20px;">
-        <div style="color: #666; font-size: 12px;">APP RATING</div>
         <div class="rating">★★★★★</div>
         <p style="font-size: 10px; color: #444;">© 2026 Charly UNAM - Crypto Dev</p>
     </div>
 
 </div>
+
+<script>
+    // Función para abrir la ventana interna
+    function openInViewer(url) {
+        document.getElementById('external-frame').src = url;
+        document.getElementById('app-viewer').style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Evita scroll atrás
+    }
+
+    // Función para cerrar y volver al inicio
+    function closeViewer() {
+        document.getElementById('app-viewer').style.display = 'none';
+        document.getElementById('external-frame').src = '';
+        document.body.style.overflow = 'auto'; // Devuelve el scroll
+    }
+</script>
 
 </body>
 </html>
