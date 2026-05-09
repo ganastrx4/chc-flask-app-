@@ -3,122 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino CharlyScan | World ID & Verifier</title>
-    
-    <script src="https://unpkg.com/@worldcoin/idkit-standalone@1.1.0/dist/index.global.js"></script>
-
+    <title>Casino CharlyScan | Volados</title>
     <style>
         :root { --gold: #f1c40f; --bg: #0a0a0a; --card: #161616; --green: #2ecc71; --red: #e74c3c; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; }
-        .card { background: var(--card); border: 1px solid #333; border-radius: 15px; padding: 20px; max-width: 450px; margin: 15px auto; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 10px; margin: 0; }
         
-        .coin-container { perspective: 1000px; width: 120px; height: 120px; margin: 20px auto; }
-        #coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
-        .spinning { transition: transform 4s cubic-bezier(0.1, 0.5, 0.1, 1); }
-        .side { position: absolute; width: 100%; height: 100%; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid var(--gold); }
-        .cara { background: linear-gradient(135deg, var(--gold), #d4af37); color: black; }
-        .aguila { background: linear-gradient(135deg, #333, #000); color: var(--gold); transform: rotateY(180deg); }
+        .card { background: var(--card); border: 1px solid #333; border-radius: 15px; padding: 20px; max-width: 450px; margin: 15px auto; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        
+        /* MONEDA UNIFORME */
+        .coin-container { perspective: 1000px; width: 140px; height: 140px; margin: 30px auto; }
+        #coin { 
+            width: 100%; height: 100%; 
+            position: relative; 
+            transform-style: preserve-3d; 
+            transition: transform 4s cubic-bezier(0.1, 0.5, 0.1, 1);
+        }
+        .side { 
+            position: absolute; width: 100%; height: 100%; 
+            border-radius: 50%; backface-visibility: hidden; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-weight: bold; border: 6px solid #d4af37; box-sizing: border-box;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+        
+        /* CARA (CHC) */
+        .cara { background: radial-gradient(circle, #f1c40f, #997a00); color: black; font-size: 1.2em; }
+        
+        /* CRUZ (X ROJA) */
+        .cruz { 
+            background: radial-gradient(circle, #222, #000); 
+            color: #d4af37; transform: rotateY(180deg); 
+        }
+        .x-roja { color: var(--red); font-size: 4em; position: absolute; font-family: Arial; text-shadow: 0 0 10px var(--red); }
 
-        .wallet-input { width: 90%; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #000; color: var(--green); font-family: monospace; font-size: 11px; margin-bottom: 15px; }
-        input[type="number"], .hash-input { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; }
-        .hash-input { width: 90%; margin-bottom: 10px; font-size: 10px; color: var(--gold); }
+        /* CONTROLES */
+        .selector { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .option { 
+            padding: 10px 20px; border: 2px solid #333; border-radius: 10px; 
+            cursor: pointer; background: #000; transition: 0.3s; font-weight: bold;
+        }
+        .option.active { border-color: var(--gold); background: #222; color: var(--gold); }
+
+        .wallet-input { width: 90%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #000; color: var(--green); font-family: monospace; font-size: 12px; margin-bottom: 15px; text-align: center; }
+        input[type="number"] { padding: 10px; background: #000; color: white; border: 1px solid var(--gold); border-radius: 5px; width: 60px; text-align: center; }
         
-        .btn { padding: 12px 20px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; margin: 5px; width: 95%; transition: 0.3s; }
-        .btn-play { background: var(--gold); color: black; font-size: 1.1em; }
-        .btn-world { background: white; color: black; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .btn-verify { background: var(--green); color: black; margin-top: 10px; }
+        .btn-play { padding: 15px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; width: 95%; background: var(--gold); color: black; font-size: 1.2em; transition: 0.3s; }
+        .btn-play:disabled { background: #555; cursor: not-allowed; }
         
-        .status { margin-top: 15px; min-height: 40px; font-weight: bold; }
-        .info { color: #888; font-size: 0.75em; }
-        hr { border: 0; border-top: 1px dashed #333; margin: 20px 0; }
+        .status { margin-top: 20px; font-size: 1.2em; font-weight: bold; min-height: 30px; }
     </style>
 </head>
 <body>
 
-    <a href="/" style="color:#666; text-decoration:none; font-size:0.8em;">🏠 SALIR</a>
-    <h2>CASINO & VERIFICADOR</h2>
+    <a href="/" style="color:#666; text-decoration:none; font-size:0.8em; display: block; margin-top: 10px;">🏠 SALIR AL PANEL</a>
+    <h2>CHC LUCK GAMES</h2>
 
     <div class="card">
-        <button id="world-id-button" class="btn btn-world">
-            <img src="https://worldcoin.org/icons/logo-dark.svg" width="20"> 
-            CONECTAR WORLD APP
-        </button>
+        <!-- Selector de elección -->
+        <p>¿Qué eliges?</p>
+        <div class="selector">
+            <div id="opt-cara" class="option active" onclick="seleccionar('cara')">CARA (CHC)</div>
+            <div id="opt-cruz" class="option" onclick="seleccionar('cruz')">CRUZ (X)</div>
+        </div>
 
         <div class="coin-container">
             <div id="coin">
-                <div class="side cara">CHC<br>CARA</div>
-                <div class="side aguila">CASA<br>ÁGUILA</div>
+                <div class="side cara">
+                    <span>CHC</span>
+                    <small style="font-size: 0.5em;">CHARLYCOIN</small>
+                </div>
+                <div class="side cruz">
+                    <span class="x-roja">X</span>
+                    <span style="margin-top: 60px; font-size: 0.8em;">CASA</span>
+                </div>
             </div>
         </div>
 
         <input type="text" id="userWallet" class="wallet-input" placeholder="Tu Dirección CharlyMiner..." />
         
-        <div style="margin-bottom: 15px;">
+        <div style="margin-bottom: 20px;">
             <span>Apuesta: </span>
             <input type="number" id="betAmount" value="1" min="1" max="10" />
+            <span style="color: var(--gold); font-weight: bold;"> CHC</span>
         </div>
 
-        <button id="playBtn" class="btn btn-play" onclick="procesarApuesta()">APOSTAR Y LANZAR</button>
-        <div id="status" class="status">¡Suerte, Charly!</div>
-        
-        <hr>
-
-        <!-- CAJA DE COMPROBACIÓN DE HASH -->
-        <h3 style="color:var(--green); font-size: 0.9em;">COMPROBAR PAGO (BNB/WLD)</h3>
-        <p class="info">Pega el Hash de tu pago a 0xd4508db1adc48dea121f356b254a7155ddab36ae</p>
-        <input type="text" id="txHash" class="hash-input" placeholder="0x9b70d15b3053aa527ebe8663186d8e0cc..." />
-        <button class="btn btn-verify" onclick="verificarTransaccion()">VERIFICAR Y RECLAMAR CHC</button>
-        <div id="verifyResult" class="info" style="margin-top:10px;">El sistema validará que el Hash no haya sido usado antes.</div>
+        <button id="playBtn" class="btn-play" onclick="procesarApuesta()">¡LANZAR VOLADO!</button>
+        <div id="status" class="status">¡Suerte!</div>
     </div>
 
 <script>
-    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
     const NODO_URL = "https://binance-bot-hna7.onrender.com";
+    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
     
+    let eleccionUsuario = 'cara';
     let perdidasConsecutivas = 0;
     let maxApuesta = 10;
 
-    IDKit.init({
-        app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
-        action: "login",
-        onSuccess: (result) => {
-            document.getElementById('status').innerText = "✅ ¡World ID Conectado!";
-            document.getElementById('world-id-button').innerHTML = "✅ CONECTADO";
-        }
-    });
-
-    document.getElementById('world-id-button').onclick = () => { IDKit.open(); };
-
-    // --- NUEVA FUNCIÓN DE VERIFICACIÓN DE HASH ---
-    async function verificarTransaccion() {
-        const hash = document.getElementById('txHash').value.trim();
-        const userWallet = document.getElementById('userWallet').value.trim();
-        const resultDiv = document.getElementById('verifyResult');
-
-        if (!hash || !userWallet) return alert("Ingresa el Hash y tu Wallet CharlyMiner.");
-
-        resultDiv.innerText = "Consultando con el nodo...";
-
-        try {
-            const response = await fetch(`${NODO_URL}/verificar-pago`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    hash: hash,
-                    receptor_final: userWallet,
-                    billetera_pool: "0xd4508db1adc48dea121f356b254a7155ddab36ae"
-                })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                resultDiv.innerHTML = `<span style="color:var(--green)">✅ PAGO VÁLIDO: Se han enviado ${data.monto_chc} CHC a tu cuenta.</span>`;
-            } else {
-                resultDiv.innerHTML = `<span style="color:var(--red)">❌ ERROR: ${data.message}</span>`;
-            }
-        } catch (e) {
-            resultDiv.innerText = "Error al conectar con el nodo verificador.";
-        }
+    function seleccionar(tipo) {
+        eleccionUsuario = tipo;
+        document.getElementById('opt-cara').classList.toggle('active', tipo === 'cara');
+        document.getElementById('opt-cruz').classList.toggle('active', tipo === 'cruz');
     }
 
     async function procesarApuesta() {
@@ -129,31 +113,38 @@
         const coin = document.getElementById('coin');
 
         if (wallet.length < 10) return alert("Ingresa tu dirección.");
-        if (apuesta > maxApuesta) return alert("Límite excedido");
-
+        
         document.getElementById('playBtn').disabled = true;
-        coin.classList.remove('spinning');
+        status.innerText = "Lanzando...";
+        
+        // Reset posición
+        coin.style.transition = "none";
         coin.style.transform = `rotateY(0deg)`;
         await new Promise(r => setTimeout(r, 50));
         
-        const ganaUsuario = Math.random() > 0.60;
-        const totalRotation = 3600 + (ganaUsuario ? 0 : 180);
+        // Lógica de probabilidad (60% casa gana / 40% usuario gana)
+        const resultadoGanaUsuario = Math.random() > 0.60;
         
-        coin.classList.add('spinning');
-        coin.style.transform = `rotateY(${totalRotation}deg)`;
+        // Calculamos la rotación final
+        // Si el usuario eligió cara y gana, debe caer cara (0 o 360).
+        // Si el usuario eligió cruz y gana, debe caer cruz (180).
+        let finalRotation = 3600; // 10 vueltas base
+        
+        if (eleccionUsuario === 'cara') {
+            finalRotation += resultadoGanaUsuario ? 0 : 180;
+        } else {
+            finalRotation += resultadoGanaUsuario ? 180 : 0;
+        }
+
+        coin.style.transition = "transform 4s cubic-bezier(0.1, 0.5, 0.1, 1)";
+        coin.style.transform = `rotateY(${finalRotation}deg)`;
 
         setTimeout(async () => {
-            if (ganaUsuario) {
-                perdidasConsecutivas = 0;
-                maxApuesta = 10;
-                status.innerHTML = `<span style="color:var(--green)">GANASTE +${apuesta} CHC</span>`;
+            if (resultadoGanaUsuario) {
+                status.innerHTML = `<span style="color:var(--green)">¡GANASTE! +${apuesta} CHC</span>`;
                 await enviarTokens(MASTER_PUBLIC, wallet, apuesta);
             } else {
-                perdidasConsecutivas++;
                 status.innerHTML = `<span style="color:var(--red)">PERDISTE -${apuesta} CHC</span>`;
-                if(perdidasConsecutivas < 5) { maxApuesta = 20; } 
-                else { maxApuesta = 300; status.innerHTML += "<br><small>¡MODO 300 CHC!</small>"; }
-                betInput.max = maxApuesta;
                 await enviarTokens(wallet, MASTER_PUBLIC, apuesta);
             }
             document.getElementById('playBtn').disabled = false;
@@ -169,10 +160,10 @@
                     emisor: emisor,
                     receptor: receptor,
                     monto: monto,
-                    firma: "CASINO_WORLD_APP"
+                    firma: "CASINO_VOLADOS"
                 })
             });
-        } catch (e) { console.log("Error de nodo"); }
+        } catch (e) { console.log("Error de red"); }
     }
 </script>
 </body>
