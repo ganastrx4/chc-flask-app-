@@ -1,32 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minería CHC | CharlyScan</title>
-  <style>
-    :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; }
-    body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin-bottom: 100px; }
-    
-    .window-container { max-width: 600px; margin: 0 auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-    
-    .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
-    
-    #iframeContainer { width: 95%; height: 350px; border: 2px solid var(--gold); margin: 20px auto; border-radius: 10px; overflow: hidden; }
-    iframe { width: 100%; height: 100%; border: none; }
-    
-    /* Input con estilo de autorrelleno */
-    input { margin: 10px; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; text-align: center; transition: 0.3s; }
-    input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 10px rgba(241, 196, 15, 0.2); }
-    
-    button { margin: 10px; padding: 12px; width: 90%; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; background: var(--gold); color: black; transition: 0.3s; }
-    button:hover { transform: scale(1.02); background: #d4af37; }
-    
-    .chc-counter { font-size: 1.8em; color: var(--gold); margin: 15px 0; font-weight: bold; }
-    .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 15px 0; cursor: pointer; }
-    .btn-home { background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8em; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minería CHC | CharlyScan</title>
+    <style>
+        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; }
+        body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin-bottom: 100px; }
+        
+        .window-container { max-width: 600px; margin: 0 auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        
+        .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
+        
+        #iframeContainer { width: 95%; height: 380px; border: 2px solid var(--gold); margin: 20px auto; border-radius: 10px; overflow: hidden; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        input { margin: 10px; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; text-align: center; transition: 0.3s; }
+        input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 10px rgba(241, 196, 15, 0.2); }
+        
+        button { margin: 10px; padding: 12px; width: 90%; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; background: var(--gold); color: black; transition: 0.3s; }
+        button:hover { transform: scale(1.02); background: #d4af37; }
+        
+        .chc-counter { font-size: 1.8em; color: var(--gold); margin: 15px 0; font-weight: bold; }
+        .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 15px 0; cursor: pointer; }
+        .btn-home { background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8em; }
+    </style>
 </head>
 <body onload="verificarMemoria()">
 
@@ -41,9 +40,8 @@
         <h2>GANA CHC</h2>
         <p style="color: #2ecc71; font-size: 0.9em;">MINERÍA AUTOMÁTICA ACTIVA</p>
         
-        <!-- Input con soporte para memoria -->
         <input type="text" id="userWallet" placeholder="Tu Billetera CharlyMiner..." onkeypress="handleKeyPress(event)" list="prevWallets" />
-        <datalist id="prevWallets"></datalist> <!-- Sugerencias tipo buscador -->
+        <datalist id="prevWallets"></datalist> 
         
         <span onclick="gestionarIdentidad()" class="wallet-link">
             ¿No tienes cuenta? Generar Billetera y Descargar Llaves
@@ -53,25 +51,52 @@
         <div id="minerStatus" style="font-size: 0.8em; color: #888;">Listo para minar</div>
     </div>
 
+    <!-- El contenedor del Iframe donde ocurre la magia -->
     <div id="iframeContainer">
-      <iframe id="iframeRedireccion" src=""></iframe>
+      <iframe id="iframeRedireccion" src="https://tareasunamyunadm.blogspot.com"></iframe>
     </div>
 
     <div style="padding: 10px;">
         <button onclick="continuarMineria()">🚀 INICIAR MINERÍA</button>
         <button style="background:#e74c3c; color:white;" onclick="pararMineria()">🛑 DETENER Y GUARDAR</button>
-        <button style="background: #2980b9; color: white;" onclick="window.location.href='https://binance-bot-hna7.onrender.com/'">🔍 EXPLORADOR CHARLY SCAN</button>
+        
+        <!-- Botón modificado para navegación interna -->
+        <button style="background: #2980b9; color: white;" onclick="abrirExplorador()">🔍 EXPLORADOR CHARLY SCAN</button>
     </div>
 </div>
 
 <script>
+    const NODO_URL = "https://binance-bot-hna7.onrender.com";
+    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
+    const urls = ["https://tareasunamyunadm.blogspot.com", "https://faucentminialtcrypto.blogspot.com", "https://solotareamsmex.blogspot.com", "https://juegospcmexico.blogspot.com"];
+    
+    let segundos = 0, chcGanados = 0, interval, minando = false;
+    let exploradorActivo = false;
+
+    // --- NAVEGACIÓN DENTRO DEL IFRAME ---
+    function abrirExplorador() {
+        exploradorActivo = true;
+        const frame = document.getElementById('iframeRedireccion');
+        frame.src = NODO_URL; // Carga tu App de Render dentro del Iframe
+        document.getElementById('minerStatus').innerText = "Navegando en CharlyScan...";
+    }
+
+    function redireccionAleatoria() {
+        // Solo rota blogs si el usuario no está usando el explorador
+        if (!exploradorActivo) {
+            document.getElementById('iframeRedireccion').src = urls[Math.floor(Math.random() * urls.length)];
+        }
+    }
+    
+    // Cambia de blog cada 30 segundos si no está el explorador abierto
+    setInterval(redireccionAleatoria, 30000);
+
     // --- MEMORIA Y AUTORRELLENO ---
     function verificarMemoria() {
         const savedWallet = localStorage.getItem("last_chc_wallet");
         if (savedWallet) {
             document.getElementById('userWallet').value = savedWallet;
             document.getElementById('minerStatus').innerText = "Billetera recordada automáticamente.";
-            // Agregar a la lista de sugerencias
             const dl = document.getElementById('prevWallets');
             const opt = document.createElement('option');
             opt.value = savedWallet;
@@ -79,21 +104,18 @@
         }
     }
 
-    // --- GENERACIÓN DE BILLETERA (ANDROID/WEB) ---
+    // --- GENERACIÓN DE BILLETERA ---
     function gestionarIdentidad() {
         let plataforma = prompt("¿Estás en ANDROID o PC?").toLowerCase();
-
         if (plataforma === "android") {
             if (localStorage.getItem("last_chc_wallet")) {
-                let seguro = confirm("⚠️ Ya tienes una billetera guardada en este navegador. ¿Deseas generar UNA NUEVA? (Asegúrate de haber guardado la anterior)");
+                let seguro = confirm("⚠️ Ya tienes una billetera guardada. ¿Generar una NUEVA?");
                 if (!seguro) return;
             }
-
-            // Generar llaves ficticias pero con formato válido para tu red
             const array = new Uint8Array(32);
             window.crypto.getRandomValues(array);
             const privateKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-            const publicKey = "chc_" + privateKey.substring(0, 40); // Formato de dirección
+            const publicKey = "chc_" + privateKey.substring(0, 40);
 
             const walletData = {
                 proyecto: "CharlyCoin Network",
@@ -102,7 +124,6 @@
                 fecha: new Date().toISOString()
             };
 
-            // Descargar el JSON
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(walletData, null, 4));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
@@ -111,30 +132,15 @@
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
 
-            // AUTORRELLENO AUTOMÁTICO
             document.getElementById('userWallet').value = publicKey;
             localStorage.setItem("last_chc_wallet", publicKey);
-            
-            alert("✅ Billetera generada. El archivo 'mi_wallet_chc.json' se ha descargado. ¡TU DIRECCIÓN SE HA COPIADO AL INPUT!");
-
+            alert("✅ Billetera generada y descargada.");
         } else if (plataforma === "pc") {
             window.location.href = "https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe";
         }
     }
 
     // --- LÓGICA DE MINERÍA ---
-    let segundos = 0, chcGanados = 0, interval, minando = false;
-    const NODO_URL = "https://binance-bot-hna7.onrender.com";
-    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
-
-    const urls = ["https://tareasunamyunadm.blogspot.com", "https://faucentminialtcrypto.blogspot.com", "https://solotareamsmex.blogspot.com", "https://juegospcmexico.blogspot.com"];
-
-    function redireccionAleatoria() {
-        document.getElementById('iframeRedireccion').src = urls[Math.floor(Math.random() * urls.length)];
-        setTimeout(redireccionAleatoria, 20000);
-    }
-    redireccionAleatoria();
-
     function handleKeyPress(e) { if (e.keyCode === 13) { continuarMineria(); } }
 
     function contarTiempo() {
@@ -146,7 +152,7 @@
                 document.getElementById('chcCount').innerText = chcGanados;
                 enviarAlNodo(wallet, 1);
             }
-            document.getElementById('minerStatus').innerText = `Minando... recompensas enviadas a la red.`;
+            if(!exploradorActivo) document.getElementById('minerStatus').innerText = `Minando en segundo plano...`;
         }
     }
 
@@ -165,9 +171,9 @@
         if (wallet.length < 5) return alert("Ingresa tu billetera.");
         if (!minando) {
             minando = true;
-            localStorage.setItem("last_chc_wallet", wallet); // Guardar para la próxima vez
+            localStorage.setItem("last_chc_wallet", wallet);
             if (!interval) interval = setInterval(contarTiempo, 1000);
-            alert("Minería vinculada y dirección guardada.");
+            alert("Minería iniciada. Puedes navegar en el explorador y seguirás ganando.");
         }
     }
 
