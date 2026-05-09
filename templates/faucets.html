@@ -259,18 +259,36 @@
 </div>
 
 <script>
-    // Función para abrir la ventana interna
+    // Función mejorada para abrir sitios
     function openInViewer(url) {
-        document.getElementById('external-frame').src = url;
-        document.getElementById('app-viewer').style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Evita scroll atrás
+        // Lista de dominios que suelen bloquear iframes (puedes añadir más)
+        const blockIframe = ["rollercoin.com", "claimfreecoins.io", "honeygain.me", "cryptotabbrowser.com"];
+        
+        // Verificamos si la URL contiene alguno de los dominios problemáticos
+        const needsPopup = blockIframe.some(domain => url.includes(domain));
+
+        if (needsPopup) {
+            // Si el sitio bloquea iframes, lo abrimos en una ventana emergente profesional
+            const width = 500;
+            const height = 700;
+            const left = (window.innerWidth / 2) - (width / 2);
+            const top = (window.innerHeight / 2) - (height / 2);
+            
+            window.open(url, 'faucetWindow', 
+                `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
+            );
+        } else {
+            // Si es un sitio seguro (como tu propio nodo o volados), lo abrimos interno
+            document.getElementById('external-frame').src = url;
+            document.getElementById('app-viewer').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; 
+        }
     }
 
-    // Función para cerrar y volver al inicio
     function closeViewer() {
         document.getElementById('app-viewer').style.display = 'none';
         document.getElementById('external-frame').src = '';
-        document.body.style.overflow = 'auto'; // Devuelve el scroll
+        document.body.style.overflow = 'auto';
     }
 </script>
 
