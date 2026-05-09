@@ -12,6 +12,7 @@
             --card: #1e1e1e;
             --text: #ffffff;
             --accent: #f1c40f;
+            --gold-glow: rgba(241, 196, 15, 0.3);
         }
 
         body {
@@ -30,7 +31,6 @@
             width: 100%;
         }
 
-        /* Header Estilo App */
         .app-header {
             text-align: center;
             padding: 20px 0;
@@ -50,15 +50,66 @@
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 1px;
+            text-align: center;
         }
 
         .tagline {
             font-size: 14px;
             color: #888;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        /* Secciones de Tarjetas */
+        /* --- SECCIÓN MINERO CORREGIDA --- */
+        .miner-section {
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            padding: 20px;
+            border-radius: 25px;
+            border: 1px solid #333;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .miner-title {
+            color: var(--accent);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .miner-banner-img {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 15px;
+            margin: 15px 0;
+            border: 1px solid #444;
+            transition: transform 0.3s;
+        }
+
+        .miner-banner-img:hover {
+            transform: scale(1.02);
+        }
+
+        .btn-download {
+            background: var(--accent);
+            color: black;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 800;
+            display: inline-block;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px var(--gold-glow);
+            transition: all 0.3s;
+        }
+
+        .btn-download:active {
+            transform: scale(0.95);
+        }
+
+        /* --- RESTO DE ESTILOS --- */
         .section-title {
             font-size: 16px;
             font-weight: 700;
@@ -80,9 +131,8 @@
             justify-items: center;
         }
 
-        /* Contenedor especial para el banner de FaucetPay para que no rompa el grid */
         .banner-faucet {
-            grid-column: 1 / -1; /* Ocupa todo el ancho del grid */
+            grid-column: 1 / -1;
             width: 100%;
             display: flex;
             justify-content: center;
@@ -95,10 +145,6 @@
             flex-direction: column;
             align-items: center;
             transition: transform 0.2s;
-        }
-
-        .app-icon:active {
-            transform: scale(0.9);
         }
 
         .app-icon img {
@@ -115,16 +161,13 @@
             color: #bbb;
             margin-top: 5px;
             text-align: center;
-            font-weight: 500;
         }
 
-        /* Enlaces de Texto Estilo Lista */
         .text-links {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
-            margin-top: 10px;
         }
 
         .chip {
@@ -137,7 +180,6 @@
             border: 1px solid #444;
         }
 
-        /* Botón de Acción Principal */
         .main-btn {
             background: linear-gradient(135deg, #2d2c2c 0%, #000 100%);
             color: white;
@@ -148,9 +190,8 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            margin: 30px 0;
+            margin: 20px 0;
             border: 1px solid #555;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .rating {
@@ -169,21 +210,29 @@
         <h1>RECLAMA TUS CRIPTOS</h1>
         <div class="tagline">"Tu moneda, tu futuro digital"</div>
     </div>
-    <h1>MINA CHC BAJO LA RED CHARLYSCAN</h1>
-        <div class="tagline">"Descarga y  listo!!! "</div>
- <a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe" rel="nofollow" target="_blank"><b>MINERO CHC DOWNLOAD</b></a>    
-<div class="separator" style="clear: both; text-align: center;"><a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe" style="margin-left: 1em; margin-right: 1em;" target="_blank"><img alt="" data-original-height="380" data-original-width="1163" height="170" src="https://blogger.googleusercontent.com/img/a/AVvXsEj8OER2LyfejLPNhJcnddzl-o-1dA7G5tCphv6hKiiZd1YsIiSgOqGyq5PsUIfck4lBfPX3GvWrbxiUwLKRcDDFnfRYrrODwMIBFQJSJv9nTz8tIXOJdkVuJvFLt9A6o_Dpb9cAL5wNvHcHzHF6Y4ghJx-XD2P0409vM1AHjfxZMJv6pEx7MuacmE9WA7hx=w518-h170" width="518" /></a></div
-   </div>
-    
+
+    <!-- SECCIÓN MINERO ACOMODADA -->
+    <div class="miner-section">
+        <div class="miner-title">MINA CHC BAJO LA RED CHARLYSCAN</div>
+        <div class="tagline" style="margin-bottom: 0;">¡Descarga y listo!</div>
+        
+        <a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe" target="_blank">
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEj8OER2LyfejLPNhJcnddzl-o-1dA7G5tCphv6hKiiZd1YsIiSgOqGyq5PsUIfck4lBfPX3GvWrbxiUwLKRcDDFnfRYrrODwMIBFQJSJv9nTz8tIXOJdkVuJvFLt9A6o_Dpb9cAL5wNvHcHzHF6Y4ghJx-XD2P0409vM1AHjfxZMJv6pEx7MuacmE9WA7hx=w518-h170" class="miner-banner-img" alt="Miner Banner">
+        </a>
+        
+        <br>
+        <a href="https://github.com/ganastrx4/binance-bot/releases/download/v1.0/charlycoin_miner.exe" class="btn-download">
+            📥 MINERO CHC DOWNLOAD
+        </a>
+    </div>
+
     <a href="https://binance-bot-hna7.onrender.com/" class="main-btn" target="_blank">
-        ACCEDER A CHARLYCOIN EN CHARLYSCAN →
+        ACCEDER A CHARLYSCAN →
     </a>
 
     <!-- SECCIÓN FAUCETS -->
     <div class="section-title">FAUCETS DIARIOS</div>
     <div class="grid-container">
-        
-        <!-- BANNER REFERRAL FAUCETPAY (REEMPLAZO DEL BOTÓN ANTERIOR) -->
         <div class="banner-faucet">
             <iframe 
                 src="https://api.fpadserver.com/referral-banners?size=300x250&clickTag=https://faucetpay.io/?r=1998768"
