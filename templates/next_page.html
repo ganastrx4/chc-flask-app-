@@ -3,165 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenida a CharlyCoin</title>
+    <title>CharlyCoin | Dashboard Pro</title>
+    
+    <!-- CONEXIÓN AL ESTILO CENTRAL -->
     <link rel="stylesheet" href="style.css">
+
     <style>
+        /* Estilos específicos para esta página de Bienvenida */
         body {
-            font-family: Arial, sans-serif;
-            background: #1e1e2f;
-            color: #ffffff;
-            text-align: center;
-            margin: 0;
-            padding: 0;
+            background: #0a0a0a; /* Fondo más profundo */
+            margin-bottom: 50px;
         }
+
         .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #2c2c3e;
-            border-radius: 10px;
-            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.1);
+            max-width: 450px;
+            margin: 20px auto;
+            padding: 25px;
+            background: rgba(44, 44, 62, 0.4); /* Efecto cristal */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        input, button {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 5px;
-        }
-        button {
-            background: #f39c12;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:hover { background: #e67e22; }
-        #cryptoInfo {
-            display: none;
-            margin-top: 20px;
-            background: #3a3a55;
-            padding: 15px;
-            border-radius: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            background: #3a3a55;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid #444;
-        }
-        th {
-            background: #f39c12;
-            color: #000;
-        }
-        h3 { color: #f39c12; margin-top: 20px; }
-        .binance-link {
-            display: block;
-            margin-top: 20px;
-            color: #f39c12;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        .grafica-link {
-            display: block;
-            margin-top: 20px;
-            color: #e67e22;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        .grafica-link:hover {
-            color: #f39c12;
-        }
+
         .gif-container img {
             width: 100%;
-            height: auto;
-            max-width: 400px;
-            margin: 0 auto;
+            max-width: 250px;
+            border-radius: 50%; /* Imagen circular */
+            border: 3px solid var(--gold);
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
         }
-        .next-button, .grafica-link, .binance-link {
-            color: #ffffff;
-            text-decoration: none;
-            font-size: 16px;
+
+        h2 {
+            font-size: 1.1rem;
+            color: var(--soft-white);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Botones estilo App Charly */
+        .btn-menu {
+            display: block;
+            width: 100%;
+            padding: 14px;
             margin: 10px 0;
-            display: inline-block;
-            padding: 10px;
-            border-radius: 5px;
-            background: #f39c12;
-            transition: background-color 0.3s ease;
+            background: #1e1e2f;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px solid #333;
+            font-weight: bold;
+            transition: 0.3s;
+            text-align: center;
         }
-        .next-button:hover, .grafica-link:hover, .binance-link:hover {
-            background: #e67e22;
+
+        .btn-menu:hover {
+            background: var(--gold);
+            color: black;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(241, 196, 15, 0.2);
+        }
+
+        .btn-highlight {
+            background: var(--gold) !important;
+            color: black !important;
+        }
+
+        /* Botón de Uniswap Especial */
+        .uniswap-banner {
+            width: 90%;
+            max-width: 450px;
+            margin: 20px auto;
+            display: block;
+            padding: 20px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #6c47ff, #ff00c8);
+            color: white;
+            text-decoration: none;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        /* Estilo para el botón de World ID */
+        #world-id {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
+
     <div class="container">
+        <!-- LOGO -->
         <div class="gif-container">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgs4uyyEce9czJNopvAJUC-EuqRY0GilYfi7dguE0OEkUjTcrn6PVYsIFXo2NbemRvavHvVWsD8ru9ZGJXUpfhSVsUyrNYeJri7NP2XU6-9NUjbyrVjQtYUNjt7N9dUaouupuqlczAJlDqpYVhdArBcT7MRvEAwVfQv8JeOKD-EWAecMuSsfAE4gizyojtT/s1024/0ed01250-9b4a-4d44-924c-7c0011004aa0.webp" alt="CharlyCoin Logo">
         </div>
 
-        <!-- Botón de World ID -->
-        <h2>Verifica tu identidad con World ID</h2>
+        <!-- VERIFICACIÓN -->
+        <h2>🛡️ Seguridad</h2>
         <div id="world-id"></div>
 
-        <!-- Enlaces de navegación -->
-        <a href="./ganarchun.html" class="next-button">GANAR CHUN</a>
-        <a href="./graficachcwld.html" class="grafica-link">VOLADOS</a>
-        <a href="./faucets.html" class="next-button">FAUCETS</a>
-        <a href="./wdd.html" class="next-button">MULTIPLICA TU WDD</a>
-        <a href="./buscador2.html" class="next-button">Movimientos</a>
-        <a href="./chcoin.html" class="next-button">INSTALA EL MINERO GANA MINA EN WEB Y MULTIPLICA</a>
+        <!-- MENU PRINCIPAL -->
+        <h2 style="margin-top: 30px;">🚀 Menú Principal</h2>
+        <a href="./ganarchun.html" class="btn-menu btn-highlight">💰 GANAR CHUN / CHC</a>
+        <a href="./graficachcwld.html" class="btn-menu">🎲 VOLADOS</a>
+        <a href="./faucets.html" class="btn-menu">🚰 FAUCETS GRATIS</a>
+        <a href="./wdd.html" class="btn-menu">💹 MULTIPLICA TU WDD</a>
+        <a href="./buscador2.html" class="btn-menu">📊 MOVIMIENTOS</a>
+        <a href="./chcoin.html" class="btn-menu" style="border-color: var(--gold); color: var(--gold);">⛏️ INSTALAR MINERO</a>
     </div>
 
-    <a href="https://app.uniswap.org/swap?outputCurrency=0x6b2ba4159916017267c39a3b70b507f7c1af5edb" target="_blank">
-        <button style="padding: 15px; font-size: 18px; border-radius: 10px; background-color: #6c47ff; color: white;">
-            ¡Apoya nuestro Token CHC en PUF y espera el PUMP!
-            <br> ¡Solo los débiles venden!
+    <!-- BOTÓN DE APOYO UNISWAP -->
+    <a href="https://app.uniswap.org/swap?outputCurrency=0x6b2ba4159916017267c39a3b70b507f7c1af5edb" target="_blank" style="text-decoration: none;">
+        <button class="uniswap-banner">
+            🚀 APOYA CHC EN UNISWAP <br>
+            <span style="font-size: 12px; font-weight: normal;">¡Solo los fuertes ganan! ESPERA EL PUMP</span>
         </button>
     </a>
 
-    <!-- Script de World ID (IDKit CDN) -->
+    <!-- SCRIPTS -->
     <script src="https://cdn.worldcoin.org/idkit/idkit.umd.min.js"></script>
     <script>
+        // Inicializar World ID
         window.IDKit.init({
-            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID de Worldcoin
-            action: "login", // Nombre de tu acción configurada
-            signal: "rp_aa5ead0710fce1dc", // Puedes usar identificadores únicos si quieres
+            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+            action: "login",
+            signal: "rp_aa5ead0710fce1dc",
             credential_types: ["orb", "device"],
             onSuccess: async (proof) => {
-                console.log("Prueba recibida:", proof);
-                
                 const response = await fetch("https://developer.worldcoin.org/api/v2/verify/app_7686f9027d3e3c0b53d987a3caf1e111", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        ...proof,
-                        action: "login"
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ...proof, action: "login" })
                 });
 
                 const result = await response.json();
                 if (result.verified) {
-                    alert("¡Verificación exitosa!");
-                } else {
-                    alert("Verificación fallida: " + (result.detail || "Intenta de nuevo."));
+                    alert("¡Identidad verificada, Charly!");
                 }
             },
             onError: (error) => {
-                console.error("Error en la verificación:", error);
-                alert("Error al verificar con World ID");
+                alert("Error de conexión con World ID");
             }
         });
-
-        // Montar el botón en el div
         window.IDKit.mount("#world-id");
     </script>
 </body>
