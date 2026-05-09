@@ -1,232 +1,333 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Promociona tu Proyecto</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Compra CHCOIN (BSC) • CHCOIN / BNB</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700;900&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      text-align: center;
-      padding: 20px;
-      font-family: Arial, sans-serif;
+    :root{
+      --bg1: linear-gradient(135deg,#0f172a 0%, #081028 40%, #081b2f 100%);
+      --accent1: #7c3aed;
+      --accent2: #06b6d4;
+      --card: rgba(255,255,255,0.04);
+      --glass: rgba(255,255,255,0.03);
+      --text: #e6eef8;
+      --muted: #a7b4c9;
+      --success: #34d399;
+      --danger: #fb7185;
     }
-    #iframeContainer {
-      width: 100%;
-      height: 500px;
-      border: 2px solid #ccc;
-      margin-top: 20px;
-      overflow: hidden;
-      border-radius: 10px;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg1);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
     }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+
+    .container{
+      max-width:1100px;
+      margin:40px auto;
+      padding:28px;
     }
-    #resultado {
-      margin-top: 20px;
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:28px;
+      align-items:center;
+      margin-bottom:28px;
     }
-    input, button {
-      margin: 10px;
-      padding: 10px;
-      width: 80%;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:18px;
+      padding:22px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
     }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s;
+
+    .title {
+      font-size:32px;
+      font-weight:900;
+      letter-spacing:-0.5px;
+      margin:0 0 8px 0;
+      background: linear-gradient(90deg,var(--accent1),var(--accent2));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
     }
-    button:hover {
-      background-color: #45a049;
+
+    .subtitle{
+      color:var(--muted);
+      margin:0 0 20px 0;
+      font-weight:500;
     }
-    .nota {
-      color: red;
-      font-weight: bold;
+
+    .token-bubble{
+      display:flex;
+      gap:14px;
+      align-items:center;
     }
-    .bono-text {
-      font-size: 0.9em;
-      color: gray;
+    .logo {
+      width:84px;
+      height:84px;
+      border-radius:18px;
+      background: linear-gradient(135deg,#0f172a, rgba(255,255,255,0.02));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:20px;
+      color:var(--text);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(2,1fr);
+      gap:12px;
+      margin-top:18px;
+    }
+    .stat{
+      background:var(--card);
+      padding:12px;
+      border-radius:10px;
+      text-align:left;
+      font-weight:600;
+      color:var(--text);
+    }
+    .stat .label{font-size:12px;color:var(--muted);font-weight:500}
+    .stat .val{font-size:18px;margin-top:6px}
+
+    .actions{
+      display:flex;
+      gap:12px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      padding:12px 16px;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+      border:0;
+      text-decoration:none;
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn-primary{
+      background: linear-gradient(90deg,var(--accent1),var(--accent2));
+      color:white;
+      box-shadow: 0 8px 24px rgba(124,58,237,0.18);
+    }
+    .btn-ghost{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      color:var(--text);
+    }
+    .small{font-size:13px;padding:8px 12px;border-radius:10px}
+
+    /* Right column */
+    .buy-panel{
+      padding:18px;
+      border-radius:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.008));
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .buy-panel h3{margin:0 0 6px 0;font-size:18px}
+    .buy-panel p{margin:0 0 12px 0;color:var(--muted);font-size:14px}
+
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .step .num{
+      min-width:36px; height:36px; border-radius:10px;
+      background:rgba(255,255,255,0.03);
+      display:flex; align-items:center; justify-content:center; font-weight:700;
+      color:var(--text);
+    }
+    .token-address{
+      word-break:break-all;
+      font-size:13px;
+      padding:10px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.02);
+      border:1px dashed rgba(255,255,255,0.03);
+    }
+
+    footer{
+      text-align:center;
+      color:var(--muted);
+      margin-top:26px;
+      font-size:13px;
+    }
+
+    /* responsive */
+    @media (max-width:960px){
+      .hero{grid-template-columns:1fr}
+      .logo{width:72px;height:72px}
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <div class="hero">
+      <div class="card">
+        <div class="token-bubble">
+          <div class="logo">CHCOIN</div>
+          <div>
+            <h1 class="title">CHCOIN • Compra en BSC</h1>
+            <p class="subtitle">Compra CHCOIN (CHCOIN/BNB) en PancakeSwap • Pool en BSC</p>
+          </div>
+        </div>
 
-<h2>Promociona tu Blog, Video o Proyecto relacionado con WLD o Tokens</h2>
-<p class="nota">Para publicar tu contenido, envía 1 WLD (o 135371.31 CHUN) a la billetera destino:<br>
-<span style="font-size: 1.2em;">0xdc178d65c502f9589bb1a35af08b5723f85ec168</span></p>
-<p><a href="#" onclick="abrirGuia(); return false;">Guía para enviar WLD</a></p>
+        <div class="stats" aria-hidden>
+          <div class="stat">
+            <div class="label">Precio (USD)</div>
+            <div class="val" id="price">$0.001379</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">
+              (valor obtenido de GeckoTerminal). :contentReference[oaicite:0]{index=0}
+            </div>
+          </div>
 
-<div id="iframeContainer">
-  <iframe id="iframeRedireccion" src=""></iframe>
-</div>
+          <div class="stat">
+            <div class="label">Liquidez aproximada</div>
+            <div class="val" id="liquidity">$0.58</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">
+              (pool con liquidez baja). :contentReference[oaicite:1]{index=1}
+            </div>
+          </div>
 
-<div id="usuario-info">
-  <input type="email" id="correo" placeholder="Tu correo (para enviarte CHUN)" />
-  <input type="text" id="urlPromocion" placeholder="URL de tu blog, video o sitio a promocionar" />
-  <button onclick="guardarDatos()">Comprar Publicidad</button>
-</div>
+          <div class="stat">
+            <div class="label">GT Score</div>
+            <div class="val" id="score">39 / 100</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">
+              Eval. de GeckoTerminal. :contentReference[oaicite:2]{index=2}
+            </div>
+          </div>
 
-<hr>
+          <div class="stat">
+            <div class="label">FDV / Market Cap</div>
+            <div class="val" id="fdv">$1.4M</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">
+              Datos agregados desde la página del pool. :contentReference[oaicite:3]{index=3}
+            </div>
+          </div>
+        </div>
 
-<button onclick="pararMineria()">Parar Mineria</button>
-<button onclick="continuarMineria()">Continuar Mineria</button>
+        <div class="actions">
+          <!-- Botones -->
+          <a class="btn btn-primary" href="https://www.geckoterminal.com/bsc/pools/0xd3c2dad1c5df30c1d77c992b9492f007e4d24c192904ab03c88f539de72d93e7" target="_blank" rel="noopener">
+            Ver pool en GeckoTerminal
+          </a>
 
-<script>
-  let tiempoTotal = 0;
-  let interval;
-  let minando = true;
-  let ventanaActiva = true;
+          <!-- PancakeSwap swap (salida hacia token) -->
+          <a class="btn btn-ghost" href="https://pancakeswap.finance/swap?outputCurrency=0x2a13eDFa28115518942b5537b83ED74758771c7a" target="_blank" rel="noopener">
+            Comprar en PancakeSwap
+          </a>
 
-  const telegramToken = '8010490851:AAGXRC8_OlcfCeL53VgJ_ALqmbRuT691Wlk';
-  const chatId = '7613604212';
+          <button class="btn small" onclick="copyAddress()">Copiar dirección token</button>
+        </div>
 
-  const urls = [
-    "https://tareasunamyunadm.blogspot.com",
-    "https://faucentminialtcrypto.blogspot.com",
-    "https://solotareasmex.blogspot.com",
-    "https://juegospcmexico.blogspot.com",
-    "https://besthserchblogger.blogspot.com",
-    "https://mundogamermejico.blogspot.com",
-    "https://backtrackingchesscaso.blogspot.com",
-    "https://charly4kminerbycaso.blogspot.com",
-    "https://mundogamermejico.blogspot.com",
-    ];
+        <div style="margin-top:14px;font-size:13px;color:var(--muted)">
+          Pool contract: <span class="token-address">0xd3c2dad1c5df30c1d77c992b9492f007e4d24c192904ab03c88f539de72d93e7</span>
+          <div style="margin-top:8px">Token contract: <span class="token-address">0x2a13eDFa28115518942b5537b83ED74758771c7a</span></div>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted)">
+            Datos tomados de GeckoTerminal (precio, liquidez, score y creación del pool). :contentReference[oaicite:4]{index=4}
+          </div>
+        </div>
+      </div>
 
-  function redireccionAleatoria() {
-    const indiceAleatorio = Math.floor(Math.random() * urls.length);
-    const urlRedireccion = urls[indiceAleatorio];
-    document.getElementById('iframeRedireccion').src = urlRedireccion;
-    setTimeout(redireccionAleatoria, 10000);
-  }
-  redireccionAleatoria();
+      <aside class="buy-panel card">
+        <h3>Cómo comprar CHCOIN (rápido)</h3>
+        <p>Pasos simples para comprar desde MetaMask o cualquier wallet compatible con BNB Chain.</p>
 
-  function guardarDatos() {
-    const correo = document.getElementById('correo').value;
-    const urlPromocion = document.getElementById('urlPromocion').value;
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <strong>Conecta tu Wallet</strong>
+            <div style="color:var(--muted);font-size:13px">Abre MetaMask o Trust Wallet y cambia la red a <strong>BNB Smart Chain (BSC)</strong>.</div>
+          </div>
+        </div>
 
-    if (!correo || !urlPromocion) {
-      alert('Por favor, completa todos los campos.');
-      return;
-    }
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <strong>Ir a PancakeSwap</strong>
+            <div style="color:var(--muted);font-size:13px">Usa este botón para abrir PancakeSwap con CHCOIN ya seleccionado.</div>
+          </div>
+        </div>
 
-    const mensaje = `Publicidad Solicitada:\nCorreo: ${correo}\nURL Promocion: ${urlPromocion}`;
-    enviarMensajeTelegram(mensaje);
-    alert('Tu solicitud ha sido enviada por Telegram. Recibirás confirmación en breve.');
-  }
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <strong>Agregar token (opcional)</strong>
+            <div style="color:var(--muted);font-size:13px">
+              Puedes agregar CHCOIN manualmente en MetaMask con esta dirección: <br>
+              <code style="display:inline-block;margin-top:8px;background:rgba(0,0,0,0.25);padding:8px;border-radius:8px;font-size:12px">0x2a13eDFa28115518942b5537b83ED74758771c7a</code>
+            </div>
+          </div>
+        </div>
 
-  function pararMineria() {
-    clearInterval(interval);
-    minando = false;
-    alert(`Ganaste ${tiempoTotal} CHC! Gracias por usar la página.`);
-    enviarMensajeTelegram(`Minería detenida. Ganancia: ${tiempoTotal} CHC`);
-  }
+        <div class="step">
+          <div class="num">4</div>
+          <div>
+            <strong>Compra con cuidado</strong>
+            <div style="color:var(--muted);font-size:13px">Pool con liquidez baja → considera slippage más alto (ej. 2–8%) y pequeñas cantidades al inicio.</div>
+          </div>
+        </div>
 
-  function continuarMineria() {
-    if (!minando) {
-      minando = true;
-      interval = setInterval(contarTiempo, 1000);
-      alert("Minería reanudada.");
-    }
-  }
+        <div style="margin-top:10px">
+          <a class="btn btn-primary" href="https://pancakeswap.finance/swap?outputCurrency=0x2a13eDFa28115518942b5537b83ED74758771c7a" target="_blank" rel="noopener">Ir a PancakeSwap</a>
+          <a class="btn btn-ghost" href="https://www.geckoterminal.com/bsc/pools/0xd3c2dad1c5df30c1d77c992b9492f007e4d24c192904ab03c88f539de72d93e7" target="_blank" rel="noopener">Ver Pool</a>
+        </div>
 
-  function contarTiempo() {
-    if (minando && ventanaActiva) {
-      tiempoTotal++;
-      if (tiempoTotal % 100 === 0) {
-        alert(`¡Has ganado 1 CHC!`);
-        enviarMensajeTelegram(`¡Usuario ha ganado 1 CHC!`);
+        <div style="margin-top:16px;font-size:13px;color:var(--muted)">
+          Advertencia: comprar tokens en pools con baja liquidez conlleva mayor riesgo (deslizamiento, volatilidad). Revisa la liquidez antes de comprar. Fuente: GeckoTerminal. :contentReference[oaicite:5]{index=5}
+        </div>
+      </aside>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin:0 0 8px 0">Información rápida</h3>
+      <p style="color:var(--muted);margin:0 0 6px">Pool CHCOIN / BNB — dirección del pool, precio actual, liquidez y FDV se muestran arriba. Datos obtenidos de GeckoTerminal.</p>
+
+      <ul style="margin:12px 0 0 18px;color:var(--muted)">
+        <li>Pool address: <strong>0xd3c2dad1c5df30c1d77c992b9492f007e4d24c192904ab03c88f539de72d93e7</strong>. :contentReference[oaicite:6]{index=6}</li>
+        <li>Token address: <strong>0x2a13eDFa28115518942b5537b83ED74758771c7a</strong>. (usa este address para agregar el token en tu wallet)</li>
+        <li>GT Score: <strong>39 / 100</strong>. Revisa riesgos y liquidez antes de operar. :contentReference[oaicite:7]{index=7}</li>
+      </ul>
+    </div>
+
+    <footer>
+      Información extraída de GeckoTerminal. No es asesoría financiera. Verifica siempre antes de operar. :contentReference[oaicite:8]{index=8}
+    </footer>
+  </div>
+
+  <script>
+    function copyAddress(){
+      const addr = '0x2a13eDFa28115518942b5537b83ED74758771c7a';
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(addr).then(()=>{ alert('Dirección copiada al portapapeles'); });
+      } else {
+        prompt('Copia la dirección:', addr);
       }
     }
-  }
 
-  interval = setInterval(contarTiempo, 1000);
-
-  function enviarMensajeTelegram(mensaje) {
-    const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
-    fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ chat_id: chatId, text: mensaje })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.ok) console.error('Error al enviar mensaje:', data);
-    })
-    .catch(err => console.error('Error en Telegram:', err));
-  }
-
-  function abrirGuia() {
-    const iframe = document.getElementById("iframeRedireccion");
-    iframe.src = "./enviarwld.html";
-  }
-
-  document.addEventListener("visibilitychange", () => {
-    ventanaActiva = !document.hidden;
-    if (!ventanaActiva) {
-      console.log("Usuario ha salido de la pestaña. Pausando minería.");
-    } else {
-      console.log("Usuario ha regresado a la pestaña.");
-    }
-  });
-</script>
-</br> </br> </br> </br> </br> </br>
-
- <nav class="bottom-nav">
-    <a href="./enviarwld.html" class="nav-item">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-4 0h4" />
-        </svg>
-        <span>DONA</span>
-    </a>
-    <a href="./next_page.html" class="nav-item">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M12 8c-1.657 0-3 1.343-3 3a3 3 0 006 0c0-1.657-1.343-3-3-3zm0 9c-4.418 0-8-1.79-8-4v1c0 2.21 3.582 4 8 4s8-1.79 8-4v-1c0 2.21-3.582 4-8 4z" />
-        </svg>
-        <span>GRAFICA</span>
-    </a>
-    <a href="./chun.html" class="nav-item">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M5.121 17.804A9 9 0 0112 15a9 9 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-        <span>RECLAMA</span>
-    </a>
-</nav>
-
-<!-- ESTILOS PARA BARRA INFERIOR -->
-<style>
-    .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: #2c2c3e;
-        border-top: 1px solid #444;
-        display: flex;
-        justify-content: space-around;
-        padding: 10px 0;
-        z-index: 9999;
-    }
-    .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: white;
-        text-decoration: none;
-        font-size: 12px;
-        transition: color 0.3s;
-    }
-    .nav-item:hover {
-        color: #f39c12;
-    }
-    .nav-icon {
-        width: 24px;
-        height: 24px;
-        margin-bottom: 5px;
-    }
-</style>
+    // (Opcional) Si quieres, puedes actualizar los valores dinámicamente
+    // Aquí dejamos los valores estáticos tal como aparecen en GeckoTerminal.
+    // Si deseas, puedo integrar llamadas a una API para actualizar precio y liquidez en tiempo real.
+  </script>
 </body>
 </html>
