@@ -1,0 +1,57 @@
+/* DISEÑO UNIVERSAL CHARLYSCAN */
+:root {
+  --gold: #f1c40f;
+  --dark-bg: #0a0a0a;
+  --card-bg: #161616;
+  --text-green: #2ecc71;
+  --soft-white: #ecf0f1;
+}
+
+body {
+  background-color: var(--dark-bg);
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: var(--soft-white);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.app-frame {
+  max-width: 450px;
+  width: 100%;
+  min-height: 100vh;
+  background: #111;
+  border: 1px solid #333;
+  position: relative;
+  padding-bottom: 80px;
+}
+
+/* Botones Estilo CharlyCoin */
+.btn-charly {
+  background: var(--gold);
+  color: black;
+  font-weight: bold;
+  border-radius: 12px;
+  border: none;
+  padding: 12px;
+  transition: 0.3s;
+  width: 100%;
+  text-transform: uppercase;
+}
+
+.btn-charly:hover {
+  transform: scale(1.02);
+  filter: brightness(1.1);
+}
+
+/* Inputs de Billetera */
+.wallet-input {
+  width: 100%;
+  background: #000;
+  border: 1px solid #444;
+  color: var(--text-green);
+  border-radius: 10px;
+  padding: 10px;
+  font-family: monospace;
+  text-align: center;
+}
