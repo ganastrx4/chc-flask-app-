@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CharlyCoin App | Premium Edition</title>
+    <title>CharlyCoin App | Premium Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,158 +11,214 @@
             --dark-bg: #0a0a0a;
             --window-bg: #161b22;
             --accent: #f1c40f;
-            --glow-blue: rgba(52, 152, 219, 0.6);
-            --glow-gold: rgba(241, 196, 15, 0.5);
+            --glow-blue: rgba(52, 152, 219, 0.4);
+            --glow-gold: rgba(241, 196, 15, 0.3);
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--dark-bg);
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(52, 152, 219, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(241, 196, 15, 0.1) 0%, transparent 40%);
+                radial-gradient(circle at 5% 10%, rgba(52, 152, 219, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 95% 90%, rgba(241, 196, 15, 0.1) 0%, transparent 50%);
             color: #ffffff;
             margin: 0;
+            padding: 20px 0;
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
 
-        /* Contenedor tipo Ventana */
         .app-window {
             width: 90%;
             max-width: 500px;
             background: var(--window-bg);
-            border: 2px solid #30363d;
-            border-radius: 20px;
+            border: 1px solid #30363d;
+            border-radius: 24px;
             padding: 25px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5), 0 0 15px var(--glow-blue);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 20px var(--glow-blue);
         }
 
-        /* Brillo de la imagen principal */
+        /* Logo y Header */
         .logo-main {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             display: block;
             margin: 0 auto;
-            filter: drop-shadow(0 0 10px var(--accent));
-            animation: pulse-gold 2s infinite alternate;
+            filter: drop-shadow(0 0 12px var(--accent));
         }
 
-        @keyframes pulse-gold {
-            from { filter: drop-shadow(0 0 5px var(--accent)); }
-            to { filter: drop-shadow(0 0 15px var(--accent)); }
+        h1 { font-size: 22px; color: var(--accent); text-align: center; margin: 15px 0 5px; text-transform: uppercase; }
+        .tagline { font-size: 13px; color: #8b949e; text-align: center; margin-bottom: 25px; font-style: italic; }
+
+        /* Títulos de Sección */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            margin: 20px 0 12px;
+            padding-left: 10px;
+            border-left: 3px solid var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        h1 { font-size: 20px; color: var(--accent); text-align: center; letter-spacing: 1px; margin: 15px 0 5px; }
-        .tagline { font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 20px; }
-
-        /* Estilo de los Grids */
+        /* Grid de Apps */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            background: rgba(0,0,0,0.3);
+            gap: 15px;
+            background: rgba(0,0,0,0.2);
             padding: 15px;
-            border-radius: 15px;
-            border: 1px solid #30363d;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .app-icon {
             text-decoration: none;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             transition: transform 0.2s;
         }
 
-        .app-icon:hover { transform: scale(1.05); }
+        .app-icon:hover { transform: translateY(-5px); }
 
         .app-icon img {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             border-radius: 12px;
-            border: 1px solid var(--accent);
-            box-shadow: 0 0 8px var(--glow-gold);
+            background: #fff;
+            padding: 3px;
+            box-shadow: 0 0 10px var(--glow-gold);
         }
 
-        .app-icon span { display: block; font-size: 10px; color: #c9d1d9; margin-top: 5px; }
+        .app-icon span { font-size: 11px; color: #c9d1d9; margin-top: 8px; font-weight: 400; }
 
-        /* Botón Principal Scaner */
+        /* Chips / Links de Texto */
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .chip {
+            background: #21262d;
+            border: 1px solid #30363d;
+            padding: 8px 14px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .chip:hover { background: var(--primary); border-color: var(--primary); }
+
+        /* Botón Scaner Principal */
         .main-btn {
             background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
             color: white;
-            padding: 12px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 12px;
             text-align: center;
-            font-weight: bold;
-            margin: 20px 0;
+            font-weight: 800;
+            margin: 25px 0;
             cursor: pointer;
             border: none;
-            box-shadow: 0 0 10px rgba(46, 160, 67, 0.4);
+            box-shadow: 0 4px 15px rgba(46, 160, 67, 0.3);
+            display: block;
+            width: 100%;
+            text-transform: uppercase;
         }
 
-        /* Footer & Estrellas */
+        /* Footer y Nav Inferior */
         .footer-section {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
             border-top: 1px solid #30363d;
-            padding-top: 15px;
+            padding-top: 20px;
         }
 
-        .rating { color: var(--accent); font-size: 18px; text-shadow: 0 0 10px var(--accent); }
+        .rating { color: var(--accent); font-size: 20px; margin-bottom: 15px; }
 
-        /* Botones Especiales Inferiores */
         .bottom-nav {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 10px;
-            margin-top: 15px;
         }
 
         .btn-special {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(241, 196, 15, 0.05);
             border: 1px solid var(--accent);
             color: var(--accent);
-            padding: 8px 5px;
-            border-radius: 8px;
+            padding: 10px 5px;
+            border-radius: 10px;
             font-size: 10px;
             text-decoration: none;
             font-weight: bold;
-            text-align: center;
-            box-shadow: inset 0 0 5px var(--glow-gold);
-            transition: 0.3s;
+            box-shadow: inset 0 0 8px rgba(241, 196, 15, 0.1);
         }
 
-        .btn-special:hover {
-            background: var(--accent);
-            color: black;
-            box-shadow: 0 0 15px var(--accent);
-        }
+        .btn-special:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
 
-        .copyright { font-size: 9px; color: #484f58; margin-top: 10px; }
+        .copyright { font-size: 10px; color: #484f58; margin-top: 15px; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
 <div class="app-window">
     <div class="app-header">
-        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh0W-emwVtCqojhHoWEZdULxW9sE1HL6qJSvnY5sMynPRQyjmjTyz-YLAUppVsP0z99ONSv5Qj2_YrF7mDuM6z9Awu_U14vmsl0-duEmifJSB9d0Kx54D2LjRtB8XWsATD2nwayxpXinapOY_JiNgIek2GVZqIzJfjRLoUdtZYoOrJVDh8lRn6gjQXrzCBx/s320/CharlyCoin%20CHC.png" class="logo-main" alt="Logo">
-        <h1>RECLAMA TUS CRIPTOS</h1>
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh0W-emwVtCqojhHoWEZdULxW9sE1HL6qJSvnY5sMynPRQyjmjTyz-YLAUppVsP0z99ONSv5Qj2_YrF7mDuM6z9Awu_U14vmsl0-duEmifJSB9d0Kx54D2LjRtB8XWsATD2nwayxpXinapOY_JiNgIek2GVZqIzJfjRLoUdtZYoOrJVDh8lRn6gjQXrzCBx/s320/CharlyCoin%20CHC.png" class="logo-main" alt="CharlyCoin">
+        <h1>CharlyCoin App</h1>
         <div class="tagline">"Tu moneda, tu futuro digital"</div>
     </div>
 
+    <!-- SECCIÓN FAUCETS -->
+    <div class="section-title">Faucets Diarios</div>
     <div class="grid-container">
-        <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFuUXElY54f0fCeP6VDgcHeeTobyv-860wCOBIVY4M2MT_dNxzXMLDCgWgAxi8UtyVD_X1iR_WBcRAyE51ggXffB_GGNhnZsU0dkUwgUpiXEHVOC9XCE383cQAYuq7kpR6_iKVNA7h0HR9sEaprCfhENvDDaVFxqPxwDPOz150uq1SBk9gSmqA2L0rjAYc/s1600-rw/ROLLERCOIN.jpg" class="app-icon"><img src="https://via.placeholder.com/50/FFF/000?text=RC" alt=""><span>RollerCoin</span></a>
-        <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgj3pYbgjQGl7L06NH51wwry_ymyuDc_JDkwN7R4V7qk3dPH_UWxYiTJTS9CfGRLdqMeYsRGjnEN0x9qeFHv1MUA9keE9ZBgYY9fLD985BLEHiixek3UtIBR9F8vPOg_dFR5jn-8wfCjMHL6fOebhGcdd9e6Ry_H5Dw-hrgB41W4lSQidPACNzWrn48D5ti/s1600-rw/honeygain.JPG" class="app-icon"><img src="https://via.placeholder.com/50/FFF/000?text=HG" alt=""><span>Honeygain</span></a>
-        <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRJ_llD9o9rAcnsKGDZGF_R65rKB9hEnd8kChRs-ApybS5K6UyyE-so1r2paeA5R1RHs9hii8qPGacdWp3xqd2NF3RqZ-Y0n1qI_S_bnPbQKbWOGWvK0SWB40GnRSk7agmNhjhcyu4hKMUtgNcAPG5Gt4sN2aedepKf5-bvLRG5n1w442fyO06kKXrpnoV/s1600-rw/cripto%20tab.JPG" class="app-icon"><img src="https://via.placeholder.com/50/FFF/000?text=CT" alt=""><span>CryptoTab</span></a>
+        <a href="https://rollercoin.com/?r=kmwzgbqj" target="_blank" class="app-icon">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgFuUXElY54f0fCeP6VDgcHeeTobyv-860wCOBIVY4M2MT_dNxzXMLDCgWgAxi8UtyVD_X1iR_WBcRAyE51ggXffB_GGNhnZsU0dkUwgUpiXEHVOC9XCE383cQAYuq7kpR6_iKVNA7h0HR9sEaprCfhENvDDaVFxqPxwDPOz150uq1SBk9gSmqA2L0rjAYc/s1600-rw/ROLLERCOIN.jpg">
+            <span>RollerCoin</span>
+        </a>
+        <a href="https://r.honeygain.me/CHARLE186A" target="_blank" class="app-icon">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgj3pYbgjQGl7L06NH51wwry_ymyuDc_JDkwN7R4V7qk3dPH_UWxYiTJTS9CfGRLdqMeYsRGjnEN0x9qeFHv1MUA9keE9ZBgYY9fLD985BLEHiixek3UtIBR9F8vPOg_dFR5jn-8wfCjMHL6fOebhGcdd9e6Ry_H5Dw-hrgB41W4lSQidPACNzWrn48D5ti/s1600-rw/honeygain.JPG">
+            <span>Honeygain</span>
+        </a>
+        <a href="https://cryptotabbrowser.com/22953090" target="_blank" class="app-icon">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhRJ_llD9o9rAcnsKGDZGF_R65rKB9hEnd8kChRs-ApybS5K6UyyE-so1r2paeA5R1RHs9hii8qPGacdWp3xqd2NF3RqZ-Y0n1qI_S_bnPbQKbWOGWvK0SWB40GnRSk7agmNhjhcyu4hKMUtgNcAPG5Gt4sN2aedepKf5-bvLRG5n1w442fyO06kKXrpnoV/s1600-rw/cripto%20tab.JPG">
+            <span>CryptoTab</span>
+        </a>
     </div>
 
-    <div class="main-btn" onclick="location.href='buscador2.html'">
-        ACCEDER A CHARLYSCAN →
+    <!-- SECCIÓN TOOLS -->
+    <div class="section-title">Tools & Bypass</div>
+    <div class="grid-container">
+        <a href="https://chromewebstore.google.com/detail/nopecha-captcha-solver/dknlfmjaanfblgfdfebhijalfmhmjjjo" target="_blank" class="app-icon">
+            <img src="https://lh3.googleusercontent.com/vvZqJ9lXxa9R0AQbjz5kSqsKcY4X1JPx0_Doehq1YKoMejBOJUSwvLNBR58OOfexU-tlZoGPWKA26g24ic7c6gA9_h4=s60-rw">
+            <span>Nopecha</span>
+        </a>
+        <a href="https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm" target="_blank" class="app-icon">
+            <img src="https://lh3.googleusercontent.com/rrgyVBVte7CfjjeTU-rCHDKba7vtq-yn3o8-10p5b6QOj_2VCDAO3VdggV5fUnugbG2eDGPPjoJ9rsiU_tUZBExgLGc=s60-rw">
+            <span>uBlock</span>
+        </a>
     </div>
+
+    <!-- SECCIÓN MULTICURRENCY -->
+    <div class="section-title">Multicurrency Faucets</div>
+    <div class="chip-container">
+        <a href="https://claimfreecoins.io/tether-faucet/?r=charly4k2019@gmail.com" target="_blank" class="chip">USDT</a>
+        <a href="https://claimfreecoins.io/solana-faucet/?r=charly4k2019@gmail.com" target="_blank" class="chip">SOL</a>
+        <a href="https://claimfreecoins.io/dogecoin-faucet/?r=charly4k2019@gmail.com" target="_blank" class="chip">DOGE</a>
+        <a href="https://claimfreecoins.io/tron-faucet/?r=charly4k2019@gmail.com" target="_blank" class="chip">TRX</a>
+        <a href="https://claimfreecoins.io/toncoin-faucet/?r=charly4k2019@gmail.com" target="_blank" class="chip">TON</a>
+    </div>
+
+    <button class="main-btn" onclick="window.open('https://binance-bot-hna7.onrender.com/', '_blank')">
+        ACCEDER A CHARLYSCAN →
+    </button>
 
     <div class="footer-section">
         <div class="rating">★★★★★</div>
