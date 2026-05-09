@@ -2,124 +2,150 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Compra el Token Futurista</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso CharlyCoin</title>
+  
+  <script src="https://developer.worldcoin.org/idkit.js"></script>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     body {
       margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      background: radial-gradient(circle at top, #0a0a0f, #020204);
-      color: #00eaff;
+      height: 100vh;
+      background: radial-gradient(circle at center, #0d1117, #000);
+      color: #fff;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
+      font-family: "Poppins", sans-serif;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: #00bcd4;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    h2 {
+      color: #aaa;
+      font-weight: 400;
+      animation: fadeIn 2s ease-in-out;
       text-align: center;
-      min-height: 100vh;
-      overflow-x: hidden;
+      padding: 0 20px;
     }
 
-    header {
-      padding: 2rem;
-      font-size: 2rem;
+    /* Botón de World ID mejorado */
+    .btn-verify {
+      background: linear-gradient(90deg, #00bcd4, #9c27b0);
+      border: none;
+      color: white;
+      padding: 15px 35px;
+      border-radius: 50px;
+      font-size: 1.2rem;
       font-weight: bold;
-      text-shadow: 0 0 10px #00eaff;
-    }
-
-    .card {
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid #00eaff;
-      border-radius: 15px;
-      padding: 2rem;
-      width: 90%;
-      max-width: 600px;
-      box-shadow: 0 0 20px #00eaff;
-      margin-bottom: 2rem;
-    }
-
-    a.button {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.8rem 1.5rem;
-      border: 1px solid #00eaff;
-      border-radius: 10px;
-      color: #00eaff;
-      text-decoration: none;
+      cursor: pointer;
+      margin-top: 30px;
+      display: none; /* Se muestra después de la carga */
       transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
     }
 
-    a.button:hover {
-      background: #00eaff;
-      color: #000;
-      box-shadow: 0 0 20px #00eaff;
+    .btn-verify:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
     }
 
-    .token {
-      color: #fff;
-      font-size: 0.9rem;
-      margin-top: 1rem;
+    .loader {
+      border: 6px solid #222;
+      border-top: 6px solid #00bcd4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
+      margin-top: 25px;
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     footer {
-      margin-top: auto;
-      padding: 1rem;
-      font-size: 0.8rem;
-      color: #aaa;
-    }
-
-    .glow {
-      animation: glow 2s infinite alternate;
-    }
-
-    @keyframes glow {
-      from { text-shadow: 0 0 10px #00eaff; }
-      to { text-shadow: 0 0 25px #00eaff; }
+      position: absolute;
+      bottom: 20px;
+      color: #555;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
 
-  <header class="glow">🚀 Bienvenido al Futuro: Token CHC & CHUN 🚀</header>
+  <h1>CharlyCoin 🌍</h1>
+  <h2 id="status-text">Iniciando sistema de seguridad...</h2>
+  
+  <div id="loader" class="loader"></div>
 
-  <div class="card">
-    <h2>Compra en PancakeSwap</h2>
-    <p>Adquiere nuestro token oficial en la red BNB Smart Chain.</p>
-    <a class="button" href="https://pancakeswap.finance/swap?outputCurrency=0x15681A8E9a8dF14946A4F852822B709e37b70c4E" target="_blank">Comprar en PancakeSwap</a>
+  <button id="world-id-button" class="btn-verify">
+    🚀 Verificar Identidad Humana
+  </button>
 
-    <div class="token">
-      <p><strong>Dirección del Token:</strong><br>
-      0x15681A8E9a8dF14946A4F852822B709e37b70c4E</p>
-      <p><strong>Red:</strong> BNB Smart Chain (BSC)</p>
-    </div>
-  </div>
+  <footer>© 2026 CharlyCoin - World Chain Ecosystem</footer>
 
-  <div class="card">
-    <h2>Agrega el Token a MetaMask</h2>
-    <p>Sigue estos pasos para añadirlo manualmente:</p>
-    <ol style="text-align:left;">
-      <li>Abre MetaMask y selecciona <strong>Importar token</strong>.</li>
-      <li>Selecciona la red BNB Smart Chain.</li>
-      <li>Pega la dirección del token arriba indicada.</li>
-      <li>Confirma para añadirlo.</li>
-    </ol>
-  </div>
+  <script>
+    // 1. Simulación de carga inicial
+    setTimeout(() => {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('status-text').innerText = 'Identidad requerida para ingresar';
+      document.getElementById('world-id-button').style.display = 'block';
+    }, 2000);
 
-  <div class="card">
-    <h2>Tokens en World Chain</h2>
-    <p>También disponibles en la red de World Chain:</p>
-    <ul style="list-style:none; padding:0;">
-      <li><a class="button" href="https://www.geckoterminal.com/world-chain/pools/0xeeea0646bc9693434f645be593e3b847a914c556" target="_blank">CHC Token</a> <br>0xde8239aeb9730d74548d65dd2fd3ce3f42517395</li>
-      <li><a class="button" href="https://www.geckoterminal.com/world-chain/pools/0x97d8285282c8392ceab2af2be5ab5b6803212ce7?embed=1" target="_blank">CHUN Token</a> <br>0x6b2ba4159916017267c39a3b70b507f7c1af5edb</li>
-    </ul>
-  </div>
+    // 2. Configuración de IDKit (World ID)
+    window.onload = function() {
+      if (typeof IDKit !== 'undefined') {
+        console.log("IDKit cargado correctamente.");
 
-  <div class="card">
-    <h2>Únete a Nuestra Comunidad</h2>
-    <p>Comparte tu dirección en nuestro canal de Telegram para participar en sorteos y recibir tokens promocionales.</p>
-    <a class="button" href="https://t.me/choroofficial" target="_blank">Entrar al Telegram</a>
-  </div>
+        IDKit.init({
+          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
+          action: "login",
+          onSuccess: (result) => {
+            console.log("¡Verificación exitosa!", result);
+            
+            // 3. Notificar a tu servidor Flask local
+            fetch('http://127.0.0.1:5000/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(result)
+            })
+            .then(response => {
+              // Una vez que Flask responde, vamos al buscador
+              window.location.href = "buscador.html"; 
+            })
+            .catch(err => {
+              console.error("Flask no respondió, pero la verificación fue real:", err);
+              window.location.href = "buscador.html";
+            });
+          },
+          onError: (error) => {
+            console.error("Error de World ID:", error);
+          }
+        });
 
-  <footer>© 2025 Token Futurista. Todos los derechos reservados.</footer>
+        // 4. Activar el botón
+        document.getElementById("world-id-button").onclick = () => {
+          IDKit.open();
+        };
+
+      } else {
+        console.error("Error crítico: No se pudo cargar IDKit de los servidores de Worldcoin.");
+        document.getElementById('status-text').innerText = 'Error de conexión con World ID';
+        document.getElementById('status-text').style.color = '#ff4444';
+      }
+    };
+  </script>
 
 </body>
 </html>
