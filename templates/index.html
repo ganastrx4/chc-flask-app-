@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CharlyCoin Ecosystem</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
+    <script src="https://unpkg.com/@worldcoin/idkit-standalone"></script>
 
     <style>
         :root {
@@ -14,7 +14,6 @@
             --glass: rgba(255, 255, 255, 0.05);
         }
 
-        /* 2. REQUISITO EXIGIDO POR APPLE/WORLDCOIN: Bloquear el scroll bounce */
         html, body {
             background-color: var(--bg);
             color: white;
@@ -27,7 +26,7 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            overscroll-behavior: none; /* Clave para iOS */
+            overscroll-behavior: none; /* Bloquea el rebote en iOS exigido por Worldcoin */
         }
 
         .intro-container {
@@ -66,7 +65,7 @@
             margin-bottom: 35px;
         }
 
-        /* Botón adaptado al estándar de MiniKit */
+        /* Tu botón adaptado para ejecutar código JS */
         .enter-button {
             background: #fff;
             color: #000;
@@ -79,11 +78,11 @@
             text-transform: uppercase;
             letter-spacing: 1.5px;
             font-weight: bold;
-            text-decoration: none;
             display: inline-block;
             width: 100%;
             box-sizing: border-box;
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+            font-family: inherit;
         }
 
         .enter-button:active {
@@ -112,20 +111,28 @@
         <h1>CharlyCoin</h1>
         <p>Verify your World ID to access the decentralized automated trading dashboard.</p>
 
-        <a href="{{ url_for('login') }}" class="enter-button">Connect World ID</a>
+        <button id="btn-worldcoin" class="enter-button">Connect World ID</button>
     </div>
 
     <script>
-        // 4. Inicializar MiniKit automáticamente al cargar
-        document.addEventListener("DOMContentLoaded", () => {
-            if (window.MiniKit) {
-                try {
-                    window.MiniKit.init();
-                    console.log("MiniKit perfectamente inicializado");
-                } catch (error) {
-                    console.error("Error inicializando MiniKit:", error);
-                }
-            }
+        // Inicializamos IDKit con tus credenciales reales
+        IDKit.init({
+            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID real
+            action: "login", // Tu identificador de acción real
+            verification_level: "device", // Nivel estándar
+        });
+
+        // Evento para abrir el modal al presionar el botón
+        document.getElementById('btn-worldcoin').addEventListener('click', () => {
+            IDKit.open();
+        });
+
+        // Qué pasa cuando el usuario se escanea con éxito
+        IDKit.onSuccess((result) => {
+            console.log("Verificación exitosa de World ID:", result);
+            
+            # Redirigir de inmediato a tu bot de Flask pasándole el estado de éxito
+            window.location.href = "https://binance-bot-2kbp.onrender.com/";
         });
     </script>
 </body>
