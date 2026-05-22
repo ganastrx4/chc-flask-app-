@@ -26,7 +26,7 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden;
-            overscroll-behavior: none; /* Bloquea el rebote en iOS exigido por Worldcoin */
+            overscroll-behavior: none;
         }
 
         .intro-container {
@@ -65,7 +65,6 @@
             margin-bottom: 35px;
         }
 
-        /* Tu botón adaptado para ejecutar código JS */
         .enter-button {
             background: #fff;
             color: #000;
@@ -115,24 +114,29 @@
     </div>
 
     <script>
-        // Inicializamos IDKit con tus credenciales reales
-        IDKit.init({
-            app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID real
-            action: "login", // Tu identificador de acción real
-            verification_level: "device", // Nivel estándar
-        });
+        // Esperamos a que la librería cargue completamente en el navegador
+        window.addEventListener('load', () => {
+            if (typeof IDKit !== 'undefined') {
+                // Inicializamos con tus credenciales
+                IDKit.init({
+                    app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
+                    action: "login",
+                    verification_level: "device"
+                });
 
-        // Evento para abrir el modal al presionar el botón
-        document.getElementById('btn-worldcoin').addEventListener('click', () => {
-            IDKit.open();
-        });
+                // Asignamos el evento al botón
+                document.getElementById('btn-worldcoin').addEventListener('click', () => {
+                    IDKit.open();
+                });
 
-        // Qué pasa cuando el usuario se escanea con éxito
-        IDKit.onSuccess((result) => {
-            console.log("Verificación exitosa de World ID:", result);
-            
-            # Redirigir de inmediato a tu bot de Flask pasándole el estado de éxito
-            window.location.href = "https://binance-bot-2kbp.onrender.com/";
+                // Acción en caso de éxito
+                IDKit.onSuccess((result) => {
+                    console.log("Verificación exitosa:", result);
+                    window.location.href = "https://binance-bot-2kbp.onrender.com/";
+                });
+            } else {
+                console.error("IDKit no pudo ser cargado correctamente.");
+            }
         });
     </script>
 </body>
