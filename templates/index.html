@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenido a CharlyCoin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CharlyCoin Ecosystem</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/dist/minikit.js"></script>
+
     <style>
         :root {
             --bg: #050505;
@@ -11,16 +14,20 @@
             --glass: rgba(255, 255, 255, 0.05);
         }
 
-        body {
+        /* 2. REQUISITO EXIGIDO POR APPLE/WORLDCOIN: Bloquear el scroll bounce */
+        html, body {
             background-color: var(--bg);
             color: white;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
+            overscroll-behavior: none; /* Clave para iOS */
         }
 
         .intro-container {
@@ -28,13 +35,15 @@
             animation: fadeIn 1.5s ease-out;
             padding: 20px;
             max-width: 400px;
+            width: 90%;
+            box-sizing: border-box;
         }
 
         .logo-glow {
-            width: 160px;
-            height: 160px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             border: 2px solid var(--accent);
             box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
             object-fit: cover;
@@ -42,7 +51,7 @@
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             margin: 10px 0;
             letter-spacing: 2px;
             background: linear-gradient(to right, #fff, var(--accent));
@@ -52,35 +61,38 @@
 
         p {
             color: #aaa;
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 40px;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 35px;
         }
 
+        /* Botón adaptado al estándar de MiniKit */
         .enter-button {
-            background: transparent;
-            color: white;
-            border: 1px solid var(--accent);
-            padding: 15px 40px;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 16px 40px;
             font-size: 1rem;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
+            font-weight: bold;
             text-decoration: none;
             display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
         }
 
-        .enter-button:hover {
-            background: var(--accent);
-            color: #000;
-            box-shadow: 0 0 20px var(--accent);
-            transform: translateY(-3px);
+        .enter-button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -94,23 +106,27 @@
 <body>
 
     <div class="intro-container">
-        <!-- Imagen de CharlyCoin proporcionada -->
         <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrxQg1zxfSMxym0NKkic-2xp1gLjogCY4Bj1mnHI_DRYPtrObsqU7i2dVCNfvTag_mm_Muv8sPMVa557zUxLpOHYOT5Tw44s1P3ZkwxDiyRAD4MVpQGcf6QXCuUBcqJOWLC5-zVA5ujpnp0Qx3lxup8jo43wV5BciYd42eCHz27QFo1vtIsmFoBhfsp7RK/s1600-rw/CharlyCoin.JPG" 
              alt="CharlyCoin Logo" class="logo-glow">
         
-        <h1>Bienvenido</h1>
-        <p>Estás ingresando al ecosistema de CharlyCoin. Gestión descentralizada y segura.</p>
+        <h1>CharlyCoin</h1>
+        <p>Verify your World ID to access the decentralized automated trading dashboard.</p>
 
-        <a href="./next_page.html" class="enter-button">Ingresar ahora</a>
+        <a href="{{ url_for('login') }}" class="enter-button">Connect World ID</a>
     </div>
 
     <script>
-        // Opcional: Redirección automática después de 5 segundos si no hacen clic
-        /*
-        setTimeout(() => {
-            window.location.href = "next_page.html";
-        }, 5000);
-        */
+        // 4. Inicializar MiniKit automáticamente al cargar
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.MiniKit) {
+                try {
+                    window.MiniKit.init();
+                    console.log("MiniKit perfectamente inicializado");
+                } catch (error) {
+                    console.error("Error inicializando MiniKit:", error);
+                }
+            }
+        });
     </script>
 </body>
 </html>
