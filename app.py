@@ -44,7 +44,7 @@ CORS(
         "https://worldcoin.org",
         "https://*.worldcoin.org",
         "https://*.world.org",
-        "https://worldid-auth.onrender.com"
+        "https://charlycoin-login.onrender.com"
     ]
 )
 
