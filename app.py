@@ -5,29 +5,66 @@ import uuid
 import hmac
 import hashlib
 import threading
+import traceback
 import requests
-from flask import Flask, request, jsonify, render_template, session, redirect
+
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    render_template,
+    session,
+    redirect
+)
+
+from flask_cors import CORS
 from web3 import Web3
 from functools import wraps
 
 # ==========================================
-# 🚀 APP (PRIMERO SIEMPRE)
+# 🚀 APP
 # ==========================================
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET", "super_secret_session_key")
 
-# ⚠️ NO PISAR session de Flask
+# SECRET
+app.secret_key = os.environ.get(
+    "FLASK_SECRET",
+    "super_secret_session_key"
+)
+
+# COOKIES WORLD APP
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
+
+# CORS
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "https://worldcoin.org",
+        "https://*.worldcoin.org",
+        "https://*.world.org",
+        "https://worldid-auth.onrender.com"
+    ]
+)
+
+# HTTP SESSION
 http = requests.Session()
 
 # ==========================================
 # 🔐 CONFIG
 # ==========================================
 APP_ID = "app_7686f9027d3e3c0b53d987a3caf1e111"
-ACTION = "verify-account"
+
+ACTION = "login"
+
 VERIFY_URL = "https://developer.worldcoin.org/api/v1/verify"
 
 SIGNER_KEY = os.environ.get("signer_key")
+
 BSC_API_KEY = os.environ.get("BSC_API_KEY")
+
+WORLDCHAIN_RPC = os.environ.get("WORLDCHAIN_RPC")
 
 POOL_WALLET = "0xd4508db1adc48dea121f356b254a7155ddab36ae"
 
@@ -35,281 +72,433 @@ HASH_FILE = "hashes_bnb.json"
 NULLIFIER_FILE = "nullifiers.txt"
 USERS_FILE = "users.json"
 
-WORLDCHAIN_RPC = os.environ.get("WORLDCHAIN_RPC")
-w3 = Web3(Web3.HTTPProvider(WORLDCHAIN_RPC)) if WORLDCHAIN_RPC else None
+# WEB3
+w3 = None
+
+if WORLDCHAIN_RPC:
+    w3 = Web3(Web3.HTTPProvider(WORLDCHAIN_RPC))
 
 # ==========================================
 # 📦 USERS
 # ==========================================
 def load_users():
+
     if not os.path.exists(USERS_FILE):
         return {}
+
     with open(USERS_FILE, "r") as f:
         return json.load(f)
 
 def save_users(users):
+
     with open(USERS_FILE, "w") as f:
         json.dump(users, f)
 
 def get_or_create_user(nullifier):
+
     users = load_users()
 
     if nullifier not in users:
+
         users[nullifier] = {
             "id": nullifier,
             "created_at": int(time.time()),
             "balance": 0
         }
+
         save_users(users)
 
     return users[nullifier]
 
 # ==========================================
-# 🔐 LOGIN REQUIRED
+# 🔒 LOGIN REQUIRED
 # ==========================================
 def login_required(f):
+
     @wraps(f)
     def wrapper(*args, **kwargs):
+
         if "user_id" not in session:
             return redirect("/")
+
         return f(*args, **kwargs)
+
     return wrapper
 
 # ==========================================
 # 🧠 NULLIFIERS
 # ==========================================
 def load_nullifiers():
+
     if not os.path.exists(NULLIFIER_FILE):
         return set()
+
     with open(NULLIFIER_FILE, "r") as f:
         return set(line.strip() for line in f.readlines())
 
-def save_nullifier(n):
+def save_nullifier(nullifier):
+
     with open(NULLIFIER_FILE, "a") as f:
-        f.write(n + "\n")
+        f.write(nullifier + "\n")
 
 # ==========================================
 # 🔑 RP SIGNATURE
 # ==========================================
 @app.route("/api/rp-signature", methods=["POST"])
 def rp_signature():
-    if not SIGNER_KEY:
-        return jsonify({"error": "signer_key missing"}), 500
 
-    nonce = str(uuid.uuid4())
-    now = int(time.time())
-    expires = now + 300
+    try:
 
-    message = f"{ACTION}:{nonce}:{now}:{expires}"
+        if not SIGNER_KEY:
 
-    signature = hmac.new(
-        bytes.fromhex(SIGNER_KEY),
-        message.encode(),
-        hashlib.sha256
-    ).hexdigest()
+            return jsonify({
+                "success": False,
+                "error": "Missing signer_key"
+            }), 500
 
-    return jsonify({
-        "signature": signature,
-        "nonce": nonce,
-        "created_at": now,
-        "expires_at": expires
-    })
+        nonce = str(uuid.uuid4())
+
+        now = int(time.time())
+
+        expires = now + 300
+
+        message = f"{ACTION}:{nonce}:{now}:{expires}"
+
+        signature = hmac.new(
+            bytes.fromhex(SIGNER_KEY),
+            message.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        return jsonify({
+            "success": True,
+            "signature": signature,
+            "nonce": nonce,
+            "created_at": now,
+            "expires_at": expires
+        })
+
+    except Exception as e:
+
+        print(traceback.format_exc())
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 # ==========================================
-# ✅ VERIFY WORLD ID + LOGIN
+# ✅ VERIFY WORLD ID
 # ==========================================
 @app.route("/api/verify-proof", methods=["POST"])
 def verify_proof():
+
     try:
+
         data = request.json or {}
+
         nullifier = data.get("nullifier_hash")
 
         if not nullifier:
-            return jsonify({"success": False, "error": "No nullifier"}), 400
 
+            return jsonify({
+                "success": False,
+                "error": "Missing nullifier"
+            }), 400
+
+        # ==================================
+        # 🚫 ANTI REUSE
+        # ==================================
+        used_nullifiers = load_nullifiers()
+
+        if nullifier in used_nullifiers:
+
+            return jsonify({
+                "success": False,
+                "error": "Nullifier already used"
+            }), 400
+
+        # ==================================
+        # 🌍 WORLD VERIFY PAYLOAD
+        # ==================================
         payload = {
+            "app_id": APP_ID,
+            "action": ACTION,
+            "signal": "charlycoin_login",
+            "proof": data.get("proof"),
             "merkle_root": data.get("merkle_root"),
             "nullifier_hash": nullifier,
-            "proof": data.get("proof"),
-            "credential_type": "orb",
-            "action": ACTION,
-            "signal": "charlycoin_login"
+            "credential_type": "orb"
         }
 
-        r = http.post(VERIFY_URL, json=payload, timeout=10)
-        result = r.json()
+        # ==================================
+        # 🌍 VERIFY
+        # ==================================
+        response = http.post(
+            VERIFY_URL,
+            json=payload,
+            timeout=25
+        )
 
+        result = response.json()
+
+        print("WORLD RESPONSE:", result)
+
+        # ==================================
+        # ✅ SUCCESS
+        # ==================================
         if result.get("success"):
 
             save_nullifier(nullifier)
 
             user = get_or_create_user(nullifier)
+
             session["user_id"] = user["id"]
 
-            return jsonify({"success": True})
+            return jsonify({
+                "success": True,
+                "user": user
+            })
 
-        return jsonify({"success": False, "error": result}), 400
+        # ==================================
+        # ❌ FAILED
+        # ==================================
+        return jsonify({
+            "success": False,
+            "error": result
+        }), 400
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+
+        print(traceback.format_exc())
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 # ==========================================
 # 👤 USER INFO
 # ==========================================
 @app.route("/api/me")
 def me():
-    if "user_id" not in session:
-        return jsonify({"logged": False})
 
-    users = load_users()
-    user = users.get(session["user_id"])
+    try:
 
-    return jsonify({"logged": True, "user": user})
+        if "user_id" not in session:
+
+            return jsonify({
+                "logged": False
+            })
+
+        users = load_users()
+
+        user = users.get(session["user_id"])
+
+        return jsonify({
+            "logged": True,
+            "user": user
+        })
+
+    except Exception as e:
+
+        print(traceback.format_exc())
+
+        return jsonify({
+            "logged": False,
+            "error": str(e)
+        })
 
 # ==========================================
 # 🚪 LOGOUT
 # ==========================================
 @app.route("/api/logout", methods=["POST"])
 def logout():
+
     session.clear()
-    return jsonify({"success": True})
+
+    return jsonify({
+        "success": True
+    })
 
 # ==========================================
-# ⚡ FUNCIÓN ANTIDORMIR (SELF-PING)
+# ❤️ HEALTH CHECK
+# ==========================================
+@app.route("/health")
+def health():
+
+    return jsonify({
+        "status": "ok",
+        "timestamp": int(time.time())
+    })
+
+# ==========================================
+# ⚡ KEEP RENDER AWAKE
 # ==========================================
 def mantenerme_despierto():
-    # Esperamos a que la app suba
+
     time.sleep(30)
-    # Cambia esta URL por la URL real de tu app en Render
-    url_app = "https://binance-bot-hna7.onrender.com/" 
-    
+
+    url_app = "https://worldid-auth.onrender.com/health"
+
     while True:
+
         try:
-            # Hace una petición simple a la home
-            r = requests.get(url_app, timeout=10)
-            print(f"⏰ Self-Ping exitoso: {r.status_code}")
+
+            r = requests.get(
+                url_app,
+                timeout=10
+            )
+
+            print("⏰ SELF PING:", r.status_code)
+
         except Exception as e:
-            print(f"❌ Error en Self-Ping: {e}")
-        
-        # Espera 10 minutos (600 segundos) antes de volver a pinguear
+
+            print("❌ SELF PING ERROR:", e)
+
         time.sleep(600)
 
 # ==========================================
-# 💰 BNB DETECTOR
+# 💰 HASHES
 # ==========================================
 def load_hashes():
+
     if not os.path.exists(HASH_FILE):
         return set()
+
     with open(HASH_FILE, "r") as f:
         return set(json.load(f))
 
 def save_hash(h):
+
     hashes = load_hashes()
+
     hashes.add(h)
+
     with open(HASH_FILE, "w") as f:
         json.dump(list(hashes), f)
 
-def get_wld_price():
-    try:
-        r = http.get("https://api.binance.com/api/v3/ticker/price?symbol=WLDUSDT")
-        return float(r.json()["price"])
-    except:
-        return 1.0
-
-def detectar_bnb():
-    if not BSC_API_KEY:
-        return
-
-    url = f"https://api.bscscan.com/api?module=account&action=txlist&address={POOL_WALLET}&apikey={BSC_API_KEY}"
-
-    try:
-        data = http.get(url).json()
-        for tx in data.get("result", []):
-            print(tx["hash"])
-    except Exception as e:
-        print("Error BNB:", e)
-
-def loop_bnb():
-    while True:
-        detectar_bnb()
-        time.sleep(20)
-
 # ==========================================
-# 🌐 HEADERS
-# ==========================================
-@app.after_request
-def headers(resp):
-    resp.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://*.world.org"
-    return resp
-# ==========================================
-# ✅ VERIFICADOR DE PAGOS (CONEXIÓN CON EL HTML)
+# 💰 VERIFY PAYMENT
 # ==========================================
 @app.route("/verificar-pago", methods=["POST"])
 def verificar_pago_usuario():
+
     try:
+
         data = request.json
+
         hash_cliente = data.get("hash")
-        billetera_receptor = data.get("receptor_final")
+
+        billetera_receptor = data.get(
+            "receptor_final"
+        )
 
         if not hash_cliente or not billetera_receptor:
-            return jsonify({"success": False, "message": "Datos incompletos"}), 400
 
-        # 1. Evitar que usen el mismo hash dos veces
+            return jsonify({
+                "success": False,
+                "message": "Datos incompletos"
+            }), 400
+
         hashes_usados = load_hashes()
-        if hash_cliente in hashes_usados:
-            return jsonify({"success": False, "message": "Este pago ya fue reclamado"}), 400
 
-        # 2. Consultar BscScan para verificar que el pago es real
-        url_scan = f"https://api.bscscan.com/api?module=account&action=txlist&address={POOL_WALLET}&apikey={BSC_API_KEY}"
+        if hash_cliente in hashes_usados:
+
+            return jsonify({
+                "success": False,
+                "message": "Hash ya usado"
+            }), 400
+
+        url_scan = (
+            f"https://api.bscscan.com/api"
+            f"?module=account"
+            f"&action=txlist"
+            f"&address={POOL_WALLET}"
+            f"&apikey={BSC_API_KEY}"
+        )
+
         response = http.get(url_scan).json()
-        
+
         tx_valida = False
+
         if response.get("status") == "1":
+
             for tx in response.get("result", []):
-                # Verificamos que el hash coincida y que el destino sea tu POOL_WALLET
-                if tx["hash"].lower() == hash_cliente.lower() and tx["to"].lower() == POOL_WALLET.lower():
+
+                if (
+                    tx["hash"].lower()
+                    == hash_cliente.lower()
+                    and
+                    tx["to"].lower()
+                    == POOL_WALLET.lower()
+                ):
+
                     tx_valida = True
                     break
 
         if tx_valida:
-            # 3. Guardar hash para que no se repita
+
             save_hash(hash_cliente)
-            
-            # 4. Aquí podrías disparar el envío de CHC desde tu nodo
-            # Por ahora, confirmamos el éxito al frontend
-            print(f"💰 Pago validado! Enviando CHC a: {billetera_receptor}")
-            
+
+            print(
+                f"💰 Pago validado: "
+                f"{billetera_receptor}"
+            )
+
             return jsonify({
-                "success": True, 
-                "message": "¡Pago verificado con éxito!",
-                "monto_chc": 10  # O la cantidad que definas por pago
+                "success": True,
+                "message": "Pago validado",
+                "monto_chc": 10
             })
-        else:
-            return jsonify({"success": False, "message": "No se encontró el pago en la pool"}), 404
+
+        return jsonify({
+            "success": False,
+            "message": "Pago no encontrado"
+        }), 404
 
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
-# =========================
-# PAGINAS
-# =========================
+
+        print(traceback.format_exc())
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+# ==========================================
+# 🌐 SECURITY HEADERS
+# ==========================================
+@app.after_request
+def headers(resp):
+
+    resp.headers[
+        'Content-Security-Policy'
+    ] = (
+        "frame-ancestors "
+        "'self' "
+        "https://worldcoin.org "
+        "https://*.worldcoin.org "
+        "https://*.world.org;"
+    )
+
+    return resp
+
+# ==========================================
+# 🏠 PAGES
+# ==========================================
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/volados.html")
-def volados():
-    return render_template("volados.html")
+@app.route("/panel.html")
+@login_required
+def panel():
+    return render_template("panel.html")
 
-
-@app.route("/buscador2.html")
-def buscador2():
-    return render_template("buscador2.html")
-
-
-@app.route("/enviarwld.html")
-def enviarwld():
-    return render_template("enviarwld.html")
-
+@app.route("/next_page.html")
+def next_page():
+    return render_template("next_page.html")
 
 @app.route("/exchange.html")
 def exchange():
@@ -319,76 +508,25 @@ def exchange():
 def jugar():
     return render_template("jugar.html")
 
-@app.route("/bola2.html")
-def bola2():
-    return render_template("bola2.html")
-
-
-@app.route("/graficachcwld.html")
-def graficachcwld():
-    return render_template("graficachcwld.html")
-
-
 @app.route("/charlycoinapp.html")
 def charlycoinapp():
     return render_template("charlycoinapp.html")
-
-
-@app.route("/chcoin.html")
-def chcoin():
-    return render_template("chcoin.html")
-
-
-@app.route("/faucets.html")
-def faucets():
-    return render_template("faucets.html")
-
-
-@app.route("/chun.html")
-def chun():
-    return render_template("chun.html")
-
-
-@app.route("/next_page.html")
-def next_page():
-    return render_template("next_page.html")
-
-
-@app.route("/index.html")
-def index():
-    return render_template("index.html")
-
-
-@app.route("/ganarchun.html")
-def ganarchun():
-    return render_template("ganarchun.html")
-
-@app.route("/reclamarchun.html")
-def reclamarchun():
-    return render_template("reclamarchun.html")
-
-
-@app.route("/glosario.html")
-def glosario():
-    return render_template("glosario.html")
-
-
-@app.route("/wdd.html")
-def wdd():
-    return render_template("wdd.html")
-
-
-
-@app.route("/panel.html")
-@login_required
-def panel():
-    return render_template("panel.html")
 
 # ==========================================
 # 🚀 START
 # ==========================================
 if __name__ == "__main__":
-    threading.Thread(target=loop_bnb, daemon=True).start()
-    threading.Thread(target=mantenerme_despierto, daemon=True).start()
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+    threading.Thread(
+        target=mantenerme_despierto,
+        daemon=True
+    ).start()
+
+    port = int(
+        os.environ.get("PORT", 5000)
+    )
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
