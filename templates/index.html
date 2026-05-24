@@ -113,29 +113,32 @@
         <button id="btn-worldcoin" class="enter-button">Connect World ID</button>
     </div>
 
-    <script>
-        // Esperamos a que la librería cargue completamente en el navegador
+   <script>
         window.addEventListener('load', () => {
-            if (typeof IDKit !== 'undefined') {
-                // Inicializamos con tus credenciales
-                IDKit.init({
+            // Verificamos si la librería cargó bajo el nombre estándar de World ID
+            const targetKit = window.IDKit || window.worldid;
+
+            if (targetKit) {
+                // Inicializamos el modal
+                targetKit.init({
                     app_id: "app_7686f9027d3e3c0b53d987a3caf1e111",
                     action: "login",
                     verification_level: "device"
                 });
 
-                // Asignamos el evento al botón
+                // Asignamos el clic a tu botón neón
                 document.getElementById('btn-worldcoin').addEventListener('click', () => {
-                    IDKit.open();
+                    targetKit.open();
                 });
 
-                // Acción en caso de éxito
-                IDKit.onSuccess((result) => {
-                    console.log("Verificación exitosa:", result);
+                // Si todo sale bien, mandamos al usuario a tu bot de Flask
+                targetKit.onSuccess((result) => {
+                    console.log("Verificación exitosa de World ID:", result);
                     window.location.href = "https://binance-bot-2kbp.onrender.com/";
                 });
             } else {
-                console.error("IDKit no pudo ser cargado correctamente.");
+                console.error("El SDK de Worldcoin no se pudo registrar en el navegador.");
+                alert("Error de conexión con Worldcoin. Por favor, recarga la página.");
             }
         });
     </script>
