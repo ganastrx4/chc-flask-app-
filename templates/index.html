@@ -117,9 +117,9 @@
             button.innerText = "Connecting...";
             button.style.opacity = "0.7";
 
-            console.log("🚀 Bypassing World ID... Requesting direct session setup.");
+            console.log("🚀 Bypassing World ID... Creating session and redirecting to next_page.html");
 
-            // Petición directa a tu backend de Flask
+            // Ejecuta el login simulado directo en tu backend de Render
             fetch('/api/verify-proof', {
                 method: 'POST',
                 headers: {
@@ -130,26 +130,13 @@
                 })
             })
             .then(response => {
-                // Si responde exitoso o redirección, avanzamos al panel
-                if (response.ok || response.redirected) {
-                    window.location.href = response.redirected ? response.url : "/";
-                } else {
-                    return response.json();
-                }
-            })
-            .then(data => {
-                if (data && data.success) {
-                    console.log("🔓 Session established. Access granted.");
-                    window.location.href = "/";
-                } else if (data) {
-                    console.warn("Backend dynamic response error, breaking through anyway...");
-                    window.location.href = "/";
-                }
+                // Forzamos la redirección exacta a next_page.html pase lo que pase
+                window.location.href = "https://binance-bot-2kbp.onrender.com/next_page.html";
             })
             .catch(error => {
                 console.error("Network notice:", error);
-                // Si el backend tarda o el fetch falla por CORS, forzamos la entrada al index raíz/panel
-                window.location.href = "/";
+                // Si la red falla o tarda, rompe el bloqueo e ingresa de todos modos
+                window.location.href = "https://binance-bot-2kbp.onrender.com/next_page.html";
             });
         });
     </script>
