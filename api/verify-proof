@@ -1,0 +1,35 @@
+# ==========================================
+# ✅ VERIFY WORLD ID (ACCESO INMEDIATO SIN CONEXIÓN)
+# ==========================================
+@app.route("/api/verify-proof", methods=["POST"])
+def verify_proof():
+    try:
+        # Leemos los datos que envíe el frontend (si es que envía algo)
+        data = request.json or {}
+        
+        # Si no viene un nullifier_hash real, inventamos uno para que la app funcione
+        nullifier = data.get("nullifier_hash") or f"user_directo_{int(time.time())}"
+
+        print(f"🌍 Saltando verificación de WorldApp. Login directo para: {nullifier}")
+
+        # Guardamos el nullifier en tu archivo de texto local para mantener el historial
+        save_nullifier(nullifier)
+        
+        # Buscamos el usuario en tu 'users.json' o creamos uno nuevo con balance 0
+        user = get_or_create_user(nullifier)
+        
+        # Guardamos la ID en la sesión de Flask (esto quita el bloqueo de /panel.html)
+        session["user_id"] = user["id"]
+
+        # Respondemos éxito inmediato al frontend para que redirija en el acto
+        return jsonify({
+            "success": True,
+            "user": user
+        })
+
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
