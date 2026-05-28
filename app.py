@@ -362,7 +362,7 @@ def headers(resp):
 # ==========================================
 # 🏠 PAGES
 # ==========================================
-@app.route("/index.html")
+@app.route("/")
 def home():
     return render_template("index.html")
 
