@@ -50,126 +50,81 @@
     </div>
   </nav>
 
+  <script>
+    const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
+    const redirectUri = window.location.href.split("?")[0];
+    let detectedWallet = null;
 
-<script type="module">
+    function startAuth() {
+      const state = Math.random().toString(36).substring(2);
+      const nonce = Math.random().toString(36).substring(2);
+      const url = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&state=${state}&nonce=${nonce}`;
+      window.location.href = url;
+    }
 
-import {
-    IDKitWidget,
-    VerificationLevel
-} from "https://cdn.jsdelivr.net/npm/@worldcoin/idkit@1/+esm";
+    async function detectWallet() {
+      try {
+        if (window.ethereum) {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const accounts = await provider.send("eth_requestAccounts", []);
+          if (accounts.length > 0) {
+            detectedWallet = accounts[0];
+            document.getElementById("walletInfo").innerText = "✅ Wallet detectada: " + detectedWallet;
+            document.getElementById("walletInfo").classList.remove("hidden");
+            return true;
+          }
+        }
+        throw new Error("No wallet encontrada");
+      } catch (err) {
+        console.error("Error detectando wallet:", err);
+        document.getElementById("walletInfo").innerText = "❌ Error detectando wallet.";
+        document.getElementById("walletInfo").classList.remove("hidden");
+        return false;
+      }
+    }
 
-// ====================================
-// CONFIG
-// ====================================
+    async function claimTokens() {
+      const code = new URLSearchParams(window.location.search).get("code");
 
-const app_id =
-"app_7686f9027d3e3c0b53d987a3caf1e111";
+      if (!code) {
+        document.getElementById("status").innerText = "❌ No se encontró el código de autenticación.";
+        return;
+      }
 
-// ====================================
-// BOTON
-// ====================================
+      const walletOk = await detectWallet();
+      if (!walletOk || !detectedWallet) {
+        document.getElementById("status").innerText = "❌ Wallet no detectada.";
+        return;
+      }
 
-window.startAuth = async function(){
+      try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const message = "Confirma que esta wallet te pertenece y eres humano verificado.";
+        const signature = await signer.signMessage(message);
 
-    try{
-
-        document.getElementById("status").innerHTML =
-        "⏳ Abriendo verificación...";
-
-        IDKitWidget.open({
-
-            app_id: app_id,
-
-            action: "login",
-
-            verification_level:
-                VerificationLevel.Device,
-
-            signal: "charlycoin",
-
-            onSuccess: async (result) => {
-
-                console.log(result);
-
-                document.getElementById("status").innerHTML = `
-                    <span class="text-green-400">
-                        ✅ Humano verificado
-                    </span>
-                `;
-
-                document
-                    .getElementById("claimSection")
-                    .classList.remove("hidden");
-            },
-
-            onError: (error) => {
-
-                console.log(error);
-
-                document.getElementById("status").innerHTML = `
-                    <span class="text-red-400">
-                        ❌ Error verificando
-                    </span>
-                `;
-            }
-
+        const res = await fetch("https://charlycoin-jj6aw66sj-carlos-sandovals-projects.vercel.app/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, wallet: detectedWallet, signature })
         });
 
-    }catch(err){
-
-        console.log(err);
-
-        document.getElementById("status").innerHTML = `
-            <span class="text-red-400">
-                ❌ Error abriendo World ID
-            </span>
-        `;
+        const data = await res.json();
+        document.getElementById("status").innerText = data.message || "✅ Token reclamado con éxito.";
+      } catch (error) {
+        console.error("Error en reclamo:", error);
+        document.getElementById("status").innerText = "❌ Error reclamando tokens.";
+      }
     }
-};
 
-// ====================================
-// CLAIM TOKENS
-// ====================================
-
-window.claimTokens = async function(){
-
-    try{
-
-        document.getElementById("status").innerHTML =
-        "🚀 Enviando CHUN...";
-
-        const response = await fetch(
-            "https://charlycoin-jj6aw66sj-carlos-sandovals-projects.vercel.app/api/auth",
-            {
-                method:"POST",
-
-                headers:{
-                    "Content-Type":"application/json"
-                },
-
-                body:JSON.stringify({
-                    reward:true
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        document.getElementById("status").innerHTML =
-            data.message || "✅ CHUN enviado";
-
-    }catch(err){
-
-        console.log(err);
-
-        document.getElementById("status").innerHTML =
-            "❌ Error enviando CHUN";
-    }
-};
-
-</script>
-
-
+    window.onload = async () => {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        document.getElementById("status").innerText = "✅ Autenticación exitosa.";
+        document.getElementById("claimSection").classList.remove("hidden");
+      }
+    };
+  </script>
 
 </body>
 </html>
