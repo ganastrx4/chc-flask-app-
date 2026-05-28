@@ -162,12 +162,13 @@
             </div>
         </div>
                
-        <a href="https://binance-bot-2kbp.onrender.com/ganarchun.html" class="btn-menu btn-gold">💰 GANAR CHUN / CHC</a>
-        <a href="./graficachcwld.html" class="btn-menu btn-blue">🎲 JUGAR VOLADOS</a>
-        <a href="./faucets.html" class="btn-menu">🚰 FAUCETS GRATIS</a>
-        <a href="./wdd.html" class="btn-menu btn-green">💹 MULTIPLICADOR WDD</a>
-        <a href="./buscador2.html" class="btn-menu">📊 EXPLORADOR</a>
-        <a href="./ganarchun.html" class="btn-menu btn-purple" style="border: 1px solid var(--gold);">⛏️ MINERO WEB y PC (CHC)</a>
+        <!-- BOTONES CORREGIDOS: Enrutamiento directo a Flask para evitar errores 404 -->
+        <a href="/ganarchun" class="btn-menu btn-gold">💰 GANAR CHUN / CHC</a>
+        <a href="/jugar" class="btn-menu btn-blue">🎲 JUGAR VOLADOS</a>
+        <a href="/faucets" class="btn-menu">🚰 FAUCETS GRATIS</a>
+        <a href="/multiplicador" class="btn-menu btn-green">💹 MULTIPLICADOR WDD</a>
+        <a href="/explorador" class="btn-menu">📊 EXPLORADOR</a>
+        <a href="/ganarchun" class="btn-menu btn-purple" style="border: 1px solid var(--gold);">⛏️ MINERO WEB y PC (CHC)</a>
     </div>
 
     <!-- BOTÓN INFERIOR CENTRADO -->
@@ -187,7 +188,31 @@
             signal: "rp_aa5ead0710fce1dc",
             credential_types: ["orb", "device"],
             onSuccess: async (proof) => {
-                console.log("Verificado");
+                console.log("Verificado localmente. Comunicando con el servidor...");
+                
+                // Envía el token de verificación de World ID a la API de Flask
+                try {
+                    const response = await fetch('/api/verify-proof', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(proof)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        console.log("Sesión autorizada con éxito.");
+                        // Una vez guardada la sesión en el Backend, redirigimos al panel protegido
+                        window.location.href = "/panel";
+                    } else {
+                        console.error("Error en la autorización de sesión:", data.error);
+                        alert("Error al iniciar sesión.");
+                    }
+                } catch (error) {
+                    console.error("Error de conexión con el backend:", error);
+                }
             }
         });
     </script>
