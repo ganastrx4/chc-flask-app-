@@ -408,7 +408,10 @@ def ganarchun():
 @app.route("/buscador2.html") # <--- Agregas el .html aquí
 def buscador2():
     return render_template("buscador2.html")
-
+    
+@app.route("/videos.html") # <--- Agregas el .html aquí
+def videos():
+    return render_template("videos.html")
 
 # ==========================================
 # 🚀 START
