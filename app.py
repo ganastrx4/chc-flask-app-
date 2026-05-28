@@ -425,6 +425,11 @@ def wdd():
 def enviarwld():
     return render_template("enviarwld.html")
 
+@app.route("/chun.html") # <--- Agregas el .html aquí
+def chun():
+    return render_template("chun.html")
+
+
 # ==========================================
 # 🚀 START
 # ==========================================
