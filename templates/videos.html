@@ -1,0 +1,203 @@
+```html id="p9q6jj"
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Trading y Criptomonedas</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:20px;
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+}
+
+h1{
+    text-align:center;
+    color:#38bdf8;
+}
+
+#videos{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:20px;
+    margin-top:30px;
+}
+
+.video{
+    background:#1e293b;
+    border-radius:12px;
+    overflow:hidden;
+    transition:0.3s;
+    box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
+
+.video:hover{
+    transform:scale(1.03);
+}
+
+.video img{
+    width:100%;
+}
+
+.info{
+    padding:15px;
+}
+
+.title{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+.date{
+    color:#94a3b8;
+    font-size:14px;
+}
+
+a{
+    text-decoration:none;
+    color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Videos de Trading y Criptomonedas</h1>
+
+<div id="videos"></div>
+
+<script>
+
+// =======================================
+// PALABRAS CLAVE
+// =======================================
+
+const keywords = [
+    "trading",
+    "crypto",
+    "bitcoin",
+    "btc",
+    "ethereum",
+    "criptomoneda",
+    "criptomonedas",
+    "mineria",
+    "minería",
+    "blockchain"
+];
+
+// =======================================
+// RSS DEL CANAL
+// =======================================
+
+// Canal:
+// https://www.youtube.com/@CharlyUNAM-Charly4k
+
+const rssUrl =
+"https://www.youtube.com/feeds/videos.xml?channel_id=UC8M5R4M9fO4M4Y5f7zQ8K4Q";
+
+// Proxy RSS GRATIS
+const api =
+`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+// =======================================
+// CARGAR VIDEOS
+// =======================================
+
+async function cargarVideos(){
+
+    try{
+
+        const response = await fetch(api);
+
+        const data = await response.json();
+
+        const contenedor = document.getElementById("videos");
+
+        contenedor.innerHTML = "";
+
+        const videos = data.items.filter(video => {
+
+            const texto =
+                (video.title + " " + video.description).toLowerCase();
+
+            return keywords.some(keyword =>
+                texto.includes(keyword)
+            );
+
+        });
+
+        if(videos.length === 0){
+
+            contenedor.innerHTML =
+            "<h2>No hay videos relacionados.</h2>";
+
+            return;
+        }
+
+        videos.forEach(video => {
+
+            const thumbnail =
+                video.thumbnail.replace("hqdefault","mqdefault");
+
+            contenedor.innerHTML += `
+
+            <a href="${video.link}" target="_blank">
+
+                <div class="video">
+
+                    <img src="${thumbnail}">
+
+                    <div class="info">
+
+                        <div class="title">
+                            ${video.title}
+                        </div>
+
+                        <div class="date">
+                            ${new Date(video.pubDate).toLocaleString()}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+            `;
+
+        });
+
+    }catch(error){
+
+        console.log(error);
+
+        document.getElementById("videos").innerHTML =
+        "<h2>Error cargando videos.</h2>";
+    }
+}
+
+// =======================================
+// CARGA INICIAL
+// =======================================
+
+cargarVideos();
+
+// =======================================
+// ACTUALIZACION AUTOMATICA
+// CADA 5 MINUTOS
+// =======================================
+
+setInterval(cargarVideos, 300000);
+
+</script>
+
+</body>
+</html>
+```
