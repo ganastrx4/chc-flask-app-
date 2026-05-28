@@ -405,6 +405,9 @@ def charlycoinapp():
 def ganarchun():
     return render_template("ganarchun.html")
 
+@app.route("/buscador2.html") # <--- Agregas el .html aquí
+def buscador2():
+    return render_template("buscador2.html")
 
 
 # ==========================================
