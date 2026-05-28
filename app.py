@@ -387,6 +387,16 @@ def jugar():
 def charlycoinapp():
     return render_template("charlycoinapp.html")
 
+# Modifica tus rutas para que incluyan el .html en el ruteo:
+
+@app.route("/ganarchun.html") # <--- Agregas el .html aquí
+def ganarchun():
+    return render_template("ganarchun.html")
+
+@app.route("/graficachcwld.html") # <--- Agregas el .html aquí
+def jugar():
+    return render_template("graficachcwld.html")
+
 # ==========================================
 # 🚀 START
 # ==========================================
