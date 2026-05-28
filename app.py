@@ -393,9 +393,7 @@ def charlycoinapp():
 def ganarchun():
     return render_template("ganarchun.html")
 
-@app.route("/graficachcwld.html") # <--- Agregas el .html aquí
-def jugar():
-    return render_template("graficachcwld.html")
+
 
 # ==========================================
 # 🚀 START
