@@ -412,6 +412,11 @@ def buscador2():
 @app.route("/videos.html") # <--- Agregas el .html aquí
 def videos():
     return render_template("videos.html")
+    
+@app.route("/chc1.html") # <--- Agregas el .html aquí
+def chc1():
+    return render_template("chc1.html")
+
 
 # ==========================================
 # 🚀 START
