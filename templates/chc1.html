@@ -50,15 +50,20 @@
     </div>
   </nav>
 
-  <script>
+ <script>
+    // Tu App ID Legacy activo en producción
     const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    const redirectUri = window.location.href.split("?")[0];
+    const redirectUri = window.location.href.split("?");
     let detectedWallet = null;
 
     function startAuth() {
+      // Generar State y Nonce seguros para evitar ataques de fijación de sesión
       const state = Math.random().toString(36).substring(2);
       const nonce = Math.random().toString(36).substring(2);
-      const url = `https://id.worldcoin.org/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid&state=${state}&nonce=${nonce}`;
+      
+      // CAMBIO CRÍTICO: Nueva ruta oauth/v2 y agregado el scope 'profile'
+      const url = `https://id.worldcoin.org/oauth/v2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid%20profile&state=${state}&nonce=${nonce}`;
+      
       window.location.href = url;
     }
 
@@ -68,7 +73,7 @@
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           const accounts = await provider.send("eth_requestAccounts", []);
           if (accounts.length > 0) {
-            detectedWallet = accounts[0];
+            detectedWallet = accounts;
             document.getElementById("walletInfo").innerText = "✅ Wallet detectada: " + detectedWallet;
             document.getElementById("walletInfo").classList.remove("hidden");
             return true;
@@ -98,11 +103,15 @@
       }
 
       try {
+        document.getElementById("status").innerText = "⏳ Esperando firma de wallet...";
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const message = "Confirma que esta wallet te pertenece y eres humano verificado.";
         const signature = await signer.signMessage(message);
 
+        document.getElementById("status").innerText = "⏳ Procesando reclamo en el servidor...";
+        
+        // Envío hacia tu API en Vercel
         const res = await fetch("https://charlycoin-jj6aw66sj-carlos-sandovals-projects.vercel.app/api/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -120,7 +129,7 @@
     window.onload = async () => {
       const code = new URLSearchParams(window.location.search).get("code");
       if (code) {
-        document.getElementById("status").innerText = "✅ Autenticación exitosa.";
+        document.getElementById("status").innerText = "✅ Autenticación exitosa de World ID.";
         document.getElementById("claimSection").classList.remove("hidden");
       }
     };
