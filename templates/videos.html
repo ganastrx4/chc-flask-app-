@@ -1,305 +1,150 @@
-```html id="c7v9mx"
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Canal Crypto & Trading</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    background:#050816;
-    font-family:'Poppins',sans-serif;
-    color:white;
-    padding:40px;
-}
-
-/* ========================= */
-/* TITULO */
-/* ========================= */
-
-h1{
-    text-align:center;
-    font-size:42px;
-    margin-bottom:40px;
-    font-weight:700;
-    background:linear-gradient(90deg,#00f0ff,#00ff88);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-
-/* ========================= */
-/* GRID */
-/* ========================= */
-
-#videos{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(350px,350px));
-    justify-content:center;
-    gap:30px;
-}
-
-/* ========================= */
-/* CARD */
-/* ========================= */
-
-.card{
-    width:350px;
-    height:350px;
-    background:#0f172a;
-    border-radius:22px;
-    overflow:hidden;
-    position:relative;
-    transition:0.35s;
-    cursor:pointer;
-    border:1px solid rgba(255,255,255,0.08);
-    box-shadow:
-        0 10px 30px rgba(0,0,0,0.5),
-        0 0 20px rgba(0,255,200,0.05);
-}
-
-.card:hover{
-    transform:translateY(-10px) scale(1.03);
-    box-shadow:
-        0 20px 40px rgba(0,0,0,0.7),
-        0 0 25px rgba(0,255,255,0.25);
-}
-
-/* ========================= */
-/* IMAGEN */
-/* ========================= */
-
-.thumb{
-    width:100%;
-    height:200px;
-    object-fit:cover;
-}
-
-/* ========================= */
-/* INFO */
-/* ========================= */
-
-.info{
-    padding:18px;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-    height:150px;
-}
-
-.title{
-    font-size:18px;
-    line-height:1.4;
-    font-weight:600;
-    color:white;
-
-    display:-webkit-box;
-    -webkit-line-clamp:3;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
-}
-
-.date{
-    margin-top:15px;
-    color:#94a3b8;
-    font-size:14px;
-}
-
-/* ========================= */
-/* BOTON */
-/* ========================= */
-
-.watch{
-    margin-top:15px;
-    background:linear-gradient(90deg,#00c6ff,#0072ff);
-    border:none;
-    color:white;
-    padding:10px 16px;
-    border-radius:12px;
-    font-weight:600;
-    transition:0.3s;
-    text-align:center;
-}
-
-.card:hover .watch{
-    background:linear-gradient(90deg,#00ffae,#00b7ff);
-}
-
-/* ========================= */
-/* LINKS */
-/* ========================= */
-
-a{
-    text-decoration:none;
-}
-
-/* ========================= */
-/* RESPONSIVE */
-/* ========================= */
-
-@media(max-width:500px){
-
-    body{
-        padding:20px;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CharlyUNAM-Charly4k - Stream</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    /* Ocultar barra de desplazamiento en las filas deslizantes estilo Netflix */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
     }
-
-    h1{
-        font-size:28px;
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
-
-    #videos{
-        grid-template-columns:1fr;
+    /* Efecto de degradado trasero para el banner principal */
+    .hero-gradient {
+      background: linear-gradient(to top, #111827 0%, rgba(17, 24, 39, 0.6) 60%, rgba(17, 24, 39, 0.9) 100%);
     }
-
-    .card{
-        width:100%;
-    }
-
-}
-
-</style>
-
+  </style>
 </head>
+<body class="bg-gray-900 text-white font-sans antialiased selection:bg-red-600">
 
-<body>
+  <nav class="fixed top-0 w-full z-50 bg-gradient-to-b from-black to-transparent px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-6">
+      <span class="text-red-600 text-2xl font-black tracking-wider uppercase">Charly4K</span>
+      <div class="hidden md:flex space-x-4 text-sm font-medium text-gray-300">
+        <a href="#" class="hover:text-white transition duration-300 text-white font-bold">Inicio</a>
+        <a href="#" class="hover:text-white transition duration-300">Vídeos recientes</a>
+        <a href="#" class="hover:text-white transition duration-300">Populares</a>
+        <a href="#" class="hover:text-white transition duration-300">Mi Lista</a>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <a href="https://www.youtube.com/@CharlyUNAM-Charly4k" target="_blank" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded transition duration-300 uppercase tracking-widest">
+        Suscribirse
+      </a>
+    </div>
+  </nav>
 
-<h1>Trading & Criptomonedas</h1>
+  <header class="relative h-96 md:h-screen w-full overflow-hidden bg-black flex items-end pb-12 md:pb-24">
+    <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80');"></div>
+    <div class="absolute inset-0 hero-gradient"></div>
 
-<div id="videos">
+    <div class="relative z-10 px-6 md:px-12 max-w-3xl space-y-4">
+      <span class="text-red-500 font-bold uppercase tracking-widest text-xs md:text-sm">★ CONTENIDO DESTACADO</span>
+      <h2 class="text-4xl md:text-6xl font-extrabold tracking-tight">CharlyUNAM-Charly4k</h2>
+      <p class="text-sm md:text-lg text-gray-300 leading-relaxed">
+        Explora las últimas producciones audiovisuales, análisis técnicos, y contenido multimedia optimizado en alta definición 4K.
+      </p>
+      <div class="flex space-x-3 pt-2">
+        <a href="https://www.youtube.com/@CharlyUNAM-Charly4k" target="_blank" class="bg-white hover:bg-gray-200 text-black font-bold px-6 py-2.5 rounded flex items-center space-x-2 transition duration-300 shadow-md">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span>Ver en YouTube</span>
+        </a>
+      </div>
+    </div>
+  </header>
 
-    Cargando videos...
+  <main class="relative z-20 px-6 md:px-12 -mt-16 md:-mt-28 space-y-12 pb-24">
 
-</div>
+    <section class="space-y-3">
+      <h3 class="text-xl md:text-2xl font-bold tracking-wide text-gray-200 hover:text-white transition duration-300 cursor-pointer inline-block">
+        Últimos Lanzamientos
+      </h3>
+      
+      <div class="flex space-x-4 overflow-x-auto no-scrollbar py-4 px-1">
+        
+        <div class="flex-none w-72 md:w-80 bg-gray-800 rounded-md overflow-hidden transform hover:scale-105 transition duration-300 shadow-lg group">
+          <div class="relative aspect-video">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-sm truncate group-hover:text-red-500 transition duration-300">Título del Vídeo Reciente 1</h4>
+            <p class="text-xs text-gray-400 mt-1">CharlyUNAM-Charly4k</p>
+          </div>
+        </div>
 
-<script>
+        <div class="flex-none w-72 md:w-80 bg-gray-800 rounded-md overflow-hidden transform hover:scale-105 transition duration-300 shadow-lg group">
+          <div class="relative aspect-video">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-sm truncate group-hover:text-red-500 transition duration-300">Título del Vídeo Reciente 2</h4>
+            <p class="text-xs text-gray-400 mt-1">CharlyUNAM-Charly4k</p>
+          </div>
+        </div>
 
-// ==========================================
-// RSS DEL CANAL
-// ==========================================
+        <div class="flex-none w-72 md:w-80 bg-gray-800 rounded-md overflow-hidden transform hover:scale-105 transition duration-300 shadow-lg group">
+          <div class="relative aspect-video">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-sm truncate group-hover:text-red-500 transition duration-300">Título del Vídeo Reciente 3</h4>
+            <p class="text-xs text-gray-400 mt-1">CharlyUNAM-Charly4k</p>
+          </div>
+        </div>
 
-const CHANNEL_ID = "UC8M5R4M9fO4M4Y5f7zQ8K4Q";
+      </div>
+    </section>
 
-const rss =
-`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+    <section class="space-y-3">
+      <h3 class="text-xl md:text-2xl font-bold tracking-wide text-gray-200 hover:text-white transition duration-300 cursor-pointer inline-block">
+        Producciones Populares
+      </h3>
+      
+      <div class="flex space-x-4 overflow-x-auto no-scrollbar py-4 px-1">
+        
+        <div class="flex-none w-72 md:w-80 bg-gray-800 rounded-md overflow-hidden transform hover:scale-105 transition duration-300 shadow-lg group">
+          <div class="relative aspect-video">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-sm truncate group-hover:text-red-500 transition duration-300">Vídeo Destacado 4K 1</h4>
+            <p class="text-xs text-gray-400 mt-1">CharlyUNAM-Charly4k</p>
+          </div>
+        </div>
 
-// Proxy CORS
-const url =
-`https://api.allorigins.win/raw?url=${encodeURIComponent(rss)}`;
+        <div class="flex-none w-72 md:w-80 bg-gray-800 rounded-md overflow-hidden transform hover:scale-105 transition duration-300 shadow-lg group">
+          <div class="relative aspect-video">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-sm truncate group-hover:text-red-500 transition duration-300">Vídeo Destacado 4K 2</h4>
+            <p class="text-xs text-gray-400 mt-1">CharlyUNAM-Charly4k</p>
+          </div>
+        </div>
 
-// ==========================================
-// CARGAR VIDEOS
-// ==========================================
+        <div class="flex-none w-72 md:w-80 bg-gray-800 rounded-md overflow-hidden transform hover:scale-105 transition duration-300 shadow-lg group">
+          <div class="relative aspect-video">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-sm truncate group-hover:text-red-500 transition duration-300">Vídeo Destacado 4K 3</h4>
+            <p class="text-xs text-gray-400 mt-1">CharlyUNAM-Charly4k</p>
+          </div>
+        </div>
 
-async function cargarVideos(){
+      </div>
+    </section>
 
-    try{
+  </main>
 
-        const response = await fetch(url);
-
-        const xmlText = await response.text();
-
-        const parser = new DOMParser();
-
-        const xml = parser.parseFromString(xmlText,"text/xml");
-
-        const entries = xml.querySelectorAll("entry");
-
-        const contenedor = document.getElementById("videos");
-
-        contenedor.innerHTML = "";
-
-        entries.forEach(entry => {
-
-            const title =
-                entry.querySelector("title")?.textContent || "";
-
-            const link =
-                entry.querySelector("link")?.getAttribute("href") || "";
-
-            const published =
-                entry.querySelector("published")?.textContent || "";
-
-            const videoId =
-                entry.querySelector("videoId")?.textContent || "";
-
-            const thumb =
-                `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-            contenedor.innerHTML += `
-
-            <a href="${link}" target="_blank">
-
-                <div class="card">
-
-                    <img class="thumb" src="${thumb}">
-
-                    <div class="info">
-
-                        <div>
-
-                            <div class="title">
-                                ${title}
-                            </div>
-
-                            <div class="date">
-                                ${new Date(published).toLocaleDateString()}
-                            </div>
-
-                        </div>
-
-                        <div class="watch">
-                            VER VIDEO
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </a>
-
-            `;
-
-        });
-
-    }catch(error){
-
-        console.log(error);
-
-        document.getElementById("videos").innerHTML = `
-            <h2 style="text-align:center;color:red;">
-                Error cargando videos
-            </h2>
-        `;
-    }
-}
-
-// ==========================================
-// INICIO
-// ==========================================
-
-cargarVideos();
-
-// ==========================================
-// ACTUALIZA AUTOMATICAMENTE
-// ==========================================
-
-setInterval(cargarVideos,300000);
-
-</script>
+  <footer class="w-full bg-black py-8 border-t border-gray-800 text-center text-xs text-gray-500">
+    <p>© 2026 CharlyUNAM-Charly4k. Inspirado en el diseño de Netflix.</p>
+  </footer>
 
 </body>
-
 </html>
-```
