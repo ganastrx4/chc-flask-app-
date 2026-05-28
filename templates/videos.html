@@ -1,4 +1,4 @@
-```html id="p9q6jj"
+```html id="r3k8fn"
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,7 +34,6 @@ h1{
     border-radius:12px;
     overflow:hidden;
     transition:0.3s;
-    box-shadow:0 0 10px rgba(0,0,0,0.4);
 }
 
 .video:hover{
@@ -71,108 +70,127 @@ a{
 
 <h1>Videos de Trading y Criptomonedas</h1>
 
-<div id="videos"></div>
+<div id="videos">
+    Cargando videos...
+</div>
 
 <script>
 
-// =======================================
+// ===============================
 // PALABRAS CLAVE
-// =======================================
+// ===============================
 
 const keywords = [
     "trading",
-    "crypto",
     "bitcoin",
     "btc",
-    "ethereum",
+    "crypto",
     "criptomoneda",
     "criptomonedas",
+    "ethereum",
     "mineria",
     "minería",
     "blockchain"
 ];
 
-// =======================================
+// ===============================
 // RSS DEL CANAL
-// =======================================
+// ===============================
 
-// Canal:
-// https://www.youtube.com/@CharlyUNAM-Charly4k
+const CHANNEL_ID = "UC8M5R4M9fO4M4Y5f7zQ8K4Q";
 
-const rssUrl =
-"https://www.youtube.com/feeds/videos.xml?channel_id=UC8M5R4M9fO4M4Y5f7zQ8K4Q";
+const rss =
+`https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
 
-// Proxy RSS GRATIS
-const api =
-`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+// Proxy CORS
+const url =
+`https://api.allorigins.win/raw?url=${encodeURIComponent(rss)}`;
 
-// =======================================
+// ===============================
 // CARGAR VIDEOS
-// =======================================
+// ===============================
 
 async function cargarVideos(){
 
     try{
 
-        const response = await fetch(api);
+        const response = await fetch(url);
 
-        const data = await response.json();
+        const xmlText = await response.text();
+
+        const parser = new DOMParser();
+
+        const xml = parser.parseFromString(xmlText,"text/xml");
+
+        const entries = xml.querySelectorAll("entry");
 
         const contenedor = document.getElementById("videos");
 
         contenedor.innerHTML = "";
 
-        const videos = data.items.filter(video => {
+        let encontrados = 0;
 
-            const texto =
-                (video.title + " " + video.description).toLowerCase();
+        entries.forEach(entry => {
 
-            return keywords.some(keyword =>
-                texto.includes(keyword)
+            const title =
+                entry.querySelector("title")?.textContent || "";
+
+            const link =
+                entry.querySelector("link")?.getAttribute("href") || "";
+
+            const published =
+                entry.querySelector("published")?.textContent || "";
+
+            const videoId =
+                entry.querySelector("videoId")?.textContent || "";
+
+            const text = title.toLowerCase();
+
+            const valido = keywords.some(keyword =>
+                text.includes(keyword)
             );
 
-        });
+            if(valido){
 
-        if(videos.length === 0){
+                encontrados++;
 
-            contenedor.innerHTML =
-            "<h2>No hay videos relacionados.</h2>";
+                const thumb =
+                `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
-            return;
-        }
+                contenedor.innerHTML += `
 
-        videos.forEach(video => {
+                <a href="${link}" target="_blank">
 
-            const thumbnail =
-                video.thumbnail.replace("hqdefault","mqdefault");
+                    <div class="video">
 
-            contenedor.innerHTML += `
+                        <img src="${thumb}">
 
-            <a href="${video.link}" target="_blank">
+                        <div class="info">
 
-                <div class="video">
+                            <div class="title">
+                                ${title}
+                            </div>
 
-                    <img src="${thumbnail}">
+                            <div class="date">
+                                ${new Date(published).toLocaleString()}
+                            </div>
 
-                    <div class="info">
-
-                        <div class="title">
-                            ${video.title}
-                        </div>
-
-                        <div class="date">
-                            ${new Date(video.pubDate).toLocaleString()}
                         </div>
 
                     </div>
 
-                </div>
+                </a>
 
-            </a>
-
-            `;
+                `;
+            }
 
         });
+
+        if(encontrados === 0){
+
+            contenedor.innerHTML =
+            "<h2>No hay videos relacionados.</h2>";
+        }
 
     }catch(error){
 
@@ -183,16 +201,15 @@ async function cargarVideos(){
     }
 }
 
-// =======================================
-// CARGA INICIAL
-// =======================================
+// ===============================
+// INICIO
+// ===============================
 
 cargarVideos();
 
-// =======================================
-// ACTUALIZACION AUTOMATICA
-// CADA 5 MINUTOS
-// =======================================
+// ===============================
+// ACTUALIZA CADA 5 MINUTOS
+// ===============================
 
 setInterval(cargarVideos, 300000);
 
