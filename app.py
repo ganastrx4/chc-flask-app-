@@ -417,6 +417,13 @@ def videos():
 def chc1():
     return render_template("chc1.html")
 
+@app.route("/wdd.html") # <--- Agregas el .html aquí
+def wdd():
+    return render_template("wdd.html")
+
+@app.route("/enviarwld.html") # <--- Agregas el .html aquí
+def enviarwld():
+    return render_template("enviarwld.html")
 
 # ==========================================
 # 🚀 START
