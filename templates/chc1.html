@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  <script src="https://unpkg.com/@worldcoin/idkit-standalone"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-black text-white flex flex-col items-center justify-center min-h-screen pb-20 px-4">
@@ -14,7 +13,7 @@
   <h1 class="text-4xl font-bold mb-4">🎉 ¡Gana 1 CHUN!</h1>
   <p class="mb-6 text-lg text-center">Verifica tu identidad con World ID y recibe 1 CHUN automáticamente en tu wallet de World Chain.</p>
 
-  <button onclick="openWorldIDWidget()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold text-white mb-4">
+  <button onclick="startAuth()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold text-white mb-4">
     🔐 Verificar con World App
   </button>
 
@@ -51,97 +50,177 @@
     </div>
   </nav>
 
-  <script>
-    const clientId = "app_7686f9027d3e3c0b53d987a3caf1e111";
-    let detectedWallet = null;
-    let authCode = null; // Guardará el código recibido de la ventana emergente
+  
+<script type="module">
 
-    // Inicializar el Widget de IDKit
-    IDKit.init({
-      app_id: clientId,
-      action: "login", // Tu identificador configurado en el Developer Portal
-      verification_level: "orb", // O "device" dependiendo de tu configuración
-    });
+import {
+    IDKitWidget,
+    VerificationLevel
+} from 'https://cdn.jsdelivr.net/npm/@worldcoin/idkit@1/+esm';
 
-    // Función para abrir la ventana emergente sin abandonar tu página
-    function openWorldIDWidget() {
-      document.getElementById("status").innerText = "⏳ Abriendo verificación...";
-      
-      IDKit.open({
-        onSuccess: (result) => {
-          // El resultado contiene el código de verificación básico de World ID
-          console.log("Autenticación Exitosa:", result);
-          authCode = result.code || result.nullifier_hash; // Ajustar según lo que retorne tu formato de app
-          
-          document.getElementById("status").innerText = "✅ Autenticación exitosa.";
-          document.getElementById("claimSection").classList.remove("hidden");
-        },
-        onError: (error) => {
-          console.error("Error en Widget:", error);
-          document.getElementById("status").innerText = "❌ Verificación cancelada o errónea.";
+const app_id = "app_7686f9027d3e3c0b53d987a3caf1e111";
+
+let verified = false;
+let detectedWallet = null;
+
+// ======================================
+// DETECTAR WALLET
+// ======================================
+
+async function detectWallet(){
+
+    try{
+
+        if(window.ethereum){
+
+            const provider =
+                new ethers.providers.Web3Provider(window.ethereum);
+
+            const accounts =
+                await provider.send("eth_requestAccounts",[]);
+
+            if(accounts.length > 0){
+
+                detectedWallet = accounts[0];
+
+                document.getElementById("walletInfo").innerHTML = `
+                    ✅ Wallet:
+                    <span class="text-green-400">
+                        ${detectedWallet}
+                    </span>
+                `;
+
+                document
+                    .getElementById("walletInfo")
+                    .classList.remove("hidden");
+
+                return true;
+            }
         }
-      });
-    }
 
-    async function detectWallet() {
-      try {
-        if (window.ethereum) {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const accounts = await provider.send("eth_requestAccounts", []);
-          if (accounts.length > 0) {
-            detectedWallet = accounts;
-            document.getElementById("walletInfo").innerText = "✅ Wallet detectada: " + detectedWallet;
-            document.getElementById("walletInfo").classList.remove("hidden");
-            return true;
-          }
-        }
-        throw new Error("No wallet encontrada");
-      } catch (err) {
-        console.error("Error detectando wallet:", err);
-        document.getElementById("walletInfo").innerText = "❌ Error detectando wallet.";
-        document.getElementById("walletInfo").classList.remove("hidden");
         return false;
-      }
+
+    }catch(err){
+
+        console.log(err);
+
+        return false;
+    }
+}
+
+// ======================================
+// VERIFICACION WORLD ID
+// ======================================
+
+window.startAuth = async function(){
+
+    const walletOk = await detectWallet();
+
+    if(!walletOk){
+
+        document.getElementById("status").innerText =
+            "❌ Wallet no detectada";
+
+        return;
     }
 
-    async function claimTokens() {
-      if (!authCode) {
-        document.getElementById("status").innerText = "❌ Falta el código de autenticación de World ID.";
-        return;
-      }
+    IDKitWidget.open({
+        app_id: app_id,
 
-      const walletOk = await detectWallet();
-      if (!walletOk || !detectedWallet) {
-        document.getElementById("status").innerText = "❌ Wallet no detectada.";
-        return;
-      }
+        action: "login",
 
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        signal: detectedWallet,
+
+        verification_level:
+            VerificationLevel.Orb,
+
+        onSuccess: async (result) => {
+
+            console.log("World ID OK:",result);
+
+            verified = true;
+
+            document.getElementById("status").innerHTML = `
+                ✅ Humano verificado correctamente
+            `;
+
+            document
+                .getElementById("claimSection")
+                .classList.remove("hidden");
+        },
+
+        onError: (error) => {
+
+            console.log(error);
+
+            document.getElementById("status").innerHTML =
+                "❌ Error verificando identidad";
+        }
+    });
+};
+
+// ======================================
+// RECLAMAR TOKENS
+// ======================================
+
+window.claimTokens = async function(){
+
+    if(!verified){
+
+        document.getElementById("status").innerHTML =
+            "❌ Debes verificarte primero";
+
+        return;
+    }
+
+    try{
+
+        document.getElementById("status").innerHTML =
+            "⏳ Enviando CHUN...";
+
+        const provider =
+            new ethers.providers.Web3Provider(window.ethereum);
+
         const signer = provider.getSigner();
-        const message = "Confirma que esta wallet te pertenece y eres humano verificado.";
-        const signature = await signer.signMessage(message);
 
-        document.getElementById("status").innerText = "⏳ Procesando transacción...";
+        const message =
+            "Confirmo que soy humano y reclamo CHUN";
 
-        const res = await fetch("https://charlycoin-jj6aw66sj-carlos-sandovals-projects.vercel.app/api/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            code: authCode, 
-            wallet: detectedWallet, 
-            signature: signature 
-          })
-        });
+        const signature =
+            await signer.signMessage(message);
+
+        const res = await fetch(
+            "https://charlycoin-jj6aw66sj-carlos-sandovals-projects.vercel.app/api/auth",
+            {
+                method:"POST",
+
+                headers:{
+                    "Content-Type":"application/json"
+                },
+
+                body:JSON.stringify({
+                    wallet: detectedWallet,
+                    signature: signature
+                })
+            }
+        );
 
         const data = await res.json();
-        document.getElementById("status").innerText = data.message || "✅ Token reclamado con éxito.";
-      } catch (error) {
-        console.error("Error en reclamo:", error);
-        document.getElementById("status").innerText = "❌ Error reclamando tokens.";
-      }
+
+        document.getElementById("status").innerHTML =
+            data.message || "✅ 1 CHUN enviado";
+
+    }catch(err){
+
+        console.log(err);
+
+        document.getElementById("status").innerHTML =
+            "❌ Error reclamando";
     }
-  </script>
+};
+
+</script>
+
 
 </body>
 </html>
