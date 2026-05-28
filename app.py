@@ -362,7 +362,7 @@ def headers(resp):
 # ==========================================
 # 🏠 PAGES
 # ==========================================
-@app.route("/")
+@app.route("/index.html")
 def home():
     return render_template("index.html")
 
@@ -382,6 +382,18 @@ def exchange():
 @app.route("/jugar.html")
 def jugar():
     return render_template("jugar.html")
+
+@app.route("/multiplicador.html")
+def multiplicador():
+    return render_template("multiplicador.html")
+
+@app.route("/explorador.html")
+def explorador():
+    return render_template("explorador.html")
+
+@app.route("/faucets.html")
+def faucets():
+    return render_template("faucets.html")
 
 @app.route("/charlycoinapp.html")
 def charlycoinapp():
