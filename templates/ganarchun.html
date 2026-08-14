@@ -8,13 +8,11 @@
         :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; }
         body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; overflow-x: hidden; }
         
-        /* Contenedor Principal */
         .window-container { max-width: 600px; margin: 20px auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
         
         .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
         
-        /* Iframe de los Blogs (Minería) */
         #iframeContainer { width: 95%; height: 300px; border: 2px solid var(--gold); margin: 15px auto; border-radius: 10px; overflow: hidden; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
         
@@ -27,7 +25,6 @@
         .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 10px 0; cursor: pointer; }
         .btn-home { background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8em; }
 
-        /* Capa Flotante (Fullscreen Modal) */
         #modalExplorador {
             display: none; 
             position: fixed;
@@ -105,544 +102,152 @@
 
 <script>
     const NODO_URL = "https://binance-bot-hna7.onrender.com";
-
-    const MASTER_PUBLIC =
-        "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
-
+    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
     const urls = [
-        "https://tareasunamyunadm.blogspot.com",
-        "https://faucentminialtcrypto.blogspot.com",
-        "https://solotareamsmex.blogspot.com",
+        "https://tareasunamyunadm.blogspot.com", 
+        "https://faucentminialtcrypto.blogspot.com", 
+        "https://solotareamsmex.blogspot.com", 
         "https://juegospcmexico.blogspot.com"
     ];
-
-    let segundos = 0;
-    let chcGanados = 0;
-    let interval = null;
-    let minando = false;
-    let enviandoRecompensa = false;
-
-    // ============================================================
-    // EXPLORADOR
-    // ============================================================
+    
+    let segundos = 0, chcGanados = 0, interval = null, minando = false;
+    let RecompensaPendiente = 0;
 
     function abrirExplorador() {
-
-        const modal = document.getElementById("modalExplorador");
-        const frame = document.getElementById("iframeExplorador");
-
-        /*
-         * El parámetro ?t evita que el navegador entregue
-         * una copia vieja del Explorer desde caché.
-         */
-        frame.src = NODO_URL + "/?t=" + Date.now();
-
+        const modal = document.getElementById('modalExplorador');
+        const frame = document.getElementById('iframeExplorador');
+        
+        if (frame.src !== NODO_URL + "/") {
+            frame.src = NODO_URL;
+        }
+        
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
     }
 
     function cerrarExplorador() {
-
-        document.getElementById("modalExplorador").style.display = "none";
-
+        document.getElementById('modalExplorador').style.display = "none";
         document.body.style.overflow = "auto";
     }
 
-    function actualizarExplorador() {
-
-        const frame = document.getElementById("iframeExplorador");
-
-        if (
-            document.getElementById("modalExplorador").style.display === "flex"
-        ) {
-            frame.src = NODO_URL + "/?t=" + Date.now();
-        }
-    }
-
-
-    // ============================================================
-    // ROTACIÓN DE PÁGINAS
-    // ============================================================
-
     function redireccionAleatoria() {
-
-        const iframe = document.getElementById("iframeRedireccion");
-
-        const nuevaURL =
-            urls[Math.floor(Math.random() * urls.length)];
-
-        iframe.src = nuevaURL + "?t=" + Date.now();
+        document.getElementById('iframeRedireccion').src = urls[Math.floor(Math.random() * urls.length)];
     }
-
     setInterval(redireccionAleatoria, 25000);
 
-
-    // ============================================================
-    // MEMORIA DE WALLET
-    // ============================================================
-
     function verificarMemoria() {
-
         const saved = localStorage.getItem("last_chc_wallet");
-
-        if (!saved) {
-            return;
+        if (saved) {
+            document.getElementById('userWallet').value = saved;
+            const dl = document.getElementById('prevWallets');
+            const opt = document.createElement('option');
+            opt.value = saved;
+            dl.appendChild(opt);
         }
-
-        document.getElementById("userWallet").value = saved;
-
-        const dl = document.getElementById("prevWallets");
-
-        const opt = document.createElement("option");
-
-        opt.value = saved;
-
-        dl.appendChild(opt);
     }
-
-
-    // ============================================================
-    // CONTADOR
-    // ============================================================
 
     function contarTiempo() {
+        const wallet = document.getElementById('userWallet').value.trim();
+        if (minando && wallet.length > 5) {
+            segundos++;
+            
+            // Cada 2 segundos suma 1 CHC local
+            if (segundos % 2 === 0) {
+                chcGanados++;
+                RecompensaPendiente++;
+                document.getElementById('chcCount').innerText = chcGanados;
+            }
 
-        const wallet =
-            document.getElementById("userWallet").value.trim();
+            // Cada 10 segundos liquida en la Blockchain las recompensas acumuladas
+            if (segundos % 10 === 0 && RecompensaPendiente > 0) {
+                const montoAEnviar = RecompensaPendiente;
+                RecompensaPendiente = 0;
+                enviarAlNodo(wallet, montoAEnviar);
+            }
 
-        if (!minando) {
-            return;
+            document.getElementById('minerStatus').innerText = `Minando... (Bloque actual: #${segundos})`;
         }
-
-        if (wallet.length <= 5) {
-            return;
-        }
-
-        segundos++;
-
-        /*
-         * IMPORTANTE:
-         *
-         * No aumentamos CHC aquí.
-         *
-         * Primero se debe confirmar la transferencia
-         * en el nodo.
-         */
-
-        if (segundos % 2 === 0) {
-
-            enviarAlNodo(wallet, 1);
-        }
-
-        document.getElementById("minerStatus").innerText =
-            "⛏️ Minando... " +
-            segundos +
-            " segundos";
     }
-
-
-    // ============================================================
-    // ENVIAR RECOMPENSA AL NODO
-    // ============================================================
 
     async function enviarAlNodo(receptor, monto) {
-
-        /*
-         * Evita que dos recompensas se manden simultáneamente.
-         */
-
-        if (enviandoRecompensa) {
-            return;
-        }
-
-        enviandoRecompensa = true;
-
-        const status =
-            document.getElementById("minerStatus");
-
-        status.innerText =
-            "⛏️ Registrando recompensa en Blockchain...";
-
         try {
-
-            const respuesta = await fetch(
-                `${NODO_URL}/transferir`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        emisor: MASTER_PUBLIC,
-
-                        receptor: receptor,
-
-                        monto: Number(monto),
-
-                        firma: "WEB_MINING_REWARD"
-
-                    })
-                }
-            );
-
-
-            /*
-             * Primero comprobamos HTTP.
-             */
+            document.getElementById('minerStatus').innerText = `Sincronizando bloque con el nodo...`;
+            const respuesta = await fetch(`${NODO_URL}/transferir`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    emisor: MASTER_PUBLIC, 
+                    receptor: receptor, 
+                    monto: Number(monto), 
+                    firma: "WEB_MINING_REWARD" 
+                })
+            });
 
             if (!respuesta.ok) {
-
-                throw new Error(
-                    "El nodo respondió HTTP " +
-                    respuesta.status
-                );
+                throw new Error(`HTTP Error status: ${respuesta.status}`);
             }
-
-
-            /*
-             * Intentamos leer JSON.
-             */
 
             const resultado = await respuesta.json();
-
-            console.log(
-                "RESPUESTA COMPLETA DEL NODO:",
-                resultado
-            );
-
-
-            /*
-             * Algunos servidores utilizan:
-             * hash
-             *
-             * Otros:
-             * tx_hash
-             *
-             * Otros:
-             * transaction_hash
-             *
-             * Otros:
-             * bloque.hash
-             */
-
-            const hash =
-                resultado.hash ||
-                resultado.tx_hash ||
-                resultado.transaction_hash ||
-                resultado.txHash ||
-                (
-                    resultado.bloque &&
-                    resultado.bloque.hash
-                ) ||
-                null;
-
-
-            const bloque =
-                resultado.bloque_id ||
-                resultado.block ||
-                resultado.block_number ||
-                (
-                    resultado.bloque &&
-                    (
-                        resultado.bloque.id ||
-                        resultado.bloque.numero
-                    )
-                ) ||
-                null;
-
-
-            /*
-             * Si el nodo devuelve explícitamente success:false,
-             * NO contabilizamos los CHC.
-             */
-
-            if (
-                resultado.success === false ||
-                resultado.ok === false
-            ) {
-
-                throw new Error(
-                    resultado.error ||
-                    resultado.message ||
-                    "El nodo rechazó la recompensa."
-                );
+            console.log("Transacción confirmada en CharlyScan:", resultado);
+            document.getElementById('minerStatus').innerText = `¡Bloque minado y registrado exitosamente!`;
+            
+            // Actualizar iframe del explorador si está abierto para reflejar cambios
+            const frame = document.getElementById('iframeExplorador');
+            if (document.getElementById('modalExplorador').style.display === "flex") {
+                frame.contentWindow.location.reload();
             }
-
-
-            /*
-             * AHORA SÍ sumamos la recompensa.
-             */
-
-            chcGanados += Number(monto);
-
-            document.getElementById("chcCount").innerText =
-                chcGanados;
-
-
-            /*
-             * Guardamos información local de la última recompensa.
-             */
-
-            localStorage.setItem(
-                "last_chc_reward",
-                JSON.stringify({
-
-                    wallet: receptor,
-
-                    monto: Number(monto),
-
-                    hash: hash,
-
-                    bloque: bloque,
-
-                    fecha: new Date().toISOString()
-
-                })
-            );
-
-
-            /*
-             * Mostramos información real.
-             */
-
-            if (hash) {
-
-                status.innerHTML =
-                    "✅ CHC minado correctamente<br>" +
-                    "<small>Hash: " +
-                    escaparHTML(hash) +
-                    "</small>";
-
-            } else {
-
-                status.innerText =
-                    "✅ CHC registrado correctamente";
-            }
-
-
-            /*
-             * Actualizamos Explorer.
-             */
-
-            actualizarExplorador();
-
 
         } catch (error) {
-
-            console.error(
-                "ERROR EN RECOMPENSA CHC:",
-                error
-            );
-
-            status.innerText =
-                "❌ No se pudo registrar la recompensa";
-
-            /*
-             * MUY IMPORTANTE:
-             *
-             * Aquí NO sumamos CHC.
-             */
+            console.error("Error en conexión con el nodo CHC:", error);
+            document.getElementById('minerStatus').innerText = `Error enviando al nodo. Reintentando...`;
+            // Devolver las monedas no enviadas a la cola de pendientes
+            RecompensaPendiente += monto;
         }
-
-        enviandoRecompensa = false;
     }
-
-
-    // ============================================================
-    // ESCAPAR TEXTO PARA HTML
-    // ============================================================
-
-    function escaparHTML(texto) {
-
-        if (!texto) {
-            return "";
-        }
-
-        return String(texto)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-
-    // ============================================================
-    // INICIAR MINERÍA
-    // ============================================================
 
     function continuarMineria() {
-
-        const wallet =
-            document.getElementById("userWallet")
-                .value
-                .trim();
-
-        if (wallet.length < 5) {
-
-            alert(
-                "Pon tu billetera CHC antes de iniciar."
-            );
-
-            return;
+        const wallet = document.getElementById('userWallet').value.trim();
+        if (wallet.length < 5) return alert("Por favor ingresa una billetera válida.");
+        if (!minando) {
+            minando = true;
+            localStorage.setItem("last_chc_wallet", wallet);
+            if (!interval) interval = setInterval(contarTiempo, 1000);
+            document.getElementById('minerStatus').innerText = "Minería en ejecución";
         }
-
-
-        if (minando) {
-
-            return;
-        }
-
-
-        minando = true;
-
-        localStorage.setItem(
-            "last_chc_wallet",
-            wallet
-        );
-
-
-        if (!interval) {
-
-            interval = setInterval(
-                contarTiempo,
-                1000
-            );
-        }
-
-
-        document.getElementById("minerStatus").innerText =
-            "⛏️ Minería iniciada";
-
-
-        alert(
-            "Minería iniciada con éxito."
-        );
     }
-
-
-    // ============================================================
-    // DETENER MINERÍA
-    // ============================================================
 
     function pararMineria() {
-
         minando = false;
-
-        document.getElementById("minerStatus").innerText =
-            "🛑 Minería detenida";
-
-        alert(
-            "Sesión pausada.\n\n" +
-            "CHC confirmados: " +
-            chcGanados
-        );
+        if (interval) {
+            clearInterval(interval);
+            interval = null;
+        }
+        // Enviar saldo restante si quedó pendiente algo
+        if (RecompensaPendiente > 0) {
+            const wallet = document.getElementById('userWallet').value.trim();
+            enviarAlNodo(wallet, RecompensaPendiente);
+            RecompensaPendiente = 0;
+        }
+        document.getElementById('minerStatus').innerText = `Minería detenida. Total: ${chcGanados} CHC`;
     }
-
-
-    // ============================================================
-    // CREAR IDENTIDAD
-    // ============================================================
 
     function gestionarIdentidad() {
-
-        let p = prompt(
-            "¿ANDROID o PC?"
-        );
-
-        if (!p) {
-            return;
-        }
-
-        p = p.toLowerCase().trim();
-
-        if (
-            p !== "android" &&
-            p !== "pc"
-        ) {
-
-            alert(
-                "Escribe ANDROID o PC."
-            );
-
-            return;
-        }
-
-
-        const array =
-            new Uint8Array(32);
-
-        window.crypto.getRandomValues(array);
-
-
-        const privateKey =
-            Array.from(array)
-                .map(
-                    b =>
-                        b.toString(16)
-                            .padStart(2, "0")
-                )
-                .join("");
-
-
-        const publicKey =
-            "chc_" +
-            privateKey.substring(0, 40);
-
-
-        /*
-         * OJO:
-         *
-         * Esto NO es una wallet criptográfica real.
-         * Es solamente un identificador generado por el navegador.
-         *
-         * Lo dejamos igual para no romper tu sistema actual.
-         */
-
-        alert(
-            "Nueva llave CHC: " +
-            publicKey +
-            "\n\nCopiada al panel."
-        );
-
-
-        document.getElementById(
-            "userWallet"
-        ).value = publicKey;
-
-
-        localStorage.setItem(
-            "last_chc_wallet",
-            publicKey
-        );
-    }
-
-
-    // ============================================================
-    // ENTER
-    // ============================================================
-
-    function handleKeyPress(e) {
-
-        if (e.key === "Enter") {
-
-            continuarMineria();
+        let p = prompt("¿ANDROID o PC?").toLowerCase();
+        if (p === "android" || p === "pc") {
+            const array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            const privateKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+            const publicKey = "chc_" + privateKey.substring(0, 40);
+            alert("Nueva llave CHC: " + publicKey + "\n\nCopiada al panel.");
+            document.getElementById('userWallet').value = publicKey;
+            localStorage.setItem("last_chc_wallet", publicKey);
         }
     }
 
-
-    // ============================================================
-    // INICIO
-    // ============================================================
-
-    window.addEventListener(
-        "load",
-        verificarMemoria
-    );
+    function handleKeyPress(e) { if (e.keyCode === 13) { continuarMineria(); } }
 </script>
 
 </body>
