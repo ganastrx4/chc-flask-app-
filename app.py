@@ -18,6 +18,7 @@ from flask import (
 )
 
 from flask_cors import CORS
+CORS(app)
 from web3 import Web3
 from functools import wraps
 
