@@ -17,8 +17,11 @@ from flask import (
     redirect
 )
 
+from flask import Flask
 from flask_cors import CORS
-CORS(app)
+
+app = Flask(__name__)  # ✅ Se crea primero la variable 'app'
+CORS(app)  # ✅ Se aplica CORS
 from web3 import Web3
 from functools import wraps
 
