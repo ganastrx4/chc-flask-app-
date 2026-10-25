@@ -1,194 +1,428 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CHARLYSCAN PRO</title>
-<script src="https://cdn.tailwindcss.com"></script>
-
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SMC Ultra-Terminal Pro V5 Neural-Engine</title>
+<link rel="stylesheet" href="https://unpkg.com/modern-normalize/modern-normalize.css">
 <style>
-body{
-    background:#070b14;
-    color:#f8fafc;
-    font-family:Segoe UI, Arial;
-}
-.card{
-    background:#111827;
-    border:1px solid #1f2937;
-    border-radius:16px;
-}
-.neon{
-    color:#00f2ff;
-    text-shadow:0 0 14px rgba(0,242,255,.55);
-}
-.blink{
-    animation:blink 1.5s infinite;
-}
-@keyframes blink{
-    0%{opacity:1}
-    50%{opacity:.3}
-    100%{opacity:1}
-}
+  :root{--bg:#020617;--panel:#0f172a;--muted:#64748b;--accent:#2dd4bf;--bull:#10b981;--bear:#ef4444;--gold:#f59e0b;--purple:#a855f7}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:#f1f5f9;margin:0;padding:10px;overflow-x:hidden}
+  .wrap{max-width:1800px;margin:0 auto;display:grid;grid-template-columns:1fr 450px;gap:12px}
+  .card{background:var(--panel);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 15px -3px rgba(0,0,0,0.5)}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+  .controls{display:flex;gap:8px;align-items:center}
+  select, button {padding:8px 12px;border-radius:8px;border:1px solid #1e293b;background:#020617;color:#fff;font-size:13px}
+  button{background:var(--accent);color:#020617;font-weight:700;cursor:pointer;border:none;transition:all 0.2s}
+  button:hover{opacity:0.9}
+  .btn-predict{background:linear-gradient(135deg, #a855f7, #6366f1);color:#fff}
+  #chart{height:600px;border-radius:8px;overflow:hidden;border:1px solid #1e293b;position:relative}
+  
+  .pro-panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .pro-card{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05)}
+  .label-mini{font-size:9px;color:var(--muted);display:block;margin-bottom:4px}
+  
+  .grid-stats{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-top:10px}
+  .stat-item{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;border-left:3px solid var(--accent)}
+  .stat-val{font-size:14px;font-weight:bold;display:block;font-family:'JetBrains Mono',monospace}
+
+  .log{max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px;background:#020617;border-radius:8px;color:var(--accent)}
+  .smt-panel{border-left-color:var(--gold);background:rgba(245,158,11,0.05)}
+  .predict-box{background:rgba(168,85,247,0.08);border:1px solid var(--purple);border-radius:12px;padding:14px;margin-top:10px;text-align:center}
+
+  /* ESTILOS DE VOLUNTAD Y NEURONAL */
+  .volition-bar-bg{background:#1e293b;height:12px;border-radius:6px;overflow:hidden;display:flex;margin:6px 0;border:1px solid rgba(255,255,255,0.1)}
+  .volition-buy{background:var(--bull);height:100%;transition:width 0.4s ease}
+  .volition-sell{background:var(--bear);height:100%;transition:width 0.4s ease}
 </style>
 </head>
+<body>
 
-<body class="p-6">
+<main class="wrap">
+  <section class="card">
+    <header>
+      <div>
+        <h2 style="margin:0;color:var(--accent);font-size:20px">SMC Terminal <span style="color:#fff">PRO V5 NEURAL</span></h2>
+        <div style="display:flex;gap:10px;font-size:10px;color:var(--muted)">
+          <span id="msb-status">ESTRUCTURA: ESCANEANDO MERCADO...</span> | <span id="activePairDisplay">PAR: NINGUNO</span>
+        </div>
+      </div>
+      <div class="controls">
+        <select id="interval">
+          <option value="1m">1m</option><option value="5m">5m</option><option value="15m" selected>15m</option><option value="1h">1h</option>
+        </select>
+        <button id="start" style="background:var(--gold); color:#000;">⚡ ESCANEAR LIQ & CONFIRMACIÓN</button>
+        <button id="predictBtn" class="btn-predict">🧠 ENTRENAR RED</button>
+        <button id="stop" disabled style="background:#334155;color:#fff">STOP</button>
+      </div>
+    </header>
 
-<div class="max-w-6xl mx-auto">
+    <div id="chart"></div>
 
-<div class="flex justify-between items-center mb-8">
-    <div>
-        <h1 class="text-5xl font-black neon">CHARLYSCAN</h1>
-        <p class="text-gray-400">Explorador Blockchain PRO</p>
+    <div class="grid-stats">
+      <div class="stat-item"><span class="label-mini">PRECIO ACT</span><span id="price" class="stat-val">—</span></div>
+      <div class="stat-item"><span class="label-mini">POC DEL RANGO</span><span id="pocVal" class="stat-val">—</span></div>
+      <div class="stat-item" style="border-left-color:var(--gold)"><span class="label-mini">ANTIGÜEDAD LIQ</span><span id="liqAge" class="stat-val">—</span></div>
+      <div class="stat-item"><span class="label-mini">SMT CORRELATION</span><span id="smtStatus" class="stat-val">—</span></div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card" style="text-align:center;border:1px solid var(--accent)">
+      <small style="color:var(--accent)">WINRATE SMC PRO</small>
+      <div id="winrate" style="font-size:32px;font-weight:900">0.00%</div>
+      <div id="score" style="font-size:11px;color:var(--muted)">SEÑALES: 0 | EXITOSAS: 0</div>
     </div>
 
-    <div class="card p-4 text-right">
-        <p class="text-sm text-gray-400">Estado Nodo</p>
-        <p class="text-green-400 font-bold blink">● EN VIVO</p>
-        <p id="total-blocks" class="text-xl mt-2 font-mono">Bloques: 0</p>
-    </div>
-</div>
+    <!-- PANEL DE PREDICCIÓN CON RED NEURONAL -->
+    <div class="predict-box">
+      <span class="label-mini" style="color:var(--purple);font-weight:bold">RED NEURONAL & VOLUNTAD HUMANA (PSICO-INDEX)</span>
+      <div id="predDir" style="font-size:22px;font-weight:900;margin:6px 0;color:var(--muted)">ESPERANDO...</div>
+      
+      <!-- BARRA DE PSICO-VOLUNTAD -->
+      <div class="volition-bar-bg">
+        <div id="volBuyBar" class="volition-buy" style="width:50%"></div>
+        <div id="volSellBar" class="volition-sell" style="width:50%"></div>
+      </div>
+      
+      <div style="font-size:12px;font-weight:bold;margin-bottom:6px;display:flex;justify-content:space-between">
+        <span>COMPRADORES: <b id="buyPercentText" style="color:var(--bull)">50%</b></span>
+        <span>VENDEDORES: <b id="sellPercentText" style="color:var(--bear)">50%</b></span>
+      </div>
 
-<div class="card p-6 mb-6 border-l-4 border-cyan-500">
-    <p class="text-sm text-gray-400 mb-2 font-bold uppercase tracking-widest">
-        Wallet Tracker
-    </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:10px;margin-top:8px">
+        <div><span class="label-mini">TAKER DELTA</span><strong id="buyVolRatio" style="color:var(--bull)">—</strong></div>
+        <div><span class="label-mini">SENTIMIENTO</span><strong id="sentimentText" style="color:var(--gold)">NEUTRAL</strong></div>
+        <div><span class="label-mini">ERROR RED (LOSS)</span><strong id="nnLoss" style="color:var(--accent)">—</strong></div>
+      </div>
 
-    <div class="flex gap-2">
-        <input
-            id="wallet-input"
-            class="w-full p-3 bg-black border border-gray-700 rounded text-cyan-300 font-mono"
-            placeholder="Ingresa tu dirección pública..."
-        />
-        <button onclick="updateDashboard()"
-            class="bg-cyan-600 hover:bg-cyan-500 px-8 rounded font-bold">
-            BUSCAR
-        </button>
-    </div>
-</div>
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-    <div class="card p-5 border-l-4 border-yellow-500">
-        <p class="text-gray-400 text-xs font-bold uppercase">Mi Saldo</p>
-        <p id="user-balance"
-           class="text-3xl text-yellow-400 font-black font-mono">
-            0.00 CHC
-        </p>
+      <div id="predDetails" style="font-size:10px;color:var(--muted);margin-top:8px;border-top:1px dashed rgba(255,255,255,0.1);padding-top:6px">
+        Presiona "🧠 ENTRENAR RED" tras escanear un par.
+      </div>
     </div>
 
-    <div class="card p-5 border-l-4 border-white">
-        <p class="text-gray-400 text-xs font-bold uppercase">Suministro Actual</p>
-        <p id="total-supply"
-           class="text-3xl font-black font-mono text-white">
-            0 CHC
-        </p>
-        <p class="text-gray-500 text-[10px] mt-1">
-            MÁXIMO: 21,000,000,000 CHC
-        </p>
+    <div class="pro-panels">
+      <div class="pro-card">
+        <span class="label-mini">ESTRUCTURA MSB/CHoCH</span>
+        <div id="structureType" style="font-weight:bold;font-size:13px;color:var(--accent)">NEUTRAL</div>
+        <small id="structureDesc" style="font-size:10px;color:var(--muted)">Sin cambio detectado</small>
+      </div>
+      <div class="pro-card smt-panel">
+        <span class="label-mini">SMT DIVERGENCE (ETH)</span>
+        <div id="smtDiv" style="font-weight:bold;font-size:13px">SIN SEÑAL</div>
+        <small style="font-size:10px">Vs. Ethereum Futures</small>
+      </div>
     </div>
 
-    <div class="card p-5 border-l-4 border-purple-500">
-        <p class="text-gray-400 text-xs font-bold uppercase">Recompensa x Bloque</p>
-        <p id="last-reward"
-           class="text-3xl text-purple-400 font-black font-mono">
-            0 CHC
-        </p>
+    <div class="card" style="margin-top:10px">
+      <strong>LIQUIDIDAD Y FVG</strong>
+      <div style="margin-top:10px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span>FVG Internos:</span><span id="fvgStatus" style="color:var(--gold)">0 Detectados</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span>Posición Rango:</span><span id="rangePos" style="color:var(--accent)">EQUILIBRIO</span>
+        </div>
+        <div class="target-box" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+          <div style="background:rgba(16,185,129,0.1);padding:8px;border-radius:6px;text-align:center">
+            <small style="color:var(--bull)">TP PRO</small><br><strong id="tpVal" style="font-size:11px">—</strong>
+          </div>
+          <div style="background:rgba(239,68,68,0.1);padding:8px;border-radius:6px;text-align:center">
+            <small style="color:var(--bear)">SL PRO</small><br><strong id="slVal" style="font-size:11px">—</strong>
+          </div>
+        </div>
+      </div>
     </div>
 
-</div>
-
-<div class="card overflow-hidden">
-    <div class="p-4 border-b border-gray-800 bg-gray-900/50">
-        <h2 class="font-bold">Blockchain Explorer</h2>
+    <div class="card" style="margin-top:10px">
+      <strong>PRO INTELLIGENCE LOG</strong>
+      <div id="events" class="log" style="margin-top:8px"></div>
     </div>
+  </aside>
+</main>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead class="text-gray-500 text-xs uppercase bg-black/30">
-                <tr>
-                    <th class="p-3">Bloque</th>
-                    <th class="p-3">De</th>
-                    <th class="p-3">A</th>
-                    <th class="p-3">Monto</th>
-                    <th class="p-3">Hash</th>
-                </tr>
-            </thead>
-
-            <tbody id="blockchain-table" class="text-sm"></tbody>
-        </table>
-    </div>
-</div>
-
-</div>
+<script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/brain.js"></script>
 
 <script>
-async function updateDashboard(){
-    try{
-        const wallet = document.getElementById("wallet-input").value.trim();
+const FAPI = 'https://fapi.binance.com/fapi/v1/klines';
+let chart, candleSeries, ghostSeries, scanTimer;
+let liqLines = {}; 
+let lastCandlesData = [];
+let currentScannedSymbol = null;
 
-        const [chainRes, statsRes] = await Promise.all([
-            fetch("/cadena"),
-            fetch("/stats")
-        ]);
+// Lista de principales pares líquidos en Binance Futures para el escáner automático
+const SCAN_LIST = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'WLDUSDT', 'XRPUSDT', 'DOGEUSDT', 'PEPEUSDT', 'AVAXUSDT', 'LINKUSDT', 'NEARUSDT'];
 
-        const chain = await chainRes.json();
-        const stats = await statsRes.json();
+let wins = parseInt(localStorage.getItem('smc_v4_wins')) || 0;
+let totalPreds = parseInt(localStorage.getItem('smc_v4_total')) || 0;
+let lastPendingPred = null;
 
-        let html = "";
+let audioCtx = null;
+function playTone(type) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        chain.forEach(block => {
-            const tx = block.transacciones?.[0];
-            if(!tx) return;
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
 
-            html += `
-            <tr class="border-t border-gray-800 hover:bg-gray-900/40">
-                <td class="p-3 text-cyan-400 font-bold">#${block.indice}</td>
-                <td class="p-3 text-xs font-mono text-gray-400">
-                    ${(tx.emisor || "").substring(0,18)}...
-                </td>
-                <td class="p-3 text-xs font-mono text-gray-400">
-                    ${(tx.receptor || "").substring(0,18)}...
-                </td>
-                <td class="p-3 text-yellow-400 font-bold">
-                    ${Number(tx.monto).toLocaleString()}
-                </td>
-                <td class="p-3 text-[10px] text-gray-600 font-mono">
-                    ${block.hash.substring(0,24)}...
-                </td>
-            </tr>`;
-        });
-
-        document.getElementById("blockchain-table").innerHTML = html;
-        document.getElementById("total-blocks").innerText =
-            "Bloques: " + stats.bloques;
-
-        document.getElementById("total-supply").innerText =
-            stats.supply.toLocaleString() + " CHC";
-
-        document.getElementById("last-reward").innerText =
-            stats.recompensa + " CHC";
-
-        if(wallet !== ""){
-            const r = await fetch("/balance/" + wallet);
-            const b = await r.json();
-
-            document.getElementById("user-balance").innerText =
-                Number(b.balance).toLocaleString(
-                    undefined,
-                    {minimumFractionDigits:2}
-                ) + " CHC";
+        if (type === 'high') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(1760, now + 0.25);
+            gainNode.gain.setValueAtTime(0.15, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
+        } else {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(330, now);
+            osc.frequency.exponentialRampToValueAtTime(165, now + 0.3);
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.start(now); osc.stop(now + 0.35);
         }
+    } catch (e) { console.warn("Audio Context bloqueado.", e); }
+}
 
-    }catch(e){
-        console.log(e);
+const net = new brain.NeuralNetwork({ hiddenLayers: [8, 6], activation: 'sigmoid' });
+
+function initChart() {
+    const el = document.getElementById('chart');
+    el.innerHTML = '';
+    chart = LightweightCharts.createChart(el, {
+        layout: { background: { color: '#020617' }, textColor: '#94a3b8', fontSize: 11 },
+        grid: { vertLines: { color: '#0f172a' }, horzLines: { color: '#0f172a' } },
+        width: el.clientWidth, height: 600,
+        timeScale: { timeVisible: true, borderVisible: false },
+        localization: { priceFormatter: p => p.toFixed(8) }
+    });
+    candleSeries = chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
+    ghostSeries = chart.addCandlestickSeries({ upColor: 'rgba(45,212,191,0.1)', downColor: 'rgba(239,68,68,0.1)', borderVisible: false });
+}
+
+async function fetchKlines(sym, tf) {
+    try {
+        const res = await fetch(`${FAPI}?symbol=${sym}&interval=${tf}&limit=150`);
+        return await res.json();
+    } catch(e) { return []; }
+}
+
+// FUNCIÓN PRINCIPAL DE ESCANEO AUTOMÁTICO DE MERCADO
+async function scanMarketForLiquidityAndConfirmation() {
+    const tf = document.getElementById('interval').value;
+    uiLog(`🔍 Escaneando temporalidad [${tf}] en busca de Barrido de Liquidez + Confirmación...`);
+
+    let foundMatch = false;
+
+    for (let sym of SCAN_LIST) {
+        const data = await fetchKlines(sym, tf);
+        if (!data || data.length < 50) continue;
+
+        const candles = data.map(k => ({ 
+            time: k[0] / 1000, 
+            open: parseFloat(k[1]), 
+            high: parseFloat(k[2]), 
+            low: parseFloat(k[3]), 
+            close: parseFloat(k[4]), 
+            vol: parseFloat(k[5]),
+            takerBuyVol: parseFloat(k[9])
+        }));
+
+        const actual = candles[candles.length - 1];
+        const maxH = Math.max(...candles.map(c => c.high));
+        const minL = Math.min(...candles.map(c => c.low));
+        const tolerance = (maxH - minL) * 0.002;
+
+        // Comprobamos barrido de liquidez
+        const hitHighLiq = actual.high >= maxH - tolerance;
+        const hitLowLiq = actual.low <= minL + tolerance;
+
+        if (hitHighLiq || hitLowLiq) {
+            // Comprobamos vela de confirmación (CHoCH estructural en las últimas velas)
+            let lastHigh = Math.max(...candles.slice(-20, -1).map(c => c.high));
+            let lastLow = Math.min(...candles.slice(-20, -1).map(c => c.low));
+            
+            let hasConfirmation = false;
+            let direction = "";
+
+            if (hitHighLiq && actual.close < candles[candles.length-2].close) {
+                hasConfirmation = true; // Rechazo de liquidez alta con vela bajista
+                direction = "BAJISTA (SHORT)";
+            } else if (hitLowLiq && actual.close > candles[candles.length-2].close) {
+                hasConfirmation = true; // Rechazo de liquidez baja con vela alcista
+                direction = "ALCISTA (LONG)";
+            }
+
+            if (hasConfirmation) {
+                currentScannedSymbol = sym;
+                lastCandlesData = data;
+                foundMatch = true;
+
+                document.getElementById('activePairDisplay').innerText = `PAR: ${sym}`;
+                uiLog(`🚨 ¡OPORTUNIDAD DETECTADA EN ${sym}! Liq Barrida & Confirmación ${direction}`);
+                
+                playTone(hitHighLiq ? 'high' : 'low');
+                renderActiveChartData(candles, maxH, minL, tf, sym);
+                break;
+            }
+        }
+    }
+
+    if (!foundMatch) {
+        uiLog(`⏳ Ningún par cumplió la condición exacta de barrido+confirmación en [${tf}]. Reintentando en breve...`);
     }
 }
 
-setInterval(updateDashboard, 10000);
-updateDashboard();
-</script>
+function renderActiveChartData(candles, maxH, minL, tf, sym) {
+    const actual = candles[candles.length - 1];
+    
+    // MSB & CHoCH
+    let structure = "NEUTRAL";
+    let lastHigh = Math.max(...candles.slice(-20, -1).map(c => c.high));
+    let lastLow = Math.min(...candles.slice(-20, -1).map(c => c.low));
+    
+    if (actual.close > lastHigh) structure = "CHoCH ALCISTA 🚀";
+    else if (actual.close < lastLow) structure = "CHoCH BAJISTA 📉";
+    document.getElementById('structureType').innerText = structure;
+    document.getElementById('structureType').style.color = structure.includes('ALCISTA') ? '#10b981' : '#ef4444';
 
+    // POC
+    let priceBins = {};
+    candles.forEach(c => {
+        let bin = (Math.round(c.close * 100000) / 100000).toFixed(8);
+        priceBins[bin] = (priceBins[bin] || 0) + c.vol;
+    });
+    let poc = Object.keys(priceBins).reduce((a, b) => priceBins[a] > priceBins[b] ? a : b);
+    document.getElementById('pocVal').innerText = poc;
+
+    // FVG
+    let fvgs = 0;
+    let markers = [];
+    for (let i = 2; i < candles.length; i++) {
+        if (candles[i-2].high < candles[i].low) {
+            fvgs++; markers.push({ time: candles[i-1].time, position: 'belowBar', color: '#f59e0b', shape: 'circle', text: 'FVG' });
+        }
+        if (candles[i-2].low > candles[i].high) {
+            fvgs++; markers.push({ time: candles[i-1].time, position: 'aboveBar', color: '#f59e0b', shape: 'circle', text: 'FVG' });
+        }
+    }
+    document.getElementById('fvgStatus').innerText = `${fvgs} Detectados`;
+    document.getElementById('liqAge').innerText = `${candles.length - candles.findIndex(c => c.high === maxH)} Velas`;
+
+    if(liqLines.up) candleSeries.removePriceLine(liqLines.up);
+    if(liqLines.dw) candleSeries.removePriceLine(liqLines.dw);
+    
+    liqLines.up = candleSeries.createPriceLine({ price: maxH, color: '#10b981', lineStyle: 2, title: `LIQ ALTA (${maxH.toFixed(8)})` });
+    liqLines.dw = candleSeries.createPriceLine({ price: minL, color: '#ef4444', lineStyle: 2, title: `LIQ BAJA (${minL.toFixed(8)})` });
+
+    document.getElementById('price').innerText = actual.close.toFixed(8);
+    candleSeries.setData(candles);
+    candleSeries.setMarkers(markers);
+}
+
+function trainAndPredictNeural() {
+    if (!lastCandlesData || lastCandlesData.length < 50) {
+        alert("Primero ejecuta el escáner para cargar un activo con liquidez.");
+        return;
+    }
+
+    uiLog(`🧠 Entrenando Red Neuronal con los datos de ${currentScannedSymbol}...`);
+    const candles = lastCandlesData.map(k => ({
+        open: parseFloat(k[1]), high: parseFloat(k[2]), low: parseFloat(k[3]), close: parseFloat(k[4]), vol: parseFloat(k[5]), takerBuyVol: parseFloat(k[9])
+    }));
+
+    let trainingData = [];
+    for (let i = 20; i < candles.length - 1; i++) {
+        const slice = candles.slice(i - 20, i);
+        let sumVol = 0, sumTaker = 0;
+        slice.forEach(c => { sumVol += c.vol; sumTaker += c.takerBuyVol; });
+        const takerRatio = sumVol > 0 ? sumTaker / sumVol : 0.5;
+
+        let vwapNum = 0, vwapDenom = 0;
+        slice.forEach(c => {
+            const tp = (c.high + c.low + c.close) / 3;
+            vwapNum += tp * c.vol; vwapDenom += c.vol;
+        });
+        const vwap = vwapNum / (vwapDenom || 1);
+        const vwapRatio = Math.min(Math.max((candles[i].close / vwap - 0.95) / 0.1, 0), 1);
+        const momentum = (candles[i].close - candles[i-1].close) / candles[i-1].close;
+        const normMomentum = Math.min(Math.max((momentum + 0.05) / 0.1, 0), 1);
+        const nextCandleUp = candles[i + 1].close >= candles[i].close ? 1 : 0;
+
+        trainingData.push({ input: [takerRatio, vwapRatio, normMomentum], output: [nextCandleUp] });
+    }
+
+    const trainResult = net.train(trainingData, { iterations: 1200, errorThresh: 0.005, log: false });
+    document.getElementById('nnLoss').innerText = trainResult.error.toFixed(4);
+    uiLog(`✅ Red Neuronal lista | Loss: ${trainResult.error.toFixed(5)}`);
+
+    const lastSlice = candles.slice(-20);
+    let totalVol = 0, totalBuyVol = 0;
+    lastSlice.forEach(c => { totalVol += c.vol; totalBuyVol += c.takerBuyVol; });
+    const currentTakerRatio = totalVol > 0 ? totalBuyVol / totalVol : 0.5;
+
+    let vwapNum = 0, vwapDenom = 0;
+    lastSlice.forEach(c => {
+        const tp = (c.high + c.low + c.close) / 3;
+        vwapNum += tp * c.vol; vwapDenom += c.vol;
+    });
+    const currentVwap = vwapNum / (vwapDenom || 1);
+    const lastCandle = candles[candles.length - 1];
+    const currentVwapRatio = Math.min(Math.max((lastCandle.close / currentVwap - 0.95) / 0.1, 0), 1);
+    const currentMomentum = (lastCandle.close - candles[candles.length - 2].close) / candles[candles.length - 2].close;
+    const currentNormMomentum = Math.min(Math.max((currentMomentum + 0.05) / 0.1, 0), 1);
+
+    const output = net.run([currentTakerRatio, currentVwapRatio, currentNormMomentum]);
+    const bullProbability = output[0] * 100;
+    const bearProbability = 100 - bullProbability;
+
+    document.getElementById('volBuyBar').style.width = bullProbability.toFixed(1) + "%";
+    document.getElementById('volSellBar').style.width = bearProbability.toFixed(1) + "%";
+    document.getElementById('buyPercentText').innerText = bullProbability.toFixed(1) + "%";
+    document.getElementById('sellPercentText').innerText = bearProbability.toFixed(1) + "%";
+    document.getElementById('buyVolRatio').innerText = (currentTakerRatio * 100).toFixed(1) + "%";
+
+    let sentiment = bullProbability > 65 ? "EUFORIA COMPRA" : (bearProbability > 65 ? "PÁNICO VENTA" : "ACUMULACIÓN SMC");
+    document.getElementById('sentimentText').innerText = sentiment;
+    document.getElementById('sentimentText').style.color = bullProbability >= 50 ? "#10b981" : "#ef4444";
+
+    const predDirEl = document.getElementById('predDir');
+    if (bullProbability >= 50) {
+        predDirEl.innerText = "🟢 ALCISTA (BARRIDO CONFIRMADO)";
+        predDirEl.style.color = "#10b981";
+    } else {
+        predDirEl.innerText = "🔴 BAJISTA (DISTRIBUCIÓN CONFIRMADA)";
+        predDirEl.style.color = "#ef4444";
+    }
+}
+
+function uiLog(m) {
+    const l = document.getElementById('events');
+    l.innerHTML = `<div style="margin-bottom:4px; border-bottom:1px solid #1e293b; padding-bottom:2px">>> ${m}</div>` + l.innerHTML;
+}
+
+document.getElementById('start').onclick = () => {
+    document.getElementById('start').disabled = true;
+    document.getElementById('stop').disabled = false;
+    initChart();
+    scanMarketForLiquidityAndConfirmation();
+    scanTimer = setInterval(scanMarketForLiquidityAndConfirmation, 10000); // Escanea cada 10 segundos
+};
+
+document.getElementById('stop').onclick = () => {
+    clearInterval(scanTimer);
+    document.getElementById('start').disabled = false;
+    document.getElementById('stop').disabled = true;
+    uiLog("🛑 Escáner detenido.");
+};
+
+document.getElementById('predictBtn').onclick = trainAndPredictNeural;
+
+window.onload = initChart;
+</script>
 </body>
 </html>
