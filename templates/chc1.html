@@ -1,353 +1,478 @@
+import os
+import json
+import time
+import hashlib
+
+from flask import Flask, request, jsonify, render_template_string
+from flask_cors import CORS
+from pymongo import MongoClient, ASCENDING, DESCENDING
+
+# =====================================================
+# APP
+# =====================================================
+app = Flask(__name__)
+CORS(app)
+
+# =====================================================
+# CONFIG
+# =====================================================
+PORT = int(os.environ.get("PORT", 10000))
+
+MONGO_URI = os.environ.get("MONGO_URI", "").strip()
+if MONGO_URI == "":
+    MONGO_URI = "mongodb+srv://charly:caseta82%2A@cluster0.daebfm2.mongodb.net/charlycoin_db?retryWrites=true&w=majority&tls=true"
+
+DIFICULTAD = 5
+RECOMPENSA_INICIAL = 18.0
+HALVING_CADA = 21000
+MAX_SUPPLY = 21000000000
+COOLDOWN_MINADO = 2
+
+ULTIMO_MINADO = {}
+
+# =====================================================
+# DB
+# =====================================================
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=30000)
+db = client["charlycoin_db"]
+collection = db["blockchain"]
+
+collection.create_index("hash")
+try:
+    collection.create_index([("indice", ASCENDING)], unique=True)
+except:
+    pass
+
+# =====================================================
+# HTML
+# =====================================================
+HTML = """
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minería CHC Pro | Sistema Seguro con Firma</title>
-    
-    <!-- Ethers.js para validación criptográfica y firmas ECDSA/Web3 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHARLYSCAN PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; --wc-blue: #3B99FC; --red: #e74c3c; }
-        body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; overflow-x: hidden; }
-        
-        .window-container { max-width: 600px; margin: 20px auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        
-        .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
-        
-        #iframeContainer { width: 95%; height: 300px; border: 2px solid var(--gold); margin: 15px auto; border-radius: 10px; overflow: hidden; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        input { margin: 8px 0; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; text-align: center; }
-        
-        button { margin: 8px 0; padding: 12px; width: 90%; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; background: var(--gold); color: black; transition: 0.3s; }
-        button:hover { transform: scale(1.02); }
-        
-        .btn-connect { background: var(--wc-blue); color: white; margin-bottom: 12px; }
-        .chc-counter { font-size: 1.8em; color: var(--gold); margin: 10px 0; font-weight: bold; }
-        .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 8px 0; cursor: pointer; }
-        .btn-home { background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8em; }
-
-        .lock-badge { font-size: 0.8em; color: #2ecc71; background: #11381e; padding: 4px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
-
-        #modalExplorador {
-            display: none; 
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            z-index: 9999;
-            flex-direction: column;
-        }
-        .modal-header {
-            background: #1a1a1a;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--blue-scan);
-        }
-        .btn-cerrar {
-            background: var(--red);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            width: auto;
-        }
-        #iframeExplorador {
-            flex-grow: 1;
-            width: 100%;
-            border: none;
-        }
-    </style>
+<style>
+body{
+    background:#070b14;
+    color:#f8fafc;
+    font-family:Segoe UI, Arial;
+}
+.card{
+    background:#111827;
+    border:1px solid #1f2937;
+    border-radius:16px;
+}
+.neon{
+    color:#00f2ff;
+    text-shadow:0 0 14px rgba(0,242,255,.55);
+}
+.blink{
+    animation:blink 1.5s infinite;
+}
+@keyframes blink{
+    0%{opacity:1}
+    50%{opacity:.3}
+    100%{opacity:1}
+}
+</style>
 </head>
-<body onload="verificarMemoria()">
 
-<div id="modalExplorador">
-    <div class="modal-header">
-        <span style="color: var(--blue-scan); font-weight: bold;">🔍 CHARLY SCAN EXPLORER</span>
-        <button class="btn-cerrar" onclick="cerrarExplorador()">← VOLVER A MINAR</button>
+<body class="p-6">
+
+<div class="max-w-6xl mx-auto">
+
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-5xl font-black neon">CHARLYSCAN</h1>
+        <p class="text-gray-400">Explorador Blockchain PRO</p>
     </div>
-    <iframe id="iframeExplorador" src=""></iframe>
+
+    <div class="card p-4 text-right">
+        <p class="text-sm text-gray-400">Estado Nodo</p>
+        <p class="text-green-400 font-bold blink">● EN VIVO</p>
+        <p id="total-blocks" class="text-xl mt-2 font-mono">Bloques: 0</p>
+    </div>
 </div>
 
-<div class="window-container">
-    <div class="window-header">
-        <a href="next_page.html" class="btn-home">🏠 HOME</a>
-        <span style="font-size: 0.9em; font-weight: bold; color: var(--gold);">CHARLY MINER PRO</span>
-        <a href="videos.html" class="btn-home" style="background: #27ae60;">VIDEOS</a>
-    </div>
+<div class="card p-6 mb-6 border-l-4 border-cyan-500">
+    <p class="text-sm text-gray-400 mb-2 font-bold uppercase tracking-widest">
+        Wallet Tracker
+    </p>
 
-    <div class="card-panel">
-        <h2>MINERÍA ACTIVA</h2>
-        <div class="lock-badge">🔒 Candado de Propiedad Activo</div>
-        
-        <input type="text" id="userWallet" placeholder="Pega tu dirección CHC..." onkeypress="handleKeyPress(event)" list="prevWallets" />
-        <datalist id="prevWallets"></datalist> 
-        
-        <button class="btn-connect" onclick="conectarBilleteraEVM()">
-            🦊 Conectar MetaMask / WalletConnect
+    <div class="flex gap-2">
+        <input
+            id="wallet-input"
+            class="w-full p-3 bg-black border border-gray-700 rounded text-cyan-300 font-mono"
+            placeholder="Ingresa tu dirección pública..."
+        />
+        <button onclick="updateDashboard()"
+            class="bg-cyan-600 hover:bg-cyan-500 px-8 rounded font-bold">
+            BUSCAR
         </button>
+    </div>
+</div>
 
-        <span onclick="gestionarIdentidad()" class="wallet-link">🔑 Generar nueva identidad con Clave Privada</span>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-        <div class="chc-counter">💰 <span id="chcCount">0</span> CHC</div>
-        <div id="minerStatus" style="font-size: 0.8em; color: #888;">Panel de control listo</div>
+    <div class="card p-5 border-l-4 border-yellow-500">
+        <p class="text-gray-400 text-xs font-bold uppercase">Mi Saldo</p>
+        <p id="user-balance"
+           class="text-3xl text-yellow-400 font-black font-mono">
+           0.00 CHC
+        </p>
     </div>
 
-    <!-- Panel de Transferencias Seguras -->
-    <div class="card-panel" style="border-color: #333;">
-        <h3 style="margin-top: 0; color: #2ecc71;">💸 ENVIAR CHC SEGURO</h3>
-        <input type="text" id="transferReceptor" placeholder="Dirección del destinatario..." />
-        <input type="number" id="transferMonto" placeholder="Monto a transferir..." />
-        <button style="background: #27ae60; color: white;" onclick="ejecutarTransferenciaSegura()">🔐 FIRMAR Y ENVIAR</button>
+    <div class="card p-5 border-l-4 border-white">
+        <p class="text-gray-400 text-xs font-bold uppercase">Suministro Actual</p>
+        <p id="total-supply"
+           class="text-3xl font-black font-mono text-white">
+           0 CHC
+        </p>
+        <p class="text-gray-500 text-[10px] mt-1">
+            MÁXIMO: 21,000,000,000 CHC
+        </p>
     </div>
 
-    <div id="iframeContainer">
-      <iframe id="iframeRedireccion" src="https://tareasunamyunadm.blogspot.com"></iframe>
+    <div class="card p-5 border-l-4 border-purple-500">
+        <p class="text-gray-400 text-xs font-bold uppercase">Recompensa x Bloque</p>
+        <p id="last-reward"
+           class="text-3xl text-purple-400 font-black font-mono">
+           0 CHC
+        </p>
     </div>
 
-    <div style="padding: 10px;">
-        <button onclick="continuarMineria()">🚀 INICIAR MINERÍA</button>
-        <button style="background:var(--red); color:white;" onclick="pararMineria()">🛑 DETENER</button>
-        
-        <button style="background: var(--blue-scan); color: white;" onclick="abrirExplorador()">🔍 ABRIR CHARLY SCAN (FULLSCREEN)</button>
+</div>
+
+<div class="card overflow-hidden">
+    <div class="p-4 border-b border-gray-800 bg-gray-900/50">
+        <h2 class="font-bold">Blockchain Explorer</h2>
     </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="text-gray-500 text-xs uppercase bg-black/30">
+                <tr>
+                    <th class="p-3">Bloque</th>
+                    <th class="p-3">De</th>
+                    <th class="p-3">A</th>
+                    <th class="p-3">Monto</th>
+                    <th class="p-3">Hash</th>
+                </tr>
+            </thead>
+
+            <tbody id="blockchain-table" class="text-sm"></tbody>
+        </table>
+    </div>
+</div>
+
 </div>
 
 <script>
-    const NODO_URL = "https://binance-bot-hna7.onrender.com";
-    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
-    const urls = [
-        "https://tareasunamyunadm.blogspot.com", 
-        "https://faucentminialtcrypto.blogspot.com", 
-        "https://solotareamsmex.blogspot.com", 
-        "https://juegospcmexico.blogspot.com"
-    ];
-    
-    let segundos = 0, chcGanados = 0, interval = null, minando = false;
-    let RecompensaPendiente = 0;
-    let web3Provider = null, signer = null;
+async function updateDashboard(){
+    try{
 
-    // --- CONEXIÓN A BILLETERA EXTERNA (METAMASK / WALLETCONNECT) ---
-    async function conectarBilleteraEVM() {
-        if (window.ethereum) {
-            try {
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                web3Provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = web3Provider.getSigner();
-                const address = await signer.getAddress();
-                
-                document.getElementById('userWallet').value = address;
-                localStorage.setItem("last_chc_wallet", address);
-                document.getElementById('minerStatus').innerText = "Billetera verificada: " + address.substring(0, 10) + "...";
-            } catch (err) {
-                alert("Conexión cancelada o rechazada.");
-            }
-        } else {
-            alert("No se detectó MetaMask. Instálalo o pega manualmente tu Clave Privada para firmar.");
-        }
-    }
+        const wallet = document.getElementById("wallet-input").value.trim();
 
-    // --- CANDADO DE SEGURIDAD: FIRMA DE TRANSACCIONES ---
-    async function ejecutarTransferenciaSegura() {
-        const emisor = document.getElementById('userWallet').value.trim();
-        const receptor = document.getElementById('transferReceptor').value.trim();
-        const monto = parseFloat(document.getElementById('transferMonto').value);
+        const [chainRes, statsRes] = await Promise.all([
+            fetch("/cadena"),
+            fetch("/stats")
+        ]);
 
-        if (!emisor || !receptor || isNaN(monto) || monto <= 0) {
-            return alert("Por favor completa los campos de emisor, destinatario y monto válido.");
-        }
+        const chain = await chainRes.json();
+        const stats = await statsRes.json();
 
-        let firma = "";
+        let html = "";
 
-        // 1. Si está conectado vía Web3 / MetaMask / WalletConnect
-        if (signer && (await signer.getAddress()).toLowerCase() === emisor.toLowerCase()) {
-            try {
-                document.getElementById('minerStatus').innerText = "Esperando firma en billetera...";
-                const mensaje = `Transferir ${monto} CHC hacia ${receptor}`;
-                firma = await signer.signMessage(mensaje);
-            } catch (e) {
-                return alert("Firma rechazada. No se puede transferir sin la autorización del dueño.");
-            }
-        } 
-        // 2. Firma por Clave Privada almacenada o solicitada al usuario
-        else {
-            let clavePrivada = localStorage.getItem("chc_privkey_" + emisor);
-            if (!clavePrivada) {
-                clavePrivada = prompt("🔍 VERIFICACIÓN DE PROPIEDAD:\nIntroduce la CLAVE PRIVADA asociada a esta billetera para autorizar la transferencia:");
-            }
+        chain.forEach(block => {
 
-            if (!clavePrivada) {
-                return alert("Transferencia cancelada. Se requiere la Clave Privada para autorizar gastos.");
-            }
+            const tx = block.transacciones?.[0];
+            if(!tx) return;
 
-            try {
-                const walletObj = new ethers.Wallet(clavePrivada);
-                // Validar si la clave ingresada le pertenece a la dirección que quiere gastar
-                if (walletObj.address.toLowerCase() !== emisor.toLowerCase() && ("chc_" + walletObj.address).toLowerCase() !== emisor.toLowerCase()) {
-                    return alert("❌ ERROR DE AUTENTICACIÓN: La clave privada introducida no le pertenece a la dirección " + emisor);
-                }
+            html += `
+            <tr class="border-t border-gray-800 hover:bg-gray-900/40">
+                <td class="p-3 text-cyan-400 font-bold">#${block.indice}</td>
+                <td class="p-3 text-xs font-mono text-gray-400">
+                    ${(tx.emisor || "").substring(0,18)}...
+                </td>
+                <td class="p-3 text-xs font-mono text-gray-400">
+                    ${(tx.receptor || "").substring(0,18)}...
+                </td>
+                <td class="p-3 text-yellow-400 font-bold">
+                    ${Number(tx.monto).toLocaleString()}
+                </td>
+                <td class="p-3 text-[10px] text-gray-600 font-mono">
+                    ${block.hash.substring(0,24)}...
+                </td>
+            </tr>`;
+        });
 
-                const mensajeHash = ethers.utils.solidityKeccak256(["string", "string", "number"], [emisor, receptor, monto]);
-                firma = await walletObj.signMessage(ethers.utils.arrayify(mensajeHash));
-            } catch (err) {
-                return alert("❌ Clave privada inválida.");
-            }
+        document.getElementById("blockchain-table").innerHTML = html;
+        document.getElementById("total-blocks").innerText =
+            "Bloques: " + stats.bloques;
+
+        document.getElementById("total-supply").innerText =
+            stats.supply.toLocaleString() + " CHC";
+
+        document.getElementById("last-reward").innerText =
+            stats.recompensa + " CHC";
+
+        if(wallet !== ""){
+            const r = await fetch("/balance/" + wallet);
+            const b = await r.json();
+
+            document.getElementById("user-balance").innerText =
+                Number(b.balance).toLocaleString(
+                    undefined,
+                    {minimumFractionDigits:2}
+                ) + " CHC";
         }
 
-        // 3. Enviar la transferencia al nodo incluyendo la firma criptográfica
-        try {
-            document.getElementById('minerStatus').innerText = "Enviando transacción firmada al nodo...";
-            const respuesta = await fetch(`${NODO_URL}/transferir`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    emisor: emisor,
-                    receptor: receptor,
-                    monto: Number(monto),
-                    firma: firma
-                })
-            });
-
-            const res = await respuesta.json();
-            if (respuesta.ok) {
-                alert("✅ Transacción confirmada exitosamente.");
-                document.getElementById('transferMonto').value = "";
-            } else {
-                alert("❌ Error del nodo: " + (res.error || res.mensaje || "Rechazada."));
-            }
-        } catch (error) {
-            alert("Error de conexión con el nodo.");
-        }
+    }catch(e){
+        console.log(e);
     }
+}
 
-    function abrirExplorador() {
-        const modal = document.getElementById('modalExplorador');
-        const frame = document.getElementById('iframeExplorador');
-        if (frame.src !== NODO_URL + "/") { frame.src = NODO_URL; }
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-    }
-
-    function cerrarExplorador() {
-        document.getElementById('modalExplorador').style.display = "none";
-        document.body.style.overflow = "auto";
-    }
-
-    function redireccionAleatoria() {
-        document.getElementById('iframeRedireccion').src = urls[Math.floor(Math.random() * urls.length)];
-    }
-    setInterval(redireccionAleatoria, 25000);
-
-    function verificarMemoria() {
-        const saved = localStorage.getItem("last_chc_wallet");
-        if (saved) {
-            document.getElementById('userWallet').value = saved;
-            const dl = document.getElementById('prevWallets');
-            const opt = document.createElement('option');
-            opt.value = saved;
-            dl.appendChild(opt);
-        }
-    }
-
-    function contarTiempo() {
-        const wallet = document.getElementById('userWallet').value.trim();
-        if (minando && wallet.length > 5) {
-            segundos++;
-            
-            if (segundos % 2 === 0) {
-                chcGanados++;
-                RecompensaPendiente++;
-                document.getElementById('chcCount').innerText = chcGanados;
-            }
-
-            if (segundos % 10 === 0 && RecompensaPendiente > 0) {
-                const montoAEnviar = RecompensaPendiente;
-                RecompensaPendiente = 0;
-                enviarAlNodo(wallet, montoAEnviar);
-            }
-
-            document.getElementById('minerStatus').innerText = `Minando... (Bloque actual: #${segundos})`;
-        }
-    }
-
-    async function enviarAlNodo(receptor, monto) {
-        try {
-            document.getElementById('minerStatus').innerText = `Sincronizando bloque con el nodo...`;
-            const respuesta = await fetch(`${NODO_URL}/transferir`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ 
-                    emisor: MASTER_PUBLIC, 
-                    receptor: receptor, 
-                    monto: Number(monto), 
-                    firma: "WEB_MINING_REWARD" 
-                })
-            });
-
-            if (!respuesta.ok) { throw new Error(`HTTP Error status: ${respuesta.status}`); }
-
-            const resultado = await respuesta.json();
-            document.getElementById('minerStatus').innerText = `¡Bloque minado y registrado exitosamente!`;
-            
-            const frame = document.getElementById('iframeExplorador');
-            if (document.getElementById('modalExplorador').style.display === "flex") {
-                frame.contentWindow.location.reload();
-            }
-
-        } catch (error) {
-            console.error("Error en conexión con el nodo CHC:", error);
-            document.getElementById('minerStatus').innerText = `Error enviando al nodo. Reintentando...`;
-            RecompensaPendiente += monto;
-        }
-    }
-
-    function continuarMineria() {
-        const wallet = document.getElementById('userWallet').value.trim();
-        if (wallet.length < 5) return alert("Por favor ingresa una billetera válida.");
-        if (!minando) {
-            minando = true;
-            localStorage.setItem("last_chc_wallet", wallet);
-            if (!interval) interval = setInterval(contarTiempo, 1000);
-            document.getElementById('minerStatus').innerText = "Minería en ejecución";
-        }
-    }
-
-    function pararMineria() {
-        minando = false;
-        if (interval) {
-            clearInterval(interval);
-            interval = null;
-        }
-        if (RecompensaPendiente > 0) {
-            const wallet = document.getElementById('userWallet').value.trim();
-            enviarAlNodo(wallet, RecompensaPendiente);
-            RecompensaPendiente = 0;
-        }
-        document.getElementById('minerStatus').innerText = `Minería detenida. Total: ${chcGanados} CHC`;
-    }
-
-    function gestionarIdentidad() {
-        const wallet = ethers.Wallet.createRandom();
-        const privKey = wallet.privateKey;
-        const pubAddress = wallet.address;
-
-        localStorage.setItem("chc_privkey_" + pubAddress, privKey);
-        localStorage.setItem("last_chc_wallet", pubAddress);
-
-        alert("🔑 NUEVA IDENTIDAD GUARDADA SEGURO:\n\nDirección Pública: " + pubAddress + "\n\nClave Privada: " + privKey + "\n\n⚠️ Guarda esta Clave Privada. Se te pedirá únicamente para autorizar transferencias de esta billetera.");
-        document.getElementById('userWallet').value = pubAddress;
-    }
-
-    function handleKeyPress(e) { if (e.keyCode === 13) { continuarMineria(); } }
+setInterval(updateDashboard, 10000);
+updateDashboard();
 </script>
 
 </body>
 </html>
+"""
+
+# =====================================================
+# HELPERS
+# =====================================================
+def calcular_hash(bloque):
+    copia = dict(bloque)
+    copia.pop("_id", None)
+    copia.pop("hash", None)
+
+    texto = json.dumps(copia, sort_keys=True).encode()
+    return hashlib.sha256(texto).hexdigest()
+
+
+def crear_genesis():
+    if collection.count_documents({}) == 0:
+        bloque = {
+            "indice": 0,
+            "timestamp": time.time(),
+            "transacciones": [],
+            "nonce": "0",
+            "hash_anterior": "0"
+        }
+
+        bloque["hash"] = calcular_hash(bloque)
+        collection.insert_one(bloque)
+
+
+def recompensa_actual():
+    bloques = collection.count_documents({})
+    halvings = bloques // HALVING_CADA
+
+    return max(
+        RECOMPENSA_INICIAL / (2 ** halvings),
+        0.00000001
+    )
+
+
+def saldo_wallet(wallet):
+    pipeline = [
+        {"$unwind": "$transacciones"},
+        {
+            "$match": {
+                "$or": [
+                    {"transacciones.receptor": wallet},
+                    {"transacciones.emisor": wallet}
+                ]
+            }
+        }
+    ]
+
+    movimientos = list(collection.aggregate(pipeline))
+
+    saldo = 0.0
+
+    for item in movimientos:
+        tx = item["transacciones"]
+
+        if tx.get("receptor") == wallet:
+            saldo += float(tx.get("monto", 0))
+
+        if tx.get("emisor") == wallet:
+            saldo -= float(tx.get("monto", 0))
+
+    return round(saldo, 8)
+
+# =====================================================
+# ROUTES
+# =====================================================
+@app.route("/")
+def home():
+    return render_template_string(HTML)
+
+
+@app.route("/stats")
+def stats():
+
+    total = collection.count_documents({})
+
+    pipeline = [
+        {"$unwind": "$transacciones"},
+        {
+            "$group": {
+                "_id": None,
+                "total": {"$sum": "$transacciones.monto"}
+            }
+        }
+    ]
+
+    result = list(collection.aggregate(pipeline))
+    supply = result[0]["total"] if result else 0
+
+    return jsonify({
+        "bloques": max(total - 1, 0),
+        "supply": round(supply, 2),
+        "recompensa": recompensa_actual(),
+        "dificultad": DIFICULTAD
+    })
+
+
+@app.route("/cadena")
+def cadena():
+    data = list(
+        collection.find({}, {"_id": 0})
+        .sort("indice", DESCENDING)
+        .limit(50)
+    )
+    return jsonify(data)
+
+
+@app.route("/balance/<wallet>")
+def balance(wallet):
+    return jsonify({
+        "wallet": wallet,
+        "balance": saldo_wallet(wallet)
+    })
+
+
+# =====================================================
+# TRANSFERIR
+# =====================================================
+@app.route("/transferir", methods=["POST"])
+def transferir():
+
+    data = request.get_json(force=True)
+
+    emisor = str(data.get("emisor", "")).strip()
+    receptor = str(data.get("receptor", "")).strip()
+
+    try:
+        monto = float(data.get("monto", 0))
+    except:
+        return jsonify({"mensaje": "monto inválido"}), 400
+
+    firma = str(data.get("firma", "")).strip()
+
+    if not emisor or not receptor or monto <= 0:
+        return jsonify({"mensaje": "datos incompletos"}), 400
+
+    if emisor == receptor:
+        return jsonify({"mensaje": "no puedes enviarte a ti mismo"}), 400
+
+    saldo = saldo_wallet(emisor)
+
+    if saldo < monto:
+        return jsonify({"mensaje": "saldo insuficiente"}), 400
+
+    ultimo = collection.find_one(sort=[("indice", -1)])
+
+    nuevo = {
+        "indice": ultimo["indice"] + 1,
+        "timestamp": time.time(),
+        "transacciones": [{
+            "emisor": emisor,
+            "receptor": receptor,
+            "monto": monto,
+            "firma": firma
+        }],
+        "nonce": "transfer",
+        "hash_anterior": ultimo["hash"]
+    }
+
+    nuevo["hash"] = calcular_hash(nuevo)
+
+    try:
+        collection.insert_one(nuevo)
+        return jsonify({
+            "ok": True,
+            "mensaje": "transferencia enviada"
+        })
+    except:
+        return jsonify({"mensaje": "error de red"}), 500
+
+
+# =====================================================
+# MINAR
+# =====================================================
+@app.route("/minar", methods=["POST"])
+def minar():
+
+    data = request.get_json(force=True)
+
+    wallet = str(data.get("wallet", "")).strip()
+    nonce = str(data.get("nonce", "")).strip()
+
+    if not wallet or not nonce:
+        return jsonify({"error": "datos incompletos"}), 400
+
+    ahora = time.time()
+
+    if wallet in ULTIMO_MINADO:
+        if ahora - ULTIMO_MINADO[wallet] < COOLDOWN_MINADO:
+            return jsonify({"error": "espera 2 seg"}), 429
+
+    prueba = hashlib.sha256(f"{wallet}{nonce}".encode()).hexdigest()
+
+    if not prueba.startswith("0" * DIFICULTAD):
+        return jsonify({"error": "hash invalido"}), 400
+
+    ultimo = collection.find_one(sort=[("indice", -1)])
+
+    nuevo = {
+        "indice": ultimo["indice"] + 1,
+        "timestamp": ahora,
+        "transacciones": [{
+            "emisor": "RED",
+            "receptor": wallet,
+            "monto": recompensa_actual()
+        }],
+        "nonce": nonce,
+        "hash_anterior": ultimo["hash"]
+    }
+
+    nuevo["hash"] = calcular_hash(nuevo)
+
+    try:
+        collection.insert_one(nuevo)
+        ULTIMO_MINADO[wallet] = ahora
+
+        return jsonify({
+            "ok": True,
+            "bloque": nuevo["indice"]
+        })
+
+    except:
+        return jsonify({"error": "error de red"}), 500
+
+
+# =====================================================
+# START
+# =====================================================
+if __name__ == "__main__":
+    crear_genesis()
+    app.run(host="0.0.0.0", port=PORT)
