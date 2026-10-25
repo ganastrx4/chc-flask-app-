@@ -3,39 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minería CHC | CharlyScan Pro</title>
-    <!-- Librería Ethers.js para conexión Web3 / WalletConnect / MetaMask -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; --wallet-btn: #8e44ad; }
-        body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; overflow-x: hidden; }
-        
-        .window-container { max-width: 600px; margin: 20px auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        
-        .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
-        
-        #iframeContainer { width: 95%; height: 300px; border: 2px solid var(--gold); margin: 15px auto; border-radius: 10px; overflow: hidden; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        input { marginAquí tienes tu código **completamente integrado con WalletConnect v2 y Web3Modal** utilizando la librería oficial `ethers.js`. 
-
-Se agregó un botón dedicado para **WalletConnect** que autocompleta la dirección de la billetera (como MetaMask, Trust Wallet o Rainbow) en tu campo de texto `userWallet` para que puedas minar directo a esa cuenta.
-
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minería CHC | CharlyScan Pro</title>
+    <title>Minería CHC Pro | Sistema Seguro con Firma</title>
     
-    <!-- Librerías para WalletConnect y Web3 -->
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js](https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js](https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js)"></script>
+    <!-- Ethers.js para validación criptográfica y firmas ECDSA/Web3 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 
     <style>
-        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; --wc-blue: #3B99FC; }
+        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; --wc-blue: #3B99FC; --red: #e74c3c; }
         body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; overflow-x: hidden; }
         
         .window-container { max-width: 600px; margin: 20px auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -46,15 +20,17 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
         #iframeContainer { width: 95%; height: 300px; border: 2px solid var(--gold); margin: 15px auto; border-radius: 10px; overflow: hidden; background: #000; }
         iframe { width: 100%; height: 100%; border: none; }
         
-        input { margin: 10px; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; text-align: center; }
+        input { margin: 8px 0; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; text-align: center; }
         
         button { margin: 8px 0; padding: 12px; width: 90%; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; background: var(--gold); color: black; transition: 0.3s; }
         button:hover { transform: scale(1.02); }
         
-        .btn-walletconnect { background: var(--wc-blue); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px auto; }
+        .btn-connect { background: var(--wc-blue); color: white; margin-bottom: 12px; }
         .chc-counter { font-size: 1.8em; color: var(--gold); margin: 10px 0; font-weight: bold; }
-        .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 10px 0; cursor: pointer; }
+        .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 8px 0; cursor: pointer; }
         .btn-home { background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8em; }
+
+        .lock-badge { font-size: 0.8em; color: #2ecc71; background: #11381e; padding: 4px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
 
         #modalExplorador {
             display: none; 
@@ -74,7 +50,7 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
             border-bottom: 2px solid var(--blue-scan);
         }
         .btn-cerrar {
-            background: #e74c3c;
+            background: var(--red);
             color: white;
             padding: 8px 20px;
             border-radius: 5px;
@@ -110,95 +86,152 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
 
     <div class="card-panel">
         <h2>MINERÍA ACTIVA</h2>
-        <input type="text" id="userWallet" placeholder="Pega tu dirección CHC o conecta tu Wallet..." onkeypress="handleKeyPress(event)" list="prevWallets" />
+        <div class="lock-badge">🔒 Candado de Propiedad Activo</div>
+        
+        <input type="text" id="userWallet" placeholder="Pega tu dirección CHC..." onkeypress="handleKeyPress(event)" list="prevWallets" />
         <datalist id="prevWallets"></datalist> 
         
-        <!-- Botón Integrado de WalletConnect -->
-        <button class="btn-walletconnect" id="btnConnectWC" onclick="conectarWalletConnect()">
-            <span data-id="selected-provider-walletconnect">🔗 Conectar con WalletConnect</span>
+        <button class="btn-connect" onclick="conectarBilleteraEVM()">
+            🦊 Conectar MetaMask / WalletConnect
         </button>
 
-        <span onclick="gestionarIdentidad()" class="wallet-link">¿No tienes cuenta? Generar nueva local</span>
+        <span onclick="gestionarIdentidad()" class="wallet-link">🔑 Generar nueva identidad con Clave Privada</span>
 
         <div class="chc-counter">💰 <span id="chcCount">0</span> CHC</div>
         <div id="minerStatus" style="font-size: 0.8em; color: #888;">Panel de control listo</div>
     </div>
 
+    <!-- Panel de Transferencias Seguras -->
+    <div class="card-panel" style="border-color: #333;">
+        <h3 style="margin-top: 0; color: #2ecc71;">💸 ENVIAR CHC SEGURO</h3>
+        <input type="text" id="transferReceptor" placeholder="Dirección del destinatario..." />
+        <input type="number" id="transferMonto" placeholder="Monto a transferir..." />
+        <button style="background: #27ae60; color: white;" onclick="ejecutarTransferenciaSegura()">🔐 FIRMAR Y ENVIAR</button>
+    </div>
+
     <div id="iframeContainer">
-      <iframe id="iframeRedireccion" src="[https://tareasunamyunadm.blogspot.com](https://tareasunamyunadm.blogspot.com)"></iframe>
+      <iframe id="iframeRedireccion" src="https://tareasunamyunadm.blogspot.com"></iframe>
     </div>
 
     <div style="padding: 10px;">
         <button onclick="continuarMineria()">🚀 INICIAR MINERÍA</button>
-        <button style="background:#e74c3c; color:white;" onclick="pararMineria()">🛑 DETENER</button>
+        <button style="background:var(--red); color:white;" onclick="pararMineria()">🛑 DETENER</button>
         
         <button style="background: var(--blue-scan); color: white;" onclick="abrirExplorador()">🔍 ABRIR CHARLY SCAN (FULLSCREEN)</button>
     </div>
 </div>
 
 <script>
-    const NODO_URL = "[https://binance-bot-hna7.onrender.com](https://binance-bot-hna7.onrender.com)";
+    const NODO_URL = "https://binance-bot-hna7.onrender.com";
     const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
     const urls = [
-        "[https://tareasunamyunadm.blogspot.com](https://tareasunamyunadm.blogspot.com)", 
-        "[https://faucentminialtcrypto.blogspot.com](https://faucentminialtcrypto.blogspot.com)", 
-        "[https://solotareamsmex.blogspot.com](https://solotareamsmex.blogspot.com)", 
-        "[https://juegospcmexico.blogspot.com](https://juegospcmexico.blogspot.com)"
+        "https://tareasunamyunadm.blogspot.com", 
+        "https://faucentminialtcrypto.blogspot.com", 
+        "https://solotareamsmex.blogspot.com", 
+        "https://juegospcmexico.blogspot.com"
     ];
     
     let segundos = 0, chcGanados = 0, interval = null, minando = false;
     let RecompensaPendiente = 0;
-    let wcProvider = null;
+    let web3Provider = null, signer = null;
 
-    // --- INTEGRACIÓN CON WALLETCONNECT ---
-    async function conectarWalletConnect() {
-        try {
-            document.getElementById('minerStatus').innerText = "Abriendo WalletConnect...";
-            
-            // Inicialización de proveedor público de WalletConnect (BSC / Ethereum compatible)
-            wcProvider = new WalletConnectProvider.default({
-                rpc: {
-                    56: "[https://bsc-dataseed.binance.org/](https://bsc-dataseed.binance.org/)",
-                    1: "[https://rpc.ankr.com/eth](https://rpc.ankr.com/eth)"
-                },
-                qrcodeModalOptions: {
-                    mobileLinks: ["metamask", "trust", "rainbow", "tokenpocket"]
+    // --- CONEXIÓN A BILLETERA EXTERNA (METAMASK / WALLETCONNECT) ---
+    async function conectarBilleteraEVM() {
+        if (window.ethereum) {
+            try {
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = web3Provider.getSigner();
+                const address = await signer.getAddress();
+                
+                document.getElementById('userWallet').value = address;
+                localStorage.setItem("last_chc_wallet", address);
+                document.getElementById('minerStatus').innerText = "Billetera verificada: " + address.substring(0, 10) + "...";
+            } catch (err) {
+                alert("Conexión cancelada o rechazada.");
+            }
+        } else {
+            alert("No se detectó MetaMask. Instálalo o pega manualmente tu Clave Privada para firmar.");
+        }
+    }
+
+    // --- CANDADO DE SEGURIDAD: FIRMA DE TRANSACCIONES ---
+    async function ejecutarTransferenciaSegura() {
+        const emisor = document.getElementById('userWallet').value.trim();
+        const receptor = document.getElementById('transferReceptor').value.trim();
+        const monto = parseFloat(document.getElementById('transferMonto').value);
+
+        if (!emisor || !receptor || isNaN(monto) || monto <= 0) {
+            return alert("Por favor completa los campos de emisor, destinatario y monto válido.");
+        }
+
+        let firma = "";
+
+        // 1. Si está conectado vía Web3 / MetaMask / WalletConnect
+        if (signer && (await signer.getAddress()).toLowerCase() === emisor.toLowerCase()) {
+            try {
+                document.getElementById('minerStatus').innerText = "Esperando firma en billetera...";
+                const mensaje = `Transferir ${monto} CHC hacia ${receptor}`;
+                firma = await signer.signMessage(mensaje);
+            } catch (e) {
+                return alert("Firma rechazada. No se puede transferir sin la autorización del dueño.");
+            }
+        } 
+        // 2. Firma por Clave Privada almacenada o solicitada al usuario
+        else {
+            let clavePrivada = localStorage.getItem("chc_privkey_" + emisor);
+            if (!clavePrivada) {
+                clavePrivada = prompt("🔍 VERIFICACIÓN DE PROPIEDAD:\nIntroduce la CLAVE PRIVADA asociada a esta billetera para autorizar la transferencia:");
+            }
+
+            if (!clavePrivada) {
+                return alert("Transferencia cancelada. Se requiere la Clave Privada para autorizar gastos.");
+            }
+
+            try {
+                const walletObj = new ethers.Wallet(clavePrivada);
+                // Validar si la clave ingresada le pertenece a la dirección que quiere gastar
+                if (walletObj.address.toLowerCase() !== emisor.toLowerCase() && ("chc_" + walletObj.address).toLowerCase() !== emisor.toLowerCase()) {
+                    return alert("❌ ERROR DE AUTENTICACIÓN: La clave privada introducida no le pertenece a la dirección " + emisor);
                 }
+
+                const mensajeHash = ethers.utils.solidityKeccak256(["string", "string", "number"], [emisor, receptor, monto]);
+                firma = await walletObj.signMessage(ethers.utils.arrayify(mensajeHash));
+            } catch (err) {
+                return alert("❌ Clave privada inválida.");
+            }
+        }
+
+        // 3. Enviar la transferencia al nodo incluyendo la firma criptográfica
+        try {
+            document.getElementById('minerStatus').innerText = "Enviando transacción firmada al nodo...";
+            const respuesta = await fetch(`${NODO_URL}/transferir`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    emisor: emisor,
+                    receptor: receptor,
+                    monto: Number(monto),
+                    firma: firma
+                })
             });
 
-            // Habilitar la sesión (Abre el modal QR o conexión directa en móviles)
-            await wcProvider.enable();
-
-            const web3Provider = new ethers.providers.Web3Provider(wcProvider);
-            const signer = web3Provider.getSigner();
-            const walletAddress = await signer.getAddress();
-
-            // Guardar dirección obtenida en el campo de wallet
-            document.getElementById('userWallet').value = walletAddress;
-            localStorage.setItem("last_chc_wallet", walletAddress);
-            document.getElementById('btnConnectWC').innerText = "✅ Billetera Conectada";
-            document.getElementById('minerStatus').innerText = "Conectado a WalletConnect con éxito.";
-
-            // Escuchar desconexión
-            wcProvider.on("disconnect", (code, reason) => {
-                document.getElementById('btnConnectWC').innerText = "🔗 Conectar con WalletConnect";
-                document.getElementById('minerStatus').innerText = "WalletConnect desconectado.";
-            });
-
+            const res = await respuesta.json();
+            if (respuesta.ok) {
+                alert("✅ Transacción confirmada exitosamente.");
+                document.getElementById('transferMonto').value = "";
+            } else {
+                alert("❌ Error del nodo: " + (res.error || res.mensaje || "Rechazada."));
+            }
         } catch (error) {
-            console.error("Error al conectar con WalletConnect:", error);
-            document.getElementById('minerStatus').innerText = "Error o conexión cancelada.";
+            alert("Error de conexión con el nodo.");
         }
     }
 
     function abrirExplorador() {
         const modal = document.getElementById('modalExplorador');
         const frame = document.getElementById('iframeExplorador');
-        
-        if (frame.src !== NODO_URL + "/") {
-            frame.src = NODO_URL;
-        }
-        
+        if (frame.src !== NODO_URL + "/") { frame.src = NODO_URL; }
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
     }
@@ -229,14 +262,12 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
         if (minando && wallet.length > 5) {
             segundos++;
             
-            // Cada 2 segundos suma 1 CHC local
             if (segundos % 2 === 0) {
                 chcGanados++;
                 RecompensaPendiente++;
                 document.getElementById('chcCount').innerText = chcGanados;
             }
 
-            // Cada 10 segundos liquida en la Blockchain las recompensas acumuladas
             if (segundos % 10 === 0 && RecompensaPendiente > 0) {
                 const montoAEnviar = RecompensaPendiente;
                 RecompensaPendiente = 0;
@@ -252,10 +283,7 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
             document.getElementById('minerStatus').innerText = `Sincronizando bloque con el nodo...`;
             const respuesta = await fetch(`${NODO_URL}/transferir`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ 
                     emisor: MASTER_PUBLIC, 
                     receptor: receptor, 
@@ -264,15 +292,11 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
                 })
             });
 
-            if (!respuesta.ok) {
-                throw new Error(`HTTP Error status: ${respuesta.status}`);
-            }
+            if (!respuesta.ok) { throw new Error(`HTTP Error status: ${respuesta.status}`); }
 
             const resultado = await respuesta.json();
-            console.log("Transacción confirmada en CharlyScan:", resultado);
             document.getElementById('minerStatus').innerText = `¡Bloque minado y registrado exitosamente!`;
             
-            // Actualizar iframe del explorador si está abierto para reflejar cambios
             const frame = document.getElementById('iframeExplorador');
             if (document.getElementById('modalExplorador').style.display === "flex") {
                 frame.contentWindow.location.reload();
@@ -311,16 +335,15 @@ Se agregó un botón dedicado para **WalletConnect** que autocompleta la direcci
     }
 
     function gestionarIdentidad() {
-        let p = prompt("¿ANDROID o PC?").toLowerCase();
-        if (p === "android" || p === "pc") {
-            const array = new Uint8Array(32);
-            window.crypto.getRandomValues(array);
-            const privateKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-            const publicKey = "chc_" + privateKey.substring(0, 40);
-            alert("Nueva llave CHC: " + publicKey + "\n\nCopiada al panel.");
-            document.getElementById('userWallet').value = publicKey;
-            localStorage.setItem("last_chc_wallet", publicKey);
-        }
+        const wallet = ethers.Wallet.createRandom();
+        const privKey = wallet.privateKey;
+        const pubAddress = wallet.address;
+
+        localStorage.setItem("chc_privkey_" + pubAddress, privKey);
+        localStorage.setItem("last_chc_wallet", pubAddress);
+
+        alert("🔑 NUEVA IDENTIDAD GUARDADA SEGURO:\n\nDirección Pública: " + pubAddress + "\n\nClave Privada: " + privKey + "\n\n⚠️ Guarda esta Clave Privada. Se te pedirá únicamente para autorizar transferencias de esta billetera.");
+        document.getElementById('userWallet').value = pubAddress;
     }
 
     function handleKeyPress(e) { if (e.keyCode === 13) { continuarMineria(); } }
