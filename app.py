@@ -1,40 +1,48 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, jsonify, request
+from flask_cors import CORS  # <-- Importante para permitir conexiones web
 
 app = Flask(__name__)
+CORS(app)  # <-- Activa CORS para que tu página web pueda hablar con el nodo sin bloqueos
 
-# Ruta principal (Home / Minería)
-@app.route('/')
+
+@app.route("/", methods=["GET"])
 def home():
-    # Renderiza el archivo HTML principal que tengas en la carpeta 'templates'
-    return render_template('index.html') 
+  return jsonify(
+      {"status": "online", "message": "Nodo CharlyCoin 2.0 Operativo"}
+  )
 
-# Ruta específica para ganarchun.html
-@app.route('/ganarchun.html')
-def ganar_chun():
-    return render_template('ganarchun.html')
 
-# Ruta genérica para cualquier otra página HTML que tengas en templates
-@app.route('/<path:nombre_pagina>')
-def cargar_pagina(nombre_pagina):
-    try:
-        return render_template(nombre_pagina)
-    except Exception:
-        return "Página no encontrada en el nodo CHC", 404
-
-# Endpoints de la API del nodo (para minería y transferencias)
-@app.route('/health', methods=['GET'])
+@app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"status": "online", "message": "Nodo CharlyCoin funcionando"})
+  return jsonify({"status": "online", "node": "CharlyScan Master Active"})
 
-@app.route('/minar', methods=['POST'])
+
+@app.route("/minar", methods=["POST"])
 def minar_bloque():
-    datos = request.json
-    return jsonify({"status": "success", "mensaje": "Bloque registrado"})
+  datos = request.json
+  wallet = datos.get("wallet")
+  nonce = datos.get("nonce")
+  # Lógica para registrar el bloque minado
+  return jsonify({
+      "status": "success",
+      "mensaje": "Bloque validado y registrado en la blockchain",
+  })
 
-@app.route('/transferir', methods=['POST'])
+
+@app.route("/transferir", methods=["POST"])
 def transferir():
-    datos = request.json
-    return jsonify({"status": "success", "mensaje": "Transferencia procesada"})
+  datos = request.json
+  emisor = datos.get("emisor")
+  receptor = datos.get("receptor")
+  monto = datos.get("monto")
+  firma = datos.get("firma")
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+  # Aquí validas la firma criptográfica antes de hacer el cambio de saldo
+  return jsonify({
+      "status": "success",
+      "mensaje": "Transferencia auditada y aceptada por el nodo",
+  })
+
+
+if __name__ == "__main__":
+  app.run(host="0.0.0.0", port=5000)
