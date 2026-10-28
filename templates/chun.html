@@ -1,27 +1,262 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Panel de Usuario</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
-        <h1 class="text-2xl font-bold mb-4 text-center">¡Bienvenido, {{ nombre }}!</h1>
-        <p class="mb-6 text-center text-gray-600">Has sido verificado con éxito. Puedes comenzar a usar la app.</p>
-        
-        <div class="flex flex-col gap-4">
-            <a href="https://app.uniswap.org/swap?outputCurrency=0x6b2ba4159916017267c39a3b70b507f7c1af5edb" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-center">
-                COMPRAR CHUN 
-            </a>
-            <a href="/bola2.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-center">
-                MULTIPLICA TUS CHC EN LA PAGINA - JUGAR VOLADOS -
-            </a>
-        </div>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SMC Instant Live Liquidity Scanner</title>
+<link rel="stylesheet" href="https://unpkg.com/modern-normalize/modern-normalize.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{--bg:#020617;--panel:#0f172a;--muted:#64748b;--accent:#2dd4bf;--bull:#10b981;--bear:#ef4444;--gold:#f59e0b}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:#f1f5f9;margin:0;padding:16px}
+  .wrap{max-width:1200px;margin:0 auto}
+  .card{background:var(--panel);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 10px 25px -5px rgba(0,0,0,0.6)}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+  .controls{display:flex;gap:10px;align-items:center}
+  select, button {padding:9px 14px;border-radius:8px;border:1px solid #1e293b;background:#020617;color:#fff;font-size:13px;outline:none}
+  button{background:var(--accent);color:#020617;font-weight:700;cursor:pointer;border:none;transition:all 0.2s}
+  button:hover{opacity:0.9}
+  
+  .table-container {
+    max-height: 550px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    background: #020617;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    text-align: left;
+  }
+  th, td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #1e293b;
+  }
+  th {
+    background: #090d1a;
+    color: var(--muted);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  tr:hover { background: rgba(255,255,255,0.02); }
 
-        <p class="mt-6 text-center text-sm text-gray-400">
-            <a href="/" class="underline hover:text-gray-600">Cerrar sesión</a>
-        </p>
+  .badge-high { color: var(--bull); background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+  .badge-low { color: var(--bear); background: rgba(239,68,68,0.1); padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+  
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <div class="card">
+    <header>
+      <div>
+        <h2 style="margin:0;color:var(--accent);font-size:22px;display:flex;align-items:center;gap:8px">
+          <i data-lucide="zap"></i> SMC Instant Live Liquidity Scanner
+        </h2>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">
+          Los pares aparecen y se ordenan al instante conforme van respondiendo. El scroll se mantiene arriba.
+        </div>
+      </div>
+      <div class="controls">
+        <label style="font-size:12px;color:var(--muted)">Temporalidad:</label>
+        <select id="intervalSelect" onchange="restartScanner()">
+          <option value="1m">1m</option>
+          <option value="5m">5m</option>
+          <option value="15m" selected>15m</option>
+          <option value="1h">1h</option>
+        </select>
+        <button id="toggleBtn" onclick="toggleScanner()">⏸️ PAUSAR</button>
+      </div>
+    </header>
+
+    <div class="status-bar">
+      <span id="scanStatus">Estado: Cargando mercado al instante...</span>
+      <span id="matchCount">Pares detectados: 0</span>
     </div>
+
+    <!-- TABLA DINÁMICA -->
+    <div class="table-container" id="tableScrollBox">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PAR</th>
+            <th>PRECIO ACTUAL</th>
+            <th>ZONA DE LIQUIDEZ</th>
+            <th>NIVEL OBJETIVO</th>
+            <th>DISTANCIA (%)</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="6" style="text-align:center; color: var(--muted); padding:30px;">Iniciando flujo de datos en tiempo real...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script>
+lucide.createIcons();
+
+const FAPI_EXCHANGE = "https://fapi.binance.com/fapi/v1/exchangeInfo";
+const FAPI_KLINES = "https://fapi.binance.com/fapi/v1/klines";
+
+let isScanningActive = true;
+let scanIntervalTimer = null;
+let liveMatches = [];
+
+async function getUsdtFuturesSymbols() {
+    try {
+        const res = await fetch(FAPI_EXCHANGE);
+        const data = await res.json();
+        return data.symbols
+            .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING' && s.contractType === 'PERPETUAL')
+            .map(s => s.symbol);
+    } catch (e) {
+        return [];
+    }
+}
+
+async function processSymbol(symbol, interval) {
+    if (!isScanningActive) return;
+    try {
+        const res = await fetch(`${FAPI_KLINES}?symbol=${symbol}&interval=${interval}&limit=100`);
+        if (!res.ok) return;
+        const klines = await res.json();
+        if (!Array.isArray(klines) || klines.length < 50) return;
+
+        const highs = klines.map(k => parseFloat(k[2]));
+        const lows = klines.map(k => parseFloat(k[3]));
+        const closes = klines.map(k => parseFloat(k[4]));
+
+        const currentPrice = closes[closes.length - 1];
+        const maxHigh = Math.max(...highs);
+        const minLow = Math.min(...lows);
+
+        const distHigh = Math.abs(currentPrice - maxHigh) / currentPrice * 100;
+        const distLow = Math.abs(currentPrice - minLow) / currentPrice * 100;
+
+        let matchData = null;
+        if (distHigh <= 10.0) {
+            matchData = { symbol, price: currentPrice, type: 'ALTA 🟢', level: maxHigh, distance: distHigh, badgeClass: 'badge-high' };
+        } else if (distLow <= 10.0) {
+            matchData = { symbol, price: currentPrice, type: 'BAJA 🔴', level: minLow, distance: distLow, badgeClass: 'badge-low' };
+        }
+
+        if (matchData) {
+            // EVITAR DUPLICADOS Y AGREGAR AL INSTANTE
+            liveMatches = liveMatches.filter(m => m.symbol !== symbol);
+            liveMatches.push(matchData);
+
+            // ORDENAR AL INSTANTE (El más cercano a 0.00% arriba)
+            liveMatches.sort((a, b) => a.distance - b.distance);
+
+            // RENDERIZAR EN TIEMPO REAL
+            renderTable();
+        }
+    } catch (e) {}
+}
+
+async function startInstantScan() {
+    if (!isScanningActive) return;
+
+    const interval = document.getElementById('intervalSelect').value;
+    const statusEl = document.getElementById('scanStatus');
+    
+    statusEl.innerText = `Estado: Escaneando Binance al instante (${interval})...`;
+    liveMatches = []; // Limpiar para nueva ronda
+    
+    const symbols = await getUsdtFuturesSymbols();
+    if (symbols.length === 0) {
+        statusEl.innerText = "Estado: Error al obtener símbolos. Reintentando...";
+        return;
+    }
+
+    statusEl.innerText = `Estado: Analizando ${symbols.length} pares en paralelo...`;
+
+    // Lanzar todas las peticiones en paralelo para que salgan al instante conforme responden
+    const promises = symbols.map(symbol => processSymbol(symbol, interval));
+    
+    // Esperar a que terminen todas las respuestas de este ciclo
+    await Promise.all(promises);
+
+    if (isScanningActive) {
+        statusEl.innerText = `Estado: Ciclo activo. Siguiente escaneo automático en 60s.`;
+    }
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const scrollBox = document.getElementById('tableScrollBox');
+    
+    tbody.innerHTML = "";
+    
+    if (liveMatches.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--muted); padding:30px;">Buscando pares cercanos al 10%...</td></tr>`;
+        return;
+    }
+
+    liveMatches.forEach((match, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><b>${index + 1}</b></td>
+            <td style="font-weight:bold; color:var(--accent);">${match.symbol}</td>
+            <td>${match.price.toFixed(6)}</td>
+            <td><span class="${match.badgeClass}">LIQ ${match.type}</span></td>
+            <td>${match.level.toFixed(6)}</td>
+            <td style="color:var(--gold); font-weight:bold;">${match.distance.toFixed(2)}%</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('matchCount').innerText = `Pares detectados: ${liveMatches.length}`;
+    
+    // Mantener el scroll estático arriba para que no baje solo
+    scrollBox.scrollTop = 0;
+}
+
+function initLoop() {
+    startInstantScan();
+    clearInterval(scanIntervalTimer);
+    scanIntervalTimer = setInterval(startInstantScan, 60000); // Repetir ciclo completo cada 60s
+}
+
+function toggleScanner() {
+    isScanningActive = !isScanningActive;
+    const btn = document.getElementById('toggleBtn');
+    if (isScanningActive) {
+        btn.innerText = "⏸️ PAUSAR";
+        btn.style.background = "var(--accent)";
+        initLoop();
+    } else {
+        btn.innerText = "▶️ REANUDAR";
+        btn.style.background = "var(--gold)";
+        clearInterval(scanIntervalTimer);
+        document.getElementById('scanStatus').innerText = "Estado: Escáner pausado.";
+    }
+}
+
+function restartScanner() {
+    clearInterval(scanIntervalTimer);
+    initLoop();
+}
+
+window.onload = () => {
+    initLoop();
+};
+</script>
 </body>
 </html>
