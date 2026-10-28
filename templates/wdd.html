@@ -1,330 +1,501 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minería CHC | CharlyScan Pro</title>
-    <!-- Librería Ethers.js para conexión Web3 / WalletConnect / MetaMask -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; --wallet-btn: #8e44ad; }
-        body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; overflow-x: hidden; }
-        
-        .window-container { max-width: 600px; margin: 20px auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        
-        .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
-        
-        #iframeContainer { width: 95%; height: 300px; border: 2px solid var(--gold); margin: 15px auto; border-radius: 10px; overflow: hidden; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        input { marginAquí tienes tu código **completamente integrado con WalletConnect v2 y Web3Modal** utilizando la librería oficial `ethers.js`. 
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SMC Ultra-Terminal Pro V5 Neural-Engine</title>
+<link rel="stylesheet" href="https://unpkg.com/modern-normalize/modern-normalize.css">
+<style>
+  :root{--bg:#020617;--panel:#0f172a;--muted:#64748b;--accent:#2dd4bf;--bull:#10b981;--bear:#ef4444;--gold:#f59e0b;--purple:#a855f7}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:#f1f5f9;margin:0;padding:10px;overflow-x:hidden}
+  .wrap{max-width:1800px;margin:0 auto;display:grid;grid-template-columns:1fr 450px;gap:12px}
+  .card{background:var(--panel);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 10px 15px -3px rgba(0,0,0,0.5)}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+  .controls{display:flex;gap:8px;align-items:center}
+  input, select, button {padding:8px 12px;border-radius:8px;border:1px solid #1e293b;background:#020617;color:#fff;font-size:13px}
+  input { border: 1px solid var(--accent); text-transform: uppercase; width: 110px; }
+  button{background:var(--accent);color:#020617;font-weight:700;cursor:pointer;border:none;transition:all 0.2s}
+  button:hover{opacity:0.9}
+  .btn-predict{background:linear-gradient(135deg, #a855f7, #6366f1);color:#fff}
+  #chart{height:600px;border-radius:8px;overflow:hidden;border:1px solid #1e293b;position:relative}
+  
+  .pro-panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .pro-card{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.05)}
+  .label-mini{font-size:9px;color:var(--muted);display:block;margin-bottom:4px}
+  
+  .grid-stats{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-top:10px}
+  .stat-item{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;border-left:3px solid var(--accent)}
+  .stat-val{font-size:14px;font-weight:bold;display:block;font-family:'JetBrains Mono',monospace}
 
-Se agregó un botón dedicado para **WalletConnect** que autocompleta la dirección de la billetera (como MetaMask, Trust Wallet o Rainbow) en tu campo de texto `userWallet` para que puedas minar directo a esa cuenta.
+  .log{max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11px;padding:10px;background:#020617;border-radius:8px;color:var(--accent)}
+  .smt-panel{border-left-color:var(--gold);background:rgba(245,158,11,0.05)}
+  .predict-box{background:rgba(168,85,247,0.08);border:1px solid var(--purple);border-radius:12px;padding:14px;margin-top:10px;text-align:center}
 
-```html
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minería CHC | CharlyScan Pro</title>
-    
-    <!-- Librerías para WalletConnect y Web3 -->
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js](https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js](https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js)"></script>
-
-    <style>
-        :root { --gold: #f1c40f; --dark-bg: #0a0a0a; --card-bg: #161616; --blue-scan: #2980b9; --wc-blue: #3B99FC; }
-        body { text-align: center; padding: 10px; font-family: 'Segoe UI', Arial, sans-serif; background: var(--dark-bg); color: white; margin: 0; overflow-x: hidden; }
-        
-        .window-container { max-width: 600px; margin: 20px auto; border: 1px solid #333; border-radius: 15px; overflow: hidden; background: #111; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .window-header { background: #222; padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        
-        .card-panel { background: var(--card-bg); padding: 20px; margin: 10px; border-radius: 12px; border: 1px solid #222; }
-        
-        #iframeContainer { width: 95%; height: 300px; border: 2px solid var(--gold); margin: 15px auto; border-radius: 10px; overflow: hidden; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        input { margin: 10px; padding: 12px; width: 85%; border-radius: 5px; border: 1px solid #444; background: #000; color: #2ecc71; font-family: monospace; text-align: center; }
-        
-        button { margin: 8px 0; padding: 12px; width: 90%; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; background: var(--gold); color: black; transition: 0.3s; }
-        button:hover { transform: scale(1.02); }
-        
-        .btn-walletconnect { background: var(--wc-blue); color: white; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px auto; }
-        .chc-counter { font-size: 1.8em; color: var(--gold); margin: 10px 0; font-weight: bold; }
-        .wallet-link { color: #3498db; text-decoration: underline; font-size: 0.85em; display: block; margin: 10px 0; cursor: pointer; }
-        .btn-home { background: #333; color: white; padding: 5px 15px; border-radius: 5px; text-decoration: none; font-size: 0.8em; }
-
-        #modalExplorador {
-            display: none; 
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            z-index: 9999;
-            flex-direction: column;
-        }
-        .modal-header {
-            background: #1a1a1a;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--blue-scan);
-        }
-        .btn-cerrar {
-            background: #e74c3c;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            width: auto;
-        }
-        #iframeExplorador {
-            flex-grow: 1;
-            width: 100%;
-            border: none;
-        }
-    </style>
+  /* ESTILOS DE VOLUNTAD Y NEURONAL */
+  .volition-bar-bg{background:#1e293b;height:12px;border-radius:6px;overflow:hidden;display:flex;margin:6px 0;border:1px solid rgba(255,255,255,0.1)}
+  .volition-buy{background:var(--bull);height:100%;transition:width 0.4s ease}
+  .volition-sell{background:var(--bear);height:100%;transition:width 0.4s ease}
+</style>
 </head>
-<body onload="verificarMemoria()">
+<body>
 
-<div id="modalExplorador">
-    <div class="modal-header">
-        <span style="color: var(--blue-scan); font-weight: bold;">🔍 CHARLY SCAN EXPLORER</span>
-        <button class="btn-cerrar" onclick="cerrarExplorador()">← VOLVER A MINAR</button>
+<main class="wrap">
+  <section class="card">
+    <header>
+      <div>
+        <h2 style="margin:0;color:var(--accent);font-size:20px">SMC Terminal <span style="color:#fff">PRO V5 NEURAL</span></h2>
+        <div style="display:flex;gap:10px;font-size:10px;color:var(--muted)">
+          <span id="msb-status">ESTRUCTURA: ANALIZANDO</span> | <span>NEURAL ORDER FLOW ENGINE</span>
+        </div>
+      </div>
+      <div class="controls">
+        <input id="symbol" value="WLDUSDT">
+        <select id="interval">
+          <option value="1m">1m</option><option value="5m">5m</option><option value="15m" selected>15m</option><option value="1h">1h</option>
+        </select>
+        <button id="start">SCAN</button>
+        <button id="predictBtn" class="btn-predict">🧠 ENTRENAR RED NEURONAL</button>
+        <button id="stop" disabled style="background:#334155;color:#fff">STOP</button>
+      </div>
+    </header>
+
+    <div id="chart"></div>
+
+    <div class="grid-stats">
+      <div class="stat-item"><span class="label-mini">PRECIO ACT (8D)</span><span id="price" class="stat-val">—</span></div>
+      <div class="stat-item"><span class="label-mini">POC DEL RANGO</span><span id="pocVal" class="stat-val">—</span></div>
+      <div class="stat-item" style="border-left-color:var(--gold)"><span class="label-mini">ANTIGÜEDAD LIQ</span><span id="liqAge" class="stat-val">—</span></div>
+      <div class="stat-item"><span class="label-mini">SMT CORRELATION</span><span id="smtStatus" class="stat-val">—</span></div>
     </div>
-    <iframe id="iframeExplorador" src=""></iframe>
-</div>
+  </section>
 
-<div class="window-container">
-    <div class="window-header">
-        <a href="next_page.html" class="btn-home">🏠 HOME</a>
-        <span style="font-size: 0.9em; font-weight: bold; color: var(--gold);">CHARLY MINER PRO</span>
-        <a href="videos.html" class="btn-home" style="background: #27ae60;">VIDEOS</a>
+  <aside>
+    <div class="card" style="text-align:center;border:1px solid var(--accent)">
+      <small style="color:var(--accent)">WINRATE SMC PRO</small>
+      <div id="winrate" style="font-size:32px;font-weight:900">0.00%</div>
+      <div id="score" style="font-size:11px;color:var(--muted)">SEÑALES: 0 | EXITOSAS: 0</div>
     </div>
 
-    <div class="card-panel">
-        <h2>MINERÍA ACTIVA</h2>
-        <input type="text" id="userWallet" placeholder="Pega tu dirección CHC o conecta tu Wallet..." onkeypress="handleKeyPress(event)" list="prevWallets" />
-        <datalist id="prevWallets"></datalist> 
-        
-        <!-- Botón Integrado de WalletConnect -->
-        <button class="btn-walletconnect" id="btnConnectWC" onclick="conectarWalletConnect()">
-            <span data-id="selected-provider-walletconnect">🔗 Conectar con WalletConnect</span>
-        </button>
+    <!-- PANEL DE PREDICCIÓN CON RED NEURONAL -->
+    <div class="predict-box">
+      <span class="label-mini" style="color:var(--purple);font-weight:bold">RED NEURONAL & VOLUNTAD HUMANA (PSICO-INDEX)</span>
+      <div id="predDir" style="font-size:22px;font-weight:900;margin:6px 0;color:var(--muted)">ESPERANDO...</div>
+      
+      <!-- BARRA DE PSICO-VOLUNTAD -->
+      <div class="volition-bar-bg">
+        <div id="volBuyBar" class="volition-buy" style="width:50%"></div>
+        <div id="volSellBar" class="volition-sell" style="width:50%"></div>
+      </div>
+      
+      <div style="font-size:12px;font-weight:bold;margin-bottom:6px;display:flex;justify-content:space-between">
+        <span>COMPRADORES: <b id="buyPercentText" style="color:var(--bull)">50%</b></span>
+        <span>VENDEDORES: <b id="sellPercentText" style="color:var(--bear)">50%</b></span>
+      </div>
 
-        <span onclick="gestionarIdentidad()" class="wallet-link">¿No tienes cuenta? Generar nueva local</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:10px;margin-top:8px">
+        <div><span class="label-mini">TAKER DELTA</span><strong id="buyVolRatio" style="color:var(--bull)">—</strong></div>
+        <div><span class="label-mini">SENTIMIENTO</span><strong id="sentimentText" style="color:var(--gold)">NEUTRAL</strong></div>
+        <div><span class="label-mini">ERROR RED (LOSS)</span><strong id="nnLoss" style="color:var(--accent)">—</strong></div>
+      </div>
 
-        <div class="chc-counter">💰 <span id="chcCount">0</span> CHC</div>
-        <div id="minerStatus" style="font-size: 0.8em; color: #888;">Panel de control listo</div>
+      <div id="predDetails" style="font-size:10px;color:var(--muted);margin-top:8px;border-top:1px dashed rgba(255,255,255,0.1);padding-top:6px">
+        Presiona "🧠 ENTRENAR RED NEURONAL" para calcular pesos.
+      </div>
     </div>
 
-    <div id="iframeContainer">
-      <iframe id="iframeRedireccion" src="[https://tareasunamyunadm.blogspot.com](https://tareasunamyunadm.blogspot.com)"></iframe>
+    <div class="pro-panels">
+      <div class="pro-card">
+        <span class="label-mini">ESTRUCTURA MSB/CHoCH</span>
+        <div id="structureType" style="font-weight:bold;font-size:13px;color:var(--accent)">NEUTRAL</div>
+        <small id="structureDesc" style="font-size:10px;color:var(--muted)">Sin cambio detectado</small>
+      </div>
+      <div class="pro-card smt-panel">
+        <span class="label-mini">SMT DIVERGENCE (ETH)</span>
+        <div id="smtDiv" style="font-weight:bold;font-size:13px">SIN SEÑAL</div>
+        <small style="font-size:10px">Vs. Ethereum Futures</small>
+      </div>
     </div>
 
-    <div style="padding: 10px;">
-        <button onclick="continuarMineria()">🚀 INICIAR MINERÍA</button>
-        <button style="background:#e74c3c; color:white;" onclick="pararMineria()">🛑 DETENER</button>
-        
-        <button style="background: var(--blue-scan); color: white;" onclick="abrirExplorador()">🔍 ABRIR CHARLY SCAN (FULLSCREEN)</button>
+    <div class="card" style="margin-top:10px">
+      <strong>LIQUIDIDAD Y FVG</strong>
+      <div style="margin-top:10px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span>FVG Internos:</span><span id="fvgStatus" style="color:var(--gold)">0 Detectados</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span>Posición Rango:</span><span id="rangePos" style="color:var(--accent)">EQUILIBRIO</span>
+        </div>
+        <div class="target-box" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+          <div style="background:rgba(16,185,129,0.1);padding:8px;border-radius:6px;text-align:center">
+            <small style="color:var(--bull)">TP PRO</small><br><strong id="tpVal" style="font-size:11px">—</strong>
+          </div>
+          <div style="background:rgba(239,68,68,0.1);padding:8px;border-radius:6px;text-align:center">
+            <small style="color:var(--bear)">SL PRO</small><br><strong id="slVal" style="font-size:11px">—</strong>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+
+    <div class="card" style="margin-top:10px">
+      <strong>PRO INTELLIGENCE LOG</strong>
+      <div id="events" class="log" style="margin-top:8px"></div>
+    </div>
+  </aside>
+</main>
+
+<script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
+<!-- BRAIN.JS: LIBRERÍA DE REDES NEURONALES -->
+<script src="https://cdn.jsdelivr.net/npm/brain.js"></script>
 
 <script>
-    const NODO_URL = "[https://binance-bot-hna7.onrender.com](https://binance-bot-hna7.onrender.com)";
-    const MASTER_PUBLIC = "93aab2b2ee274042d81954cd6569085ac3f1f660d600e6c7ca3aa11adbf94e62544ff783541316f3c7269d751079414e879f18804dde24c1b83c70c4e13cd4ee";
-    const urls = [
-        "[https://tareasunamyunadm.blogspot.com](https://tareasunamyunadm.blogspot.com)", 
-        "[https://faucentminialtcrypto.blogspot.com](https://faucentminialtcrypto.blogspot.com)", 
-        "[https://solotareamsmex.blogspot.com](https://solotareamsmex.blogspot.com)", 
-        "[https://juegospcmexico.blogspot.com](https://juegospcmexico.blogspot.com)"
-    ];
+const FAPI = 'https://fapi.binance.com/fapi/v1/klines';
+let chart, candleSeries, ghostSeries, pollTimer;
+let liqLines = {}; 
+let lastCandlesData = [];
+
+let wins = parseInt(localStorage.getItem('smc_v4_wins')) || 0;
+let totalPreds = parseInt(localStorage.getItem('smc_v4_total')) || 0;
+let lastPendingPred = null;
+
+// GESTIÓN DE AUDIO WEB API PARA LAS ALERTAS DE TONO (LIQUIDACIÓN ALTA / BAJA)
+let audioCtx = null;
+let lastAlertedHighLiq = false;
+let lastAlertedLowLiq = false;
+
+function playTone(type) {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'high') {
+            // Tono agudo y alcista para Liquidación Alta
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, now); // Nota A5
+            osc.frequency.exponentialRampToValueAtTime(1760, now + 0.25); // Sube a A6
+            
+            gainNode.gain.setValueAtTime(0.15, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            
+            osc.start(now);
+            osc.stop(now + 0.3);
+        } else if (type === 'low') {
+            // Tono grave y de alerta para Liquidación Baja
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(330, now); // Nota E4
+            osc.frequency.exponentialRampToValueAtTime(165, now + 0.3); // Baja de tono
+            
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+    } catch (e) {
+        console.warn("Audio Context bloqueado o no soportado por interacción previa.", e);
+    }
+}
+
+// INSTANCIA DE RED NEURONAL PERCEPTRÓN MULTICAPA (MLP)
+const net = new brain.NeuralNetwork({
+    hiddenLayers: [8, 6],
+    activation: 'sigmoid'
+});
+
+function initChart() {
+    const el = document.getElementById('chart');
+    el.innerHTML = '';
+    chart = LightweightCharts.createChart(el, {
+        layout: { background: { color: '#020617' }, textColor: '#94a3b8', fontSize: 11 },
+        grid: { vertLines: { color: '#0f172a' }, horzLines: { color: '#0f172a' } },
+        width: el.clientWidth, height: 600,
+        timeScale: { timeVisible: true, borderVisible: false },
+        localization: { priceFormatter: p => p.toFixed(8) }
+    });
+    candleSeries = chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' });
+    ghostSeries = chart.addCandlestickSeries({ upColor: 'rgba(45,212,191,0.1)', downColor: 'rgba(239,68,68,0.1)', borderVisible: false });
+}
+
+async function fetchKlines(sym, tf) {
+    const res = await fetch(`${FAPI}?symbol=${sym}&interval=${tf}&limit=150`);
+    return await res.json();
+}
+
+async function analyze() {
+    try {
+        const sym = document.getElementById('symbol').value.toUpperCase();
+        const tf = document.getElementById('interval').value;
+        
+        const [data, ethData] = await Promise.all([
+            fetchKlines(sym, tf),
+            fetchKlines('ETHUSDT', tf)
+        ]);
+
+        lastCandlesData = data;
+
+        const candles = data.map(k => ({ 
+            time: k[0] / 1000, 
+            open: parseFloat(k[1]), 
+            high: parseFloat(k[2]), 
+            low: parseFloat(k[3]), 
+            close: parseFloat(k[4]), 
+            vol: parseFloat(k[5]),
+            takerBuyVol: parseFloat(k[9])
+        }));
+        
+        const ethCandles = ethData.map(k => ({ high: parseFloat(k[2]), low: parseFloat(k[3]) }));
+        const actual = candles[candles.length - 1];
+
+        // 1. MSB y CHoCH
+        let structure = "NEUTRAL";
+        let lastHigh = Math.max(...candles.slice(-20, -1).map(c => c.high));
+        let lastLow = Math.min(...candles.slice(-20, -1).map(c => c.low));
+        
+        if (actual.close > lastHigh) structure = "CHoCH ALCISTA 🚀";
+        else if (actual.close < lastLow) structure = "CHoCH BAJISTA 📉";
+        document.getElementById('structureType').innerText = structure;
+        document.getElementById('structureType').style.color = structure.includes('ALCISTA') ? '#10b981' : (structure.includes('BAJISTA') ? '#ef4444' : '#2dd4bf');
+
+        // 2. POC
+        let priceBins = {};
+        candles.forEach(c => {
+            let bin = (Math.round(c.close * 100000) / 100000).toFixed(8);
+            priceBins[bin] = (priceBins[bin] || 0) + c.vol;
+        });
+        let poc = Object.keys(priceBins).reduce((a, b) => priceBins[a] > priceBins[b] ? a : b);
+        document.getElementById('pocVal').innerText = poc;
+
+        // 3. SMT Divergence
+        let smt = "NORMAL";
+        if (actual.low > candles[candles.length-2].low && ethCandles[ethCandles.length-1].low < ethCandles[ethCandles.length-2].low) {
+            smt = "SMT BULLISH (DIV)";
+        }
+        document.getElementById('smtStatus').innerText = smt;
+        document.getElementById('smtDiv').innerText = smt;
+        document.getElementById('smtDiv').style.color = smt.includes('BULLISH') ? '#10b981' : '#64748b';
+
+        // 4. FVG
+        let fvgs = 0;
+        let markers = [];
+        for (let i = 2; i < candles.length; i++) {
+            if (candles[i-2].high < candles[i].low) {
+                fvgs++;
+                markers.push({ time: candles[i-1].time, position: 'belowBar', color: '#f59e0b', shape: 'circle', text: 'FVG' });
+            }
+            if (candles[i-2].low > candles[i].high) {
+                fvgs++;
+                markers.push({ time: candles[i-1].time, position: 'aboveBar', color: '#f59e0b', shape: 'circle', text: 'FVG' });
+            }
+        }
+        document.getElementById('fvgStatus').innerText = `${fvgs} Detectados`;
+
+        // 5. Liquidez
+        const maxH = Math.max(...candles.map(c => c.high));
+        const minL = Math.min(...candles.map(c => c.low));
+        const ageIndex = candles.length - candles.findIndex(c => c.high === maxH);
+        document.getElementById('liqAge').innerText = `${ageIndex} Velas`;
+
+        if(liqLines.up) candleSeries.removePriceLine(liqLines.up);
+        if(liqLines.dw) candleSeries.removePriceLine(liqLines.dw);
+        
+        liqLines.up = candleSeries.createPriceLine({ price: maxH, color: '#10b981', lineStyle: 2, title: `LIQ ALTA (${maxH.toFixed(8)})` });
+        liqLines.dw = candleSeries.createPriceLine({ price: minL, color: '#ef4444', lineStyle: 2, title: `LIQ BAJA (${minL.toFixed(8)})` });
+
+        // VERIFICAR SI EL PRECIO ACTUAL TOCA O ROMPE LAS LÍNEAS DE LIQUIDACIÓN SEGÚN LA TEMPORALIDAD
+        const tolerance = (maxH - minL) * 0.001; // Margen dinámico para mechas en la temporalidad activa
+        
+        if (actual.high >= maxH - tolerance) {
+            if (!lastAlertedHighLiq) {
+                playTone('high');
+                uiLog(`🔔 [TF: ${tf}] ¡El precio ha tocado / barrido la LIQUIDACIÓN ALTA (${maxH.toFixed(8)})!`);
+                lastAlertedHighLiq = true;
+            }
+        } else {
+            lastAlertedHighLiq = false; // Reset al retroceder el precio
+        }
+
+        if (actual.low <= minL + tolerance) {
+            if (!lastAlertedLowLiq) {
+                playTone('low');
+                uiLog(`🔔 [TF: ${tf}] ¡El precio ha tocado / barrido la LIQUIDACIÓN BAJA (${minL.toFixed(8)})!`);
+                lastAlertedLowLiq = true;
+            }
+        } else {
+            lastAlertedLowLiq = false; // Reset al rebotar el precio
+        }
+
+        // Update UI
+        document.getElementById('price').innerText = actual.close.toFixed(8);
+        candleSeries.setData(candles);
+        candleSeries.setMarkers(markers);
+
+        document.getElementById('winrate').innerText = totalPreds > 0 ? ((wins/totalPreds)*100).toFixed(2)+"%" : "0.00%";
+        document.getElementById('score').innerText = `SEÑALES: ${totalPreds} | EXITOSAS: ${wins}`;
+        
+        if (!lastPendingPred && (structure !== "NEUTRAL" || smt !== "NORMAL")) {
+            const side = (structure.includes("ALCISTA") || smt.includes("BULLISH")) ? "LONG" : "SHORT";
+            lastPendingPred = { time: actual.time, side, entry: actual.close };
+            document.getElementById('tpVal').innerText = (side === "LONG" ? maxH : minL).toFixed(8);
+            document.getElementById('slVal').innerText = (side === "LONG" ? minL : maxH).toFixed(8);
+            uiLog(`🔥 SEÑAL PRO: ${side} detectado en ${actual.close.toFixed(8)}`);
+            totalPreds++; localStorage.setItem('smc_v4_total', totalPreds);
+        }
+
+    } catch (e) { console.error(e); }
+}
+
+// RED NEURONAL & PSICO-INDEX DE VOLUNTAD HUMANA
+function trainAndPredictNeural() {
+    if (!lastCandlesData || lastCandlesData.length < 50) {
+        alert("Inicia primero el SCANNER para cargar los datos de mercado.");
+        return;
+    }
+
+    uiLog("🧠 Extrayendo vectores de características de Order Flow...");
+
+    const candles = lastCandlesData.map(k => ({
+        open: parseFloat(k[1]),
+        high: parseFloat(k[2]),
+        low: parseFloat(k[3]),
+        close: parseFloat(k[4]),
+        vol: parseFloat(k[5]),
+        takerBuyVol: parseFloat(k[9])
+    }));
+
+    // PREPARAR DATOS DE ENTRENAMIENTO PARA BRAIN.JS
+    // Normalizamos valores entre 0 y 1 para activar capas Sigmoides
+    let trainingData = [];
+
+    for (let i = 20; i < candles.length - 1; i++) {
+        const slice = candles.slice(i - 20, i);
+        
+        // Feature 1: Taker Buy Delta Ratio
+        let sumVol = 0, sumTaker = 0;
+        slice.forEach(c => { sumVol += c.vol; sumTaker += c.takerBuyVol; });
+        const takerRatio = sumVol > 0 ? sumTaker / sumVol : 0.5;
+
+        // Feature 2: VWAP Normalizado
+        let vwapNum = 0, vwapDenom = 0;
+        slice.forEach(c => {
+            const tp = (c.high + c.low + c.close) / 3;
+            vwapNum += tp * c.vol;
+            vwapDenom += c.vol;
+        });
+        const vwap = vwapNum / (vwapDenom || 1);
+        const vwapRatio = Math.min(Math.max((candles[i].close / vwap - 0.95) / 0.1, 0), 1);
+
+        // Feature 3: Momentum del Cierre actual
+        const momentum = (candles[i].close - candles[i-1].close) / candles[i-1].close;
+        const normMomentum = Math.min(Math.max((momentum + 0.05) / 0.1, 0), 1);
+
+        // Target: ¿La siguiente vela fue alcista (1) o bajista (0)?
+        const nextCandleUp = candles[i + 1].close >= candles[i].close ? 1 : 0;
+
+        trainingData.push({
+            input: [takerRatio, vwapRatio, normMomentum],
+            output: [nextCandleUp]
+        });
+    }
+
+    // ENTRENAMIENTO DE LA RED NEURONAL EN TIEMPO REAL
+    const trainResult = net.train(trainingData, {
+        iterations: 1500,
+        errorThresh: 0.005,
+        log: false
+    });
+
+    document.getElementById('nnLoss').innerText = trainResult.error.toFixed(4);
+    uiLog(`✅ Red Neuronal entrenada | Épocas: ${trainResult.iterations} | Error Loss: ${trainResult.error.toFixed(5)}`);
+
+    // EVALUACIÓN DE LA VELA ACTUAL
+    const lastSlice = candles.slice(-20);
+    let totalVol = 0, totalBuyVol = 0;
+    lastSlice.forEach(c => { totalVol += c.vol; totalBuyVol += c.takerBuyVol; });
+    const currentTakerRatio = totalVol > 0 ? totalBuyVol / totalVol : 0.5;
+
+    let vwapNum = 0, vwapDenom = 0;
+    lastSlice.forEach(c => {
+        const tp = (c.high + c.low + c.close) / 3;
+        vwapNum += tp * c.vol;
+        vwapDenom += c.vol;
+    });
+    const currentVwap = vwapNum / (vwapDenom || 1);
+    const lastCandle = candles[candles.length - 1];
+    const currentVwapRatio = Math.min(Math.max((lastCandle.close / currentVwap - 0.95) / 0.1, 0), 1);
+
+    const currentMomentum = (lastCandle.close - candles[candles.length - 2].close) / candles[candles.length - 2].close;
+    const currentNormMomentum = Math.min(Math.max((currentMomentum + 0.05) / 0.1, 0), 1);
+
+    // INFERENCIA EN LA RED NEURONAL
+    const output = net.run([currentTakerRatio, currentVwapRatio, currentNormMomentum]);
+    const bullProbability = output[0] * 100;
+    const bearProbability = 100 - bullProbability;
+
+    // ACTUALIZAR PANTALLA DE VOLUNTAD Y PREDICCIÓN
+    document.getElementById('volBuyBar').style.width = bullProbability.toFixed(1) + "%";
+    document.getElementById('volSellBar').style.width = bearProbability.toFixed(1) + "%";
     
-    let segundos = 0, chcGanados = 0, interval = null, minando = false;
-    let RecompensaPendiente = 0;
-    let wcProvider = null;
+    document.getElementById('buyPercentText').innerText = bullProbability.toFixed(1) + "%";
+    document.getElementById('sellPercentText').innerText = bearProbability.toFixed(1) + "%";
 
-    // --- INTEGRACIÓN CON WALLETCONNECT ---
-    async function conectarWalletConnect() {
-        try {
-            document.getElementById('minerStatus').innerText = "Abriendo WalletConnect...";
-            
-            // Inicialización de proveedor público de WalletConnect (BSC / Ethereum compatible)
-            wcProvider = new WalletConnectProvider.default({
-                rpc: {
-                    56: "[https://bsc-dataseed.binance.org/](https://bsc-dataseed.binance.org/)",
-                    1: "[https://rpc.ankr.com/eth](https://rpc.ankr.com/eth)"
-                },
-                qrcodeModalOptions: {
-                    mobileLinks: ["metamask", "trust", "rainbow", "tokenpocket"]
-                }
-            });
+    document.getElementById('buyVolRatio').innerText = (currentTakerRatio * 100).toFixed(1) + "%";
 
-            // Habilitar la sesión (Abre el modal QR o conexión directa en móviles)
-            await wcProvider.enable();
+    // DETERMINAR SENTIMIENTO
+    let sentiment = "NEUTRAL";
+    if (bullProbability > 65) sentiment = "EUFORIA (COMPRA AVALANCHA)";
+    else if (bullProbability > 52) sentiment = "ACUMULACIÓN BARRIDO";
+    else if (bearProbability > 65) sentiment = "PÁNICO (VENTA MASIVA)";
+    else sentiment = "DISTRIBUCIÓN / DUDAS";
 
-            const web3Provider = new ethers.providers.Web3Provider(wcProvider);
-            const signer = web3Provider.getSigner();
-            const walletAddress = await signer.getAddress();
+    document.getElementById('sentimentText').innerText = sentiment;
+    document.getElementById('sentimentText').style.color = bullProbability >= 50 ? "#10b981" : "#ef4444";
 
-            // Guardar dirección obtenida en el campo de wallet
-            document.getElementById('userWallet').value = walletAddress;
-            localStorage.setItem("last_chc_wallet", walletAddress);
-            document.getElementById('btnConnectWC').innerText = "✅ Billetera Conectada";
-            document.getElementById('minerStatus').innerText = "Conectado a WalletConnect con éxito.";
+    const predDirEl = document.getElementById('predDir');
+    const predDetailsEl = document.getElementById('predDetails');
+    const tf = document.getElementById('interval').value;
 
-            // Escuchar desconexión
-            wcProvider.on("disconnect", (code, reason) => {
-                document.getElementById('btnConnectWC').innerText = "🔗 Conectar con WalletConnect";
-                document.getElementById('minerStatus').innerText = "WalletConnect desconectado.";
-            });
-
-        } catch (error) {
-            console.error("Error al conectar con WalletConnect:", error);
-            document.getElementById('minerStatus').innerText = "Error o conexión cancelada.";
-        }
+    if (bullProbability >= 50) {
+        predDirEl.innerText = "🟢 ALCISTA (BARRIDO DE COMPRAS)";
+        predDirEl.style.color = "#10b981";
+        predDetailsEl.innerText = `La Red Neuronal infiere un ${(bullProbability).toFixed(1)}% de probabilidad alcista en temporalidad ${tf}. Presión de Taker en ${(currentTakerRatio * 100).toFixed(1)}%.`;
+    } else {
+        predDirEl.innerText = "🔴 BAJISTA (DISTRIBUCIÓN INSTITUCIONAL)";
+        predDirEl.style.color = "#ef4444";
+        predDetailsEl.innerText = `La Red Neuronal infiere un ${(bearProbability).toFixed(1)}% de probabilidad bajista en temporalidad ${tf}. Ventas Taker dominando.`;
     }
+}
 
-    function abrirExplorador() {
-        const modal = document.getElementById('modalExplorador');
-        const frame = document.getElementById('iframeExplorador');
-        
-        if (frame.src !== NODO_URL + "/") {
-            frame.src = NODO_URL;
-        }
-        
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-    }
+function uiLog(m) {
+    const l = document.getElementById('events');
+    l.innerHTML = `<div style="margin-bottom:4px; border-bottom:1px solid #1e293b; padding-bottom:2px">>> ${m}</div>` + l.innerHTML;
+}
 
-    function cerrarExplorador() {
-        document.getElementById('modalExplorador').style.display = "none";
-        document.body.style.overflow = "auto";
-    }
+document.getElementById('start').onclick = () => {
+    document.getElementById('start').disabled = true;
+    document.getElementById('stop').disabled = false;
+    initChart(); analyze();
+    pollTimer = setInterval(analyze, 5000);
+};
 
-    function redireccionAleatoria() {
-        document.getElementById('iframeRedireccion').src = urls[Math.floor(Math.random() * urls.length)];
-    }
-    setInterval(redireccionAleatoria, 25000);
+document.getElementById('stop').onclick = () => {
+    clearInterval(pollTimer);
+    document.getElementById('start').disabled = false;
+    document.getElementById('stop').disabled = true;
+};
 
-    function verificarMemoria() {
-        const saved = localStorage.getItem("last_chc_wallet");
-        if (saved) {
-            document.getElementById('userWallet').value = saved;
-            const dl = document.getElementById('prevWallets');
-            const opt = document.createElement('option');
-            opt.value = saved;
-            dl.appendChild(opt);
-        }
-    }
+document.getElementById('predictBtn').onclick = trainAndPredictNeural;
 
-    function contarTiempo() {
-        const wallet = document.getElementById('userWallet').value.trim();
-        if (minando && wallet.length > 5) {
-            segundos++;
-            
-            // Cada 2 segundos suma 1 CHC local
-            if (segundos % 2 === 0) {
-                chcGanados++;
-                RecompensaPendiente++;
-                document.getElementById('chcCount').innerText = chcGanados;
-            }
-
-            // Cada 10 segundos liquida en la Blockchain las recompensas acumuladas
-            if (segundos % 10 === 0 && RecompensaPendiente > 0) {
-                const montoAEnviar = RecompensaPendiente;
-                RecompensaPendiente = 0;
-                enviarAlNodo(wallet, montoAEnviar);
-            }
-
-            document.getElementById('minerStatus').innerText = `Minando... (Bloque actual: #${segundos})`;
-        }
-    }
-
-    async function enviarAlNodo(receptor, monto) {
-        try {
-            document.getElementById('minerStatus').innerText = `Sincronizando bloque con el nodo...`;
-            const respuesta = await fetch(`${NODO_URL}/transferir`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    emisor: MASTER_PUBLIC, 
-                    receptor: receptor, 
-                    monto: Number(monto), 
-                    firma: "WEB_MINING_REWARD" 
-                })
-            });
-
-            if (!respuesta.ok) {
-                throw new Error(`HTTP Error status: ${respuesta.status}`);
-            }
-
-            const resultado = await respuesta.json();
-            console.log("Transacción confirmada en CharlyScan:", resultado);
-            document.getElementById('minerStatus').innerText = `¡Bloque minado y registrado exitosamente!`;
-            
-            // Actualizar iframe del explorador si está abierto para reflejar cambios
-            const frame = document.getElementById('iframeExplorador');
-            if (document.getElementById('modalExplorador').style.display === "flex") {
-                frame.contentWindow.location.reload();
-            }
-
-        } catch (error) {
-            console.error("Error en conexión con el nodo CHC:", error);
-            document.getElementById('minerStatus').innerText = `Error enviando al nodo. Reintentando...`;
-            RecompensaPendiente += monto;
-        }
-    }
-
-    function continuarMineria() {
-        const wallet = document.getElementById('userWallet').value.trim();
-        if (wallet.length < 5) return alert("Por favor ingresa una billetera válida.");
-        if (!minando) {
-            minando = true;
-            localStorage.setItem("last_chc_wallet", wallet);
-            if (!interval) interval = setInterval(contarTiempo, 1000);
-            document.getElementById('minerStatus').innerText = "Minería en ejecución";
-        }
-    }
-
-    function pararMineria() {
-        minando = false;
-        if (interval) {
-            clearInterval(interval);
-            interval = null;
-        }
-        if (RecompensaPendiente > 0) {
-            const wallet = document.getElementById('userWallet').value.trim();
-            enviarAlNodo(wallet, RecompensaPendiente);
-            RecompensaPendiente = 0;
-        }
-        document.getElementById('minerStatus').innerText = `Minería detenida. Total: ${chcGanados} CHC`;
-    }
-
-    function gestionarIdentidad() {
-        let p = prompt("¿ANDROID o PC?").toLowerCase();
-        if (p === "android" || p === "pc") {
-            const array = new Uint8Array(32);
-            window.crypto.getRandomValues(array);
-            const privateKey = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-            const publicKey = "chc_" + privateKey.substring(0, 40);
-            alert("Nueva llave CHC: " + publicKey + "\n\nCopiada al panel.");
-            document.getElementById('userWallet').value = publicKey;
-            localStorage.setItem("last_chc_wallet", publicKey);
-        }
-    }
-
-    function handleKeyPress(e) { if (e.keyCode === 13) { continuarMineria(); } }
+window.onload = initChart;
 </script>
-
 </body>
 </html>
