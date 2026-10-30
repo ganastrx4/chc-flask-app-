@@ -1,151 +1,515 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso CharlyCoin</title>
-  
-  <script src="https://developer.worldcoin.org/idkit.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      background: radial-gradient(circle at center, #0d1117, #000);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: "Poppins", sans-serif;
-      overflow: hidden;
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMC / ICT Institutional Terminal - Neural Audit</title>
+<!-- Modern Normalize & Tailwind CSS desde CDN para un estilo responsivo rápido -->
+<link rel="stylesheet" href="https://unpkg.com/modern-normalize/modern-normalize.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          darkbg: '#020617',
+          panelbg: '#0f172a',
+          accent: '#2dd4bf',
+          bull: '#10b981',
+          bear: '#ef4444',
+          gold: '#f59e0b',
+          purple: '#a855f7'
+        },
+        fontFamily: {
+          mono: ['JetBrains Mono', 'Courier New', 'monospace'],
+          sans: ['Inter', 'sans-serif']
+        }
+      }
     }
-
-    h1 {
-      font-size: 2.5em;
-      color: #00bcd4;
-      margin-bottom: 10px;
-      letter-spacing: 2px;
-      animation: fadeIn 1.5s ease-in-out;
-    }
-
-    h2 {
-      color: #aaa;
-      font-weight: 400;
-      animation: fadeIn 2s ease-in-out;
-      text-align: center;
-      padding: 0 20px;
-    }
-
-    /* Botón de World ID mejorado */
-    .btn-verify {
-      background: linear-gradient(90deg, #00bcd4, #9c27b0);
-      border: none;
-      color: white;
-      padding: 15px 35px;
-      border-radius: 50px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 30px;
-      display: none; /* Se muestra después de la carga */
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
-    }
-
-    .btn-verify:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6);
-    }
-
-    .loader {
-      border: 6px solid #222;
-      border-top: 6px solid #00bcd4;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite, fadeIn 2.5s ease-in-out;
-      margin-top: 25px;
-    }
-
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    footer {
-      position: absolute;
-      bottom: 20px;
-      color: #555;
-      font-size: 0.9em;
-    }
-  </style>
+  }
+</script>
+<style>
+  body { background-color: #020617; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+  .custom-scroll::-webkit-scrollbar { width: 6px; }
+  .custom-scroll::-webkit-scrollbar-track { background: #020617; }
+  .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+  .glow-box { box-shadow: 0 0 25px -5px rgba(45, 212, 191, 0.15); }
+  .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+</style>
 </head>
-<body>
+<body class="p-4 md:p-6 min-h-screen">
 
-  <h1>CharlyCoin 🌍</h1>
-  <h2 id="status-text">Iniciando sistema de seguridad...</h2>
-  
-  <div id="loader" class="loader"></div>
+<div class="max-w-[1450px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-  <button id="world-id-button" class="btn-verify">
-    🚀 Verificar Identidad Humana
-  </button>
+  <!-- COLUMNA IZQUIERDA: CONTROLES DE ENTRADA -->
+  <aside class="lg:col-span-4 flex flex-col gap-5">
+    
+    <!-- HEADER APP -->
+    <div class="glass-card p-5 rounded-2xl glow-box flex items-center justify-between border-l-4 border-accent">
+      <div>
+        <h1 class="text-xl font-bold text-accent flex items-center gap-2">
+          <i data-lucide="cpu" class="w-6 h-6"></i> SMC / ICT TERMINAL
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">Multi-Confluence Order Flow Diagnostic</p>
+      </div>
+      <span id="apiStatusBadge" class="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-bull border border-bull/30 flex items-center gap-1">
+        <span class="w-2 h-2 rounded-full bg-bull animate-pulse"></span> ONLINE
+      </span>
+    </div>
 
-  <footer>© 2026 CharlyCoin - World Chain Ecosystem</footer>
+    <!-- PANEL DE PARÁMETROS -->
+    <div class="glass-card p-5 rounded-2xl flex flex-col gap-4">
+      <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 border-b border-slate-800 pb-3">
+        <i data-lucide="sliders" class="w-4 h-4 text-accent"></i> Configuración de Auditoría
+      </h2>
 
-  <script>
-    // 1. Simulación de carga inicial
-    setTimeout(() => {
-      document.getElementById('loader').style.display = 'none';
-      document.getElementById('status-text').innerText = 'Identidad requerida para ingresar';
-      document.getElementById('world-id-button').style.display = 'block';
-    }, 2000);
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Par de Futuros (USDT)</label>
+        <div class="relative">
+          <input type="text" id="symbolInput" value="BTCUSDT" placeholder="Ej: SOLUSDT, WLDUSDT" 
+                 class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accent transition-colors uppercase font-bold pl-10" />
+          <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5"></i>
+        </div>
+      </div>
 
-    // 2. Configuración de IDKit (World ID)
-    window.onload = function() {
-      if (typeof IDKit !== 'undefined') {
-        console.log("IDKit cargado correctamente.");
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Temporalidad Operativa</label>
+        <div class="grid grid-cols-5 gap-2">
+          <button type="button" onclick="selectTf('1m', this)" class="tf-btn py-2 text-xs font-mono font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:border-slate-700 transition">1m</button>
+          <button type="button" onclick="selectTf('5m', this)" class="tf-btn py-2 text-xs font-mono font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:border-slate-700 transition">5m</button>
+          <button type="button" onclick="selectTf('15m', this)" class="tf-btn active-tf py-2 text-xs font-mono font-bold rounded-lg border border-accent bg-accent/10 text-accent transition">15m</button>
+          <button type="button" onclick="selectTf('1h', this)" class="tf-btn py-2 text-xs font-mono font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:border-slate-700 transition">1h</button>
+          <button type="button" onclick="selectTf('4h', this)" class="tf-btn py-2 text-xs font-mono font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:border-slate-700 transition">4h</button>
+        </div>
+      </div>
 
-        IDKit.init({
-          app_id: "app_7686f9027d3e3c0b53d987a3caf1e111", // Tu App ID
-          action: "login",
-          onSuccess: (result) => {
-            console.log("¡Verificación exitosa!", result);
-            
-            // 3. Notificar a tu servidor Flask local
-            fetch('http://127.0.0.1:5000/api/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(result)
-            })
-            .then(response => {
-              // Una vez que Flask responde, vamos al buscador
-              window.location.href = "buscador.html"; 
-            })
-            .catch(err => {
-              console.error("Flask no respondió, pero la verificación fue real:", err);
-              window.location.href = "buscador.html";
-            });
-          },
-          onError: (error) => {
-            console.error("Error de World ID:", error);
-          }
+      <!-- BOTONES RÁPIDOS DE PARES -->
+      <div>
+        <label class="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Pares Recomendados</label>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setPair('BTCUSDT')" class="px-2.5 py-1 text-xs font-mono rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-accent transition">BTCUSDT</button>
+          <button onclick="setPair('ETHUSDT')" class="px-2.5 py-1 text-xs font-mono rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-accent transition">ETHUSDT</button>
+          <button onclick="setPair('SOLUSDT')" class="px-2.5 py-1 text-xs font-mono rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-accent transition">SOLUSDT</button>
+          <button onclick="setPair('WLDUSDT')" class="px-2.5 py-1 text-xs font-mono rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:border-accent transition">WLDUSDT</button>
+        </div>
+      </div>
+
+      <button id="runBtn" onclick="runAudit()" class="w-full bg-accent hover:bg-teal-300 text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm mt-2">
+        <i data-lucide="play" class="w-4 h-4 fill-current"></i> EJECUTAR AUDITORÍA NEURAL
+      </button>
+    </div>
+
+    <!-- CONSOLA DE AUDITORÍA LOGS -->
+    <div class="glass-card p-5 rounded-2xl flex flex-col gap-3">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="terminal" class="w-4 h-4 text-accent"></i> Console Live Logs
+        </h3>
+        <button onclick="clearConsole()" class="text-[10px] text-slate-500 hover:text-slate-300">LIMPIAR</button>
+      </div>
+      <div id="consoleLog" class="h-44 bg-slate-950 rounded-xl p-3 font-mono text-[11px] custom-scroll overflow-y-auto space-y-1.5 border border-slate-900 text-emerald-400">
+        <div class="text-slate-600">>> Terminal de auditoría inicializada. Esperando comando...</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- COLUMNA DERECHA: RESULTADOS Y MATRIZ -->
+  <main class="lg:col-span-8 flex flex-col gap-5">
+    
+    <!-- CUADRO DE VEREDICTO DE MERCADO -->
+    <div id="verdictBox" class="glass-card p-6 rounded-2xl border-l-4 border-gold relative overflow-hidden transition-all duration-300">
+      <div class="flex justify-between items-start mb-3">
+        <span class="text-[11px] font-mono uppercase font-bold tracking-widest text-slate-400 flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-gold"></i> PROYECCIÓN INSTITUCIONAL SMC / ICT
+        </span>
+        <span id="targetDistanceBadge" class="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-gold">
+          DISTANCIA: —
+        </span>
+      </div>
+
+      <div id="verdictTitle" class="text-2xl font-extrabold text-gold flex items-center gap-3">
+        <i data-lucide="help-circle" class="w-7 h-7"></i> INICIA UNA AUDITORÍA
+      </div>
+      <p id="verdictDesc" class="text-sm text-slate-300 mt-2 leading-relaxed">
+        Ingresa un par de Binance Futures y selecciona la temporalidad para calcular de forma inmediata los Order Blocks, Fair Value Gaps, cambio de estructura (CHoCH) y confluencias técnicas.
+      </p>
+
+      <!-- MEDIDOR DE PROBABILIDAD (PROGRESS BAR) -->
+      <div class="mt-5 pt-4 border-t border-slate-800/80">
+        <div class="flex justify-between text-xs font-mono font-bold mb-2">
+          <span class="text-bull flex items-center gap-1"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> RUPTURA / CONTINUACIÓN: <b id="breakoutProbText">50%</b></span>
+          <span class="text-bear flex items-center gap-1"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> REBOTE / SWEEP: <b id="sweepProbText">50%</b></span>
+        </div>
+        <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden flex p-0.5 border border-slate-800">
+          <div id="breakoutBar" class="h-full bg-bull rounded-full transition-all duration-500" style="width: 50%;"></div>
+          <div id="sweepBar" class="h-full bg-bear rounded-full transition-all duration-500" style="width: 50%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATRIZ DE 8 CAPAS DE CONFLUENCIA -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      
+      <!-- MATRIZ 1: ICT STRUCTURE -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-accent">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Estructura ICT</span>
+        <span id="matStruct" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 2: ORDER BLOCK -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-purple">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Order Block (OB)</span>
+        <span id="matOb" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 3: FVG IMBALANCE -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-gold">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Fair Value Gap</span>
+        <span id="matFvg" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 4: FIBONACCI OTE -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-bull">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Fibo OTE (0.618-0.786)</span>
+        <span id="matFibo" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 5: EMA TREND -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-accent">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Medias Móviles (EMA)</span>
+        <span id="matEma" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 6: RSI MOMENTUM -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-bear">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">RSI (14) Momentum</span>
+        <span id="matRsi" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 7: LIQUIDEZ MACRO -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-gold">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Zona Objetivo Macro</span>
+        <span id="matLiqZone" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+      <!-- MATRIZ 8: TAKER DELTA FLOW -->
+      <div class="glass-card p-3.5 rounded-xl border-l-2 border-bull">
+        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider mb-1">Taker Order Flow</span>
+        <span id="matFlow" class="font-mono text-xs font-bold text-white block truncate">—</span>
+      </div>
+
+    </div>
+
+    <!-- RAZONAMIENTO TÉCNICO DETALLADO -->
+    <div class="glass-card p-5 rounded-2xl flex flex-col gap-3">
+      <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 border-b border-slate-800 pb-3">
+        <i data-lucide="list-checks" class="w-4 h-4 text-accent"></i> Fundamentos del Veredicto Institucional
+      </h3>
+      <div id="reasonsContainer" class="flex flex-col gap-2.5 min-h-[140px] justify-center">
+        <div class="text-xs text-slate-500 italic text-center py-6">
+          Los argumentos desglosados del análisis institucional se mostrarán aquí tras ejecutar la auditoría.
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// Inicializar Iconos Lucide
+lucide.createIcons();
+
+let selectedTimeframe = '15m';
+
+function selectTf(tf, btn) {
+    selectedTimeframe = tf;
+    document.querySelectorAll('.tf-btn').forEach(b => {
+        b.className = "tf-btn py-2 text-xs font-mono font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-white hover:border-slate-700 transition";
+    });
+    btn.className = "tf-btn active-tf py-2 text-xs font-mono font-bold rounded-lg border border-accent bg-accent/10 text-accent transition";
+}
+
+function setPair(pair) {
+    document.getElementById('symbolInput').value = pair;
+}
+
+function logToConsole(msg, type = 'info') {
+    const consoleBox = document.getElementById('consoleLog');
+    const time = new Date().toLocaleTimeString();
+    let colorClass = 'text-emerald-400';
+    if (type === 'warn') colorClass = 'text-amber-400';
+    if (type === 'error') colorClass = 'text-rose-400';
+    
+    const div = document.createElement('div');
+    div.className = colorClass;
+    div.innerHTML = `<span class="text-slate-600">[${time}]</span> ${msg}`;
+    consoleBox.appendChild(div);
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+}
+
+function clearConsole() {
+    document.getElementById('consoleLog').innerHTML = '';
+}
+
+// FUNCIONES MATEMÁTICAS NATIVAS DE INDICADORES
+function calculateEMA(closes, period) {
+    if (closes.length < period) return closes[closes.length - 1];
+    let k = 2 / (period + 1);
+    let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+    for (let i = period; i < closes.length; i++) {
+        ema = (closes[i] * k) + (ema * (1 - k));
+    }
+    return ema;
+}
+
+function calculateRSI(closes, period = 14) {
+    if (closes.length < period + 1) return 50;
+    let gains = 0, losses = 0;
+    for (let i = closes.length - period; i < closes.length; i++) {
+        let diff = closes[i] - closes[i - 1];
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+    }
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    if (avgLoss === 0) return 100;
+    let rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+}
+
+function detectICTStructure(opens, highs, lows, closes) {
+    if (closes.length < 30) return { struct: "NEUTRAL", ob: "SIN OB CLARO" };
+    
+    const recentHigh = Math.max(...highs.slice(-18, -3));
+    const recentLow = Math.min(...lows.slice(-18, -3));
+    const currentClose = closes[closes.length - 1];
+    
+    let struct = "BOS / CONTINUACIÓN";
+    if (currentClose > recentHigh) struct = "CHoCH ALCISTA 🚀";
+    else if (currentClose < recentLow) struct = "CHoCH BAJISTA 📉";
+
+    let ob = "NEUTRAL";
+    for (let i = closes.length - 10; i < closes.length - 2; i++) {
+        if (closes[i] < opens[i] && closes[i+1] > highs[i]) {
+            ob = `BULLISH OB ($${lows[i].toFixed(4)})`;
+            break;
+        } else if (closes[i] > opens[i] && closes[i+1] < lows[i]) {
+            ob = `BEARISH OB ($${highs[i].toFixed(4)})`;
+            break;
+        }
+    }
+    return { struct, ob };
+}
+
+// EJECUCIÓN DE LA AUDITORÍA ASÍNCRONA
+async function runAudit() {
+    const symbol = document.getElementById('symbolInput').value.trim().toUpperCase();
+    const runBtn = document.getElementById('runBtn');
+
+    if (!symbol) {
+        logToConsole('[-] Ingresa un símbolo válido de Binance Futures.', 'warn');
+        return;
+    }
+
+    runBtn.disabled = true;
+    runBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> CONSULTANDO BINANCE...`;
+    lucide.createIcons();
+
+    logToConsole(`>> Iniciando conexión a fapi.binance.com para [${symbol}] (${selectedTimeframe})...`);
+
+    try {
+        const url = `https://fapi.binance.com/fapi/v1/klines?symbol=${symbol}&interval=${selectedTimeframe}&limit=120`;
+        const res = await fetch(url);
+
+        if (!res.ok) {
+            throw new Error(`Código ${res.status}: El par "${symbol}" no existe en Binance Futures o hay restricción.`);
+        }
+
+        const klines = await res.json();
+        if (!Array.isArray(klines) || klines.length < 60) {
+            throw new Error("Datos insuficientes recibidos desde la API.");
+        }
+
+        logToConsole(`[+] ${klines.length} velas descargadas con éxito. Procesando capas ICT/SMC...`);
+
+        // Extracción de vectores de precios
+        const opens = klines.map(k => parseFloat(k[1]));
+        const highs = klines.map(k => parseFloat(k[2]));
+        const lows = klines.map(k => parseFloat(k[3]));
+        const closes = klines.map(k => parseFloat(k[4]));
+        const volumes = klines.map(k => parseFloat(k[5]));
+        const takerBuyVols = klines.map(k => parseFloat(k[9]));
+
+        const currentPrice = closes[closes.length - 1];
+        const maxHigh = Math.max(...highs);
+        const minLow = Math.min(...lows);
+
+        // 1. Cálculos de Indicadores
+        const ema50 = calculateEMA(closes, 50);
+        const ema200 = calculateEMA(closes, Math.min(200, closes.length));
+        const rsiVal = calculateRSI(closes, 14);
+
+        // Distancias a Liquidez
+        const distHigh = Math.abs(currentPrice - maxHigh) / currentPrice * 100;
+        const distLow = Math.abs(currentPrice - minLow) / currentPrice * 100;
+        const isNearResistance = distHigh <= distLow;
+        const targetZonePrice = isNearResistance ? maxHigh : minLow;
+        const targetDistance = isNearResistance ? distHigh : distLow;
+
+        // 2. ICT Structure & Order Block
+        const { struct: ictStruct, ob: ictOb } = detectICTStructure(opens, highs, lows, closes);
+
+        // 3. FVG Imbalance Detection
+        let fvgDetected = false;
+        for (let i = klines.length - 10; i < klines.length - 2; i++) {
+            if (lows[i] > highs[i - 1] || highs[i] < lows[i - 1]) {
+                fvgDetected = true;
+                break;
+            }
+        }
+
+        // 4. Fibonacci OTE
+        const rangeSpan = maxHigh - minLow;
+        const retrace = rangeSpan > 0 ? (currentPrice - minLow) / rangeSpan : 0.5;
+        const isFiboOte = (retrace >= 0.618 && retrace <= 0.786);
+        const fiboText = isFiboOte ? `DENTRO OTE (${retrace.toFixed(2)})` : `FORA OTE (${retrace.toFixed(2)})`;
+
+        // 5. Taker Order Flow
+        let recentVol = 0, recentTakerBuy = 0;
+        for (let i = klines.length - 12; i < klines.length; i++) {
+            recentVol += volumes[i];
+            recentTakerBuy += takerBuyVols[i];
+        }
+        const takerRatio = recentVol > 0 ? (recentTakerBuy / recentVol) * 100 : 50;
+
+        // 6. Motor Ponderado de Decisión
+        let bullishPoints = 0;
+        let bearishPoints = 0;
+        let reasons = [];
+
+        // Evaluar Estructura
+        if (ictStruct.includes("CHoCH ALCISTA")) {
+            bullishPoints += 3;
+            reasons.push({ icon: 'trending-up', color: 'text-bull', title: 'CHoCH Alcista Detectado', desc: 'Ruptura estructural de máximos anteriores. Entrada de flujo comprador.' });
+        } else if (ictStruct.includes("CHoCH BAJISTA")) {
+            bearishPoints += 3;
+            reasons.push({ icon: 'trending-down', color: 'text-bear', title: 'CHoCH Bajista Detectado', desc: 'Ruptura estructural de mínimos anteriores. Giro institucional a la baja.' });
+        }
+
+        // Evaluar Order Blocks
+        if (ictOb.includes("BULLISH")) {
+            bullishPoints += 2;
+            reasons.push({ icon: 'box', color: 'text-bull', title: 'Bullish Order Block Activo', desc: 'Presencia de soporte institucional derivado de mitigación previa.' });
+        } else if (ictOb.includes("BEARISH")) {
+            bearishPoints += 2;
+            reasons.push({ icon: 'box', color: 'text-bear', title: 'Bearish Order Block Activo', desc: 'Presencia de bloque vendedora en la zona superior.' });
+        }
+
+        // Evaluar EMAs
+        if (currentPrice > ema50 && ema50 > ema200) {
+            bullishPoints += 2;
+            reasons.push({ icon: 'zap', color: 'text-accent', title: 'Tendencia Macro Alcista', desc: 'El precio cotiza de forma saludable por encima de las medias EMA 50 y EMA 200.' });
+        } else if (currentPrice < ema50 && ema50 < ema200) {
+            bearishPoints += 2;
+            reasons.push({ icon: 'zap', color: 'text-bear', title: 'Tendencia Macro Bajista', desc: 'Presión vendedora dominante por debajo de EMA 50 y EMA 200.' });
+        }
+
+        // Evaluar RSI & Cercanía a Liquidez
+        if (targetDistance <= 3.0) {
+            if (rsiVal > 68 || rsiVal < 32) {
+                bearishPoints += 3.5;
+                reasons.push({ icon: 'alert-triangle', color: 'text-amber-400', title: 'Agotamiento Extremo + Zona Liquidez', desc: `El precio está a solo ${targetDistance.toFixed(2)}% del objetivo pero con RSI en ${rsiVal.toFixed(1)}. Alta probabilidad de SWEEP / REBOTE.` });
+            } else {
+                bullishPoints += 3.5;
+                reasons.push({ icon: 'rocket', color: 'text-bull', title: 'Aproximación con Momentum', desc: `Precio a ${targetDistance.toFixed(2)}% del nivel sin agotamiento en RSI (${rsiVal.toFixed(1)}). Favorable para RUPTURA / BREAKOUT.` });
+            }
+        }
+
+        // Evaluar FVG
+        if (fvgDetected) {
+            reasons.push({ icon: 'layers', color: 'text-purple', title: 'Fair Value Gap (FVG)', desc: 'Desequilibrio activo detectado en el rango de velas reciente.' });
+        }
+
+        // Evaluar Taker Flow
+        if (takerRatio > 54) {
+            bullishPoints += 1.5;
+            reasons.push({ icon: 'arrow-up-right', color: 'text-bull', title: 'Taker Delta Comprador', desc: `Volumen Taker Buy representa el ${takerRatio.toFixed(1)}% de las transacciones.` });
+        } else if (takerRatio < 46) {
+            bearishPoints += 1.5;
+            reasons.push({ icon: 'arrow-down-right', color: 'text-bear', title: 'Taker Delta Vendedor', desc: `Presión Taker Sell activa (${(100 - takerRatio).toFixed(1)}%).` });
+        }
+
+        // Cálculos Finales de Probabilidad
+        const totalPts = bullishPoints + bearishPoints;
+        const breakoutProb = totalPts > 0 ? Math.round((bullishPoints / totalPts) * 100) : 50;
+        const sweepProb = 100 - breakoutProb;
+        const isBreakout = breakoutProb >= 50;
+
+        // ACTUAILIZACIÓN DE LA UI
+        
+        // 1. Veredicto principal
+        const verdictBox = document.getElementById('verdictBox');
+        const verdictTitle = document.getElementById('verdictTitle');
+        const verdictDesc = document.getElementById('verdictDesc');
+
+        if (isBreakout) {
+            verdictBox.className = "glass-card p-6 rounded-2xl border-l-4 border-bull relative overflow-hidden transition-all duration-300";
+            verdictTitle.innerHTML = `<i data-lucide="rocket" class="w-7 h-7 text-bull"></i> RUPTURA Y CONTINUACIÓN (${breakoutProb}%)`;
+            verdictTitle.className = "text-2xl font-extrabold text-bull flex items-center gap-3";
+            verdictDesc.innerHTML = `El análisis multifactorial de <b>${symbol}</b> en <b>${selectedTimeframe}</b> proyecta un consumo violento de la liquidez en <b>$${targetZonePrice.toFixed(6)}</b>. Los bloques y la estructura institucional favorecen el <b>Breakout de continuación</b>.`;
+        } else {
+            verdictBox.className = "glass-card p-6 rounded-2xl border-l-4 border-bear relative overflow-hidden transition-all duration-300";
+            verdictTitle.innerHTML = `<i data-lucide="rotate-ccw" class="w-7 h-7 text-bear"></i> REBOTE / LIQUIDITY SWEEP (${sweepProb}%)`;
+            verdictTitle.className = "text-2xl font-extrabold text-bear flex items-center gap-3";
+            verdictDesc.innerHTML = `El análisis indica absorción pasiva en la zona de <b>$${targetZonePrice.toFixed(6)}</b>. El agotamiento técnico y la confluencia ICT anticipan un <b>barrido de mecha (Sweep) y posterior giro opuesto</b>.`;
+        }
+
+        document.getElementById('targetDistanceBadge').innerText = `DISTANCIA: ${targetDistance.toFixed(2)}%`;
+        document.getElementById('breakoutProbText').innerText = `${breakoutProb}%`;
+        document.getElementById('sweepProbText').innerText = `${sweepProb}%`;
+        document.getElementById('breakoutBar').style.width = `${breakoutProb}%`;
+        document.getElementById('sweepBar').style.width = `${sweepProb}%`;
+
+        // 2. Matriz
+        document.getElementById('matStruct').innerText = ictStruct;
+        document.getElementById('matOb').innerText = ictOb;
+        document.getElementById('matFvg').innerText = fvgDetected ? "ACTIVO (IMBALANCE)" : "EQUILIBRADO";
+        document.getElementById('matFibo').innerText = fiboText;
+        document.getElementById('matEma').innerText = currentPrice > ema50 ? "ALCISTA (SUP. EMA)" : "BAJISTA (INF. EMA)";
+        document.getElementById('matRsi').innerText = `${rsiVal.toFixed(1)} (${rsiVal > 70 ? 'SOBRECOMPRA' : rsiVal < 30 ? 'SOBREVENTA' : 'NEUTRAL'})`;
+        document.getElementById('matLiqZone').innerText = `$${targetZonePrice.toFixed(4)}`;
+        document.getElementById('matFlow').innerText = `${takerRatio.toFixed(1)}% BUY`;
+
+        // 3. Razones desglosadas
+        const reasonsContainer = document.getElementById('reasonsContainer');
+        reasonsContainer.innerHTML = '';
+        reasons.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'flex items-start gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-900';
+            item.innerHTML = `
+                <i data-lucide="${r.icon}" class="w-5 h-5 ${r.color} flex-shrink-0 mt-0.5"></i>
+                <div>
+                  <h4 class="text-xs font-bold text-white">${r.title}</h4>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${r.desc}</p>
+                </div>
+            `;
+            reasonsContainer.appendChild(item);
         });
 
-        // 4. Activar el botón
-        document.getElementById("world-id-button").onclick = () => {
-          IDKit.open();
-        };
+        logToConsole(`[+] Auditoría finalizada correctamente para ${symbol}. Veredicto: ${isBreakout ? 'CONTINUACIÓN' : 'SWEEP / REBOTE'}`);
 
-      } else {
-        console.error("Error crítico: No se pudo cargar IDKit de los servidores de Worldcoin.");
-        document.getElementById('status-text').innerText = 'Error de conexión con World ID';
-        document.getElementById('status-text').style.color = '#ff4444';
-      }
-    };
-  </script>
-
+    } catch (err) {
+        logToConsole(`[-] Error: ${err.message}`, 'error');
+        alert(`Error al realizar el análisis: ${err.message}`);
+    } finally {
+        runBtn.disabled = false;
+        runBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i> EJECUTAR AUDITORÍA NEURAL`;
+        lucide.createIcons();
+    }
+}
+</script>
 </body>
 </html>
