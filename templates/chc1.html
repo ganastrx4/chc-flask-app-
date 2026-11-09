@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Binance Futures - Terminal Modular en Vivo</title>
+  <title>Binance Futures - Terminal Modular con IA Adaptativa</title>
   <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root {
@@ -19,6 +19,7 @@
       --red-hover: #e03a50;
       --yellow: #fcd535;
       --blue: #3861fb;
+      --purple: #9333ea;
     }
 
     * {
@@ -67,9 +68,9 @@
       background: var(--bg-input);
       border: 1px solid #3c444d;
       color: var(--text-main);
-      padding: 8px 10px;
+      padding: 7px 10px;
       border-radius: 5px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       outline: none;
     }
 
@@ -80,7 +81,7 @@
     button {
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.15s ease, opacity 0.15s ease;
+      transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
     }
 
     button:disabled {
@@ -105,14 +106,14 @@
       background: var(--bg-panel);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
     .panel-header {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 700;
       color: var(--yellow);
       border-bottom: 1px solid var(--border);
@@ -120,26 +121,27 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 6px;
     }
 
-    .panel-1 { grid-column: span 4; }
+    .panel-1 { grid-column: span 3; }
     .panel-2 { grid-column: span 4; }
-    .panel-3 { grid-column: span 4; }
+    .panel-3 { grid-column: span 5; }
     .panel-4 { grid-column: span 12; }
 
-    @media (max-width: 1180px) {
+    @media (max-width: 1250px) {
       .panel-1, .panel-2, .panel-3 { grid-column: span 12; }
     }
 
     .data-row {
       display: flex;
       justify-content: space-between;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       padding: 2px 0;
     }
 
     .data-row span:first-child { color: var(--text-muted); }
-    .data-row span:last-child { font-weight: 600; font-family: monospace; font-size: 0.9rem; }
+    .data-row span:last-child { font-weight: 600; font-family: monospace; font-size: 0.88rem; }
 
     .highlight-box {
       background: #1e2329;
@@ -150,7 +152,7 @@
     }
 
     .highlight-value {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: var(--yellow);
       font-family: monospace;
@@ -167,8 +169,8 @@
       background: var(--green);
       color: #0b0e11;
       border: none;
-      padding: 11px;
-      font-size: 0.95rem;
+      padding: 10px;
+      font-size: 0.92rem;
     }
     .btn-buy:hover:not(:disabled) { background: var(--green-hover); }
 
@@ -176,8 +178,8 @@
       background: var(--red);
       color: #ffffff;
       border: none;
-      padding: 11px;
-      font-size: 0.95rem;
+      padding: 10px;
+      font-size: 0.92rem;
     }
     .btn-sell:hover:not(:disabled) { background: var(--red-hover); }
 
@@ -189,7 +191,6 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-top: 2px;
     }
 
     .close-inputs {
@@ -199,24 +200,24 @@
     }
 
     .close-inputs label {
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       color: var(--text-muted);
       display: block;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
     .close-inputs input {
       width: 100%;
-      padding: 6px 8px;
-      font-size: 0.84rem;
+      padding: 5px 8px;
+      font-size: 0.83rem;
     }
 
     .btn-close-long {
       background: #d97706;
       color: #fff;
       border: none;
-      padding: 9px;
-      font-size: 0.8rem;
+      padding: 8px;
+      font-size: 0.78rem;
     }
     .btn-close-long:hover:not(:disabled) { background: #b45309; }
 
@@ -224,20 +225,86 @@
       background: #2563eb;
       color: #fff;
       border: none;
-      padding: 9px;
-      font-size: 0.8rem;
+      padding: 8px;
+      font-size: 0.78rem;
     }
     .btn-close-short:hover:not(:disabled) { background: #1d4ed8; }
+
+    /* Estilos específicos del Motor IA en Panel 3 */
+    .ai-control-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e2329;
+      border: 1px solid #3c444d;
+      padding: 8px 10px;
+      border-radius: 6px;
+      gap: 8px;
+    }
+
+    .btn-ai-toggle {
+      padding: 7px 12px;
+      border: none;
+      font-size: 0.82rem;
+      border-radius: 5px;
+      font-weight: 700;
+    }
+
+    .btn-ai-off {
+      background: #3c444d;
+      color: var(--text-main);
+    }
+
+    .btn-ai-on {
+      background: linear-gradient(90deg, #0ecb81, #2563eb);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(14, 203, 129, 0.35);
+    }
+
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: #0b0e11;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #2b3139;
+    }
+
+    .mem-card {
+      text-align: center;
+      padding: 4px;
+    }
+
+    .mem-card .mem-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .mem-card .mem-val {
+      font-family: monospace;
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .ai-signal-box {
+      background: #1e2329;
+      border-left: 3px solid var(--yellow);
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
 
     .btn-hedge-limit {
       background: linear-gradient(90deg, #0ecb81, #3861fb);
       color: #ffffff;
       border: none;
-      padding: 11px;
-      font-size: 0.92rem;
+      padding: 9px;
+      font-size: 0.85rem;
       width: 100%;
-      letter-spacing: 0.3px;
-      box-shadow: 0 2px 8px rgba(14, 203, 129, 0.25);
     }
     .btn-hedge-limit:hover:not(:disabled) {
       filter: brightness(1.08);
@@ -286,14 +353,16 @@
     }
 
     .status-log {
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       color: var(--text-muted);
       background: #0b0e11;
       padding: 8px;
       border-radius: 4px;
-      min-height: 36px;
+      max-height: 88px;
+      overflow-y: auto;
       word-break: break-word;
       line-height: 1.35;
+      font-family: monospace;
     }
 
     /* Panel 4: Gráfico + Liquidez */
@@ -397,10 +466,10 @@
 
   <!-- BARRA SUPERIOR DE CREDENCIALES Y MODO POSICIÓN -->
   <header>
-    <div class="brand">⚡ BINANCE FUTURES USDT-M</div>
+    <div class="brand">⚡ BINANCE FUTURES USDT-M + IA</div>
     <div class="api-bar">
-      <input type="password" id="apiKey" placeholder="Binance API Key" size="22" />
-      <input type="password" id="apiSecret" placeholder="Binance API Secret" size="22" />
+      <input type="password" id="apiKey" placeholder="Binance API Key" size="20" />
+      <input type="password" id="apiSecret" placeholder="Binance API Secret" size="20" />
       <select id="posModeSelect" title="Modo de posición en tu cuenta Binance">
         <option value="AUTO">Modo: Auto-Detectar</option>
         <option value="HEDGE">Hedge Mode (Cobertura)</option>
@@ -419,42 +488,42 @@
     <!-- PANEL 1: SELECCIÓN DE PAR Y MARGEN INICIAL MÍNIMO -->
     <section class="panel panel-1">
       <div class="panel-header">
-        <span>1. PAR Y MARGEN INICIAL MÍNIMO</span>
+        <span>1. PAR Y MARGEN MÍNIMO</span>
         <span id="live-price-tag" style="color: var(--green); font-family: monospace;">--</span>
       </div>
 
       <div style="display: flex; gap: 8px;">
-        <input type="text" id="symbolInput" value="XAUUSDT" placeholder="Ej. XAUUSDT, BTCUSDT" style="flex: 1; text-transform: uppercase;" />
-        <input type="number" id="leverageInput" value="20" min="1" max="125" style="width: 75px;" title="Apalancamiento (x)" />
+        <input type="text" id="symbolInput" value="XAUUSDT" placeholder="Ej. XAUUSDT" style="flex: 1; text-transform: uppercase;" />
+        <input type="number" id="leverageInput" value="75" min="1" max="125" style="width: 72px;" title="Apalancamiento (x)" />
       </div>
-      <small style="color: var(--text-muted); font-size: 0.76rem;">Presiona <b>ENTER</b> en el par para consultar el margen mínimo.</small>
+      <small style="color: var(--text-muted); font-size: 0.74rem;">Presiona <b>ENTER</b> en el par para consultar el margen mínimo.</small>
 
       <div class="highlight-box">
-        <div style="font-size: 0.78rem; color: var(--text-muted);">MARGEN INICIAL MÍNIMO REQUERIDO</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">MARGEN INICIAL MÍNIMO</div>
         <div class="highlight-value" id="minMarginResult">-- USDT</div>
       </div>
 
       <div>
         <div class="data-row"><span>Par seleccionado:</span><span id="info-symbol">--</span></div>
-        <div class="data-row"><span>Nocional mínimo (Min Notional):</span><span id="info-notional">--</span></div>
-        <div class="data-row"><span>Cantidad mínima (Step Size):</span><span id="info-minqty">--</span></div>
+        <div class="data-row"><span>Min Notional:</span><span id="info-notional">--</span></div>
+        <div class="data-row"><span>Step Size (Contratos):</span><span id="info-minqty">--</span></div>
         <div class="data-row"><span>Tick Size (Precio):</span><span id="info-ticksize">--</span></div>
-        <div class="data-row"><span>Apalancamiento aplicado:</span><span id="info-lev">20x</span></div>
+        <div class="data-row"><span>Apalancamiento:</span><span id="info-lev">75x</span></div>
       </div>
     </section>
 
     <!-- PANEL 2: EJECUCIÓN COMPRA / VENTA Y RETIRO STOP-LIMIT (ALGO ORDER API) -->
     <section class="panel panel-2">
       <div class="panel-header">
-        <span>2. EJECUCIÓN DE ORDEN (USDT)</span>
+        <span>2. EJECUCIÓN MANUAL (USDT)</span>
         <span id="active-pair-p2" style="color: var(--text-muted);">XAUUSDT</span>
       </div>
 
-      <label style="font-size: 0.82rem; color: var(--text-muted);">Monto a invertir (Margen en USDT):</label>
-      <input type="number" id="usdtAmount" placeholder="Ej. 50" step="0.01" min="0" />
+      <label style="font-size: 0.8rem; color: var(--text-muted);">Monto a invertir (Margen en USDT):</label>
+      <input type="number" id="usdtAmount" placeholder="Ej. 10" step="0.01" min="0" />
 
       <div class="data-row">
-        <span>Tamaño de posición estimado:</span>
+        <span>Tamaño de posición:</span>
         <span id="est-position-usdt">0.00 USDT</span>
       </div>
       <div class="data-row">
@@ -468,10 +537,10 @@
       </div>
 
       <!-- SECCIÓN DE RETIRO EN STOP-LIMIT (ALGO ORDER API) -->
-      <div class="close-box" id="stopLimitCloseBox">
+      <div class="close-box">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size: 0.8rem; font-weight: 700; color: var(--yellow);">RETIRAR POSICIÓN (STOP-LIMIT)</span>
-          <button onclick="autoFillStopLimitPrices()" style="padding: 3px 7px; font-size: 0.72rem;">Auto-Precio</button>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--yellow);">RETIRAR POSICIÓN (STOP-LIMIT)</span>
+          <button onclick="autoFillStopLimitPrices()" style="padding: 3px 7px; font-size: 0.7rem;">Auto-Precio</button>
         </div>
 
         <div class="close-inputs">
@@ -498,17 +567,54 @@
       <div class="status-log" id="orderStatus">Listo para operar.</div>
     </section>
 
-    <!-- PANEL 3: MONITOR EN VIVO CADA 5s Y CUBRIMIENTO EN PRECIO LIMIT -->
+    <!-- PANEL 3: MONITOR EN VIVO CADA 5s + MOTOR DE IA BALANCEADOR CON MEMORIA -->
     <section class="panel panel-3">
       <div class="panel-header">
-        <span><span class="live-dot"></span>3. MONITOR EN VIVO (5s) Y CUBRIMIENTO</span>
-        <button onclick="syncLivePositionsFromBinance()" style="padding: 2px 7px; font-size: 0.72rem;" title="Sincronizar ahora">↻ <span id="syncCountdown">5s</span></button>
+        <span><span class="live-dot"></span>3. MONITOR (5s) E IA BALANCEADORA</span>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <button onclick="resetAiMemory()" style="padding: 2px 6px; font-size: 0.7rem;" title="Reiniciar memoria de PnL de la IA">🧹 Mem</button>
+          <button onclick="syncLivePositionsFromBinance()" style="padding: 2px 7px; font-size: 0.72rem;" title="Sincronizar ahora">↻ <span id="syncCountdown">5s</span></button>
+        </div>
       </div>
 
+      <!-- BARRA DE CONTROL DE LA IA AUTOMÁTICA -->
+      <div class="ai-control-bar">
+        <button id="btnToggleAi" class="btn-ai-toggle btn-ai-off" onclick="toggleAiAutoMode()">
+          🤖 IA AUTO: PAUSADA
+        </button>
+        <div style="display:flex; gap:6px; align-items:center; font-size:0.75rem;">
+          <label style="color:var(--text-muted);">Ajuste:</label>
+          <select id="aiStepPct" title="Porcentaje de contratos a ajustar por ciclo" style="padding:4px 6px; font-size:0.76rem;">
+            <option value="0.20">20% / ciclo</option>
+            <option value="0.30" selected>30% / ciclo</option>
+            <option value="0.50">50% / ciclo</option>
+          </select>
+          <label style="color:var(--text-muted);">Max USDT:</label>
+          <input type="number" id="aiMaxMarginInput" value="50" min="1" style="width:58px; padding:4px 6px; font-size:0.76rem;" title="Tope máximo de margen USDT en uso" />
+        </div>
+      </div>
+
+      <!-- MEMORIA DE LA IA (GANANCIAS COBRADAS, RETIROS Y BALANCE NETO) -->
+      <div class="memory-grid">
+        <div class="mem-card">
+          <div class="mem-title">MEMORIA COBRADA</div>
+          <div class="mem-val" id="memRealizedPnl" style="color: var(--green);">+0.0000</div>
+        </div>
+        <div class="mem-card">
+          <div class="mem-title">PNL FLOTANTE</div>
+          <div class="mem-val" id="memFloatingPnl">0.0000</div>
+        </div>
+        <div class="mem-card">
+          <div class="mem-title">NETO TOTAL IA</div>
+          <div class="mem-val" id="memNetTotal" style="color: var(--yellow);">0.0000</div>
+        </div>
+      </div>
+
+      <!-- TABLA EN VIVO DE POSICIONES ABIERTAS -->
       <table class="positions-mini-table">
         <thead>
           <tr>
-            <th>Lado</th>
+            <th>Posición</th>
             <th>Contratos</th>
             <th>Entrada</th>
             <th>PnL (USDT)</th>
@@ -516,41 +622,26 @@
         </thead>
         <tbody id="livePositionsBody">
           <tr>
-            <td colspan="4" style="text-align:center; color: var(--text-muted); padding: 10px;">
+            <td colspan="4" style="text-align:center; color: var(--text-muted); padding: 8px;">
               Sin posiciones abiertas detectadas
             </td>
           </tr>
         </tbody>
       </table>
 
-      <div class="highlight-box" style="text-align: left;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-          <span style="font-size: 0.76rem; color: var(--text-muted); font-weight:700;">CUBRIMIENTO CALCULADO (TABLAS):</span>
-          <span id="hedgeDirectionBadge" style="font-size: 0.76rem; font-weight:700; color: var(--yellow);">--</span>
-        </div>
+      <!-- DIAGNÓSTICO DE VELAS Y DECISIÓN DE LA IA -->
+      <div class="ai-signal-box" id="aiDecisionBox">
+        <b>Diagnóstico IA:</b> Esperando datos de velas y posiciones...
+      </div>
 
-        <div class="close-inputs" style="margin-bottom: 8px;">
-          <div>
-            <label>Margen Cubrimiento (USDT):</label>
-            <input type="number" id="hedgeUsdtInput" step="any" placeholder="0.00" />
-          </div>
-          <div>
-            <label>Precio Entrada LIMIT:</label>
-            <input type="number" id="hedgeLimitPriceInput" step="any" placeholder="0.00" />
-          </div>
-        </div>
-
-        <div class="data-row" style="margin-bottom: 8px;">
-          <span>Contratos a cubrir:</span>
-          <span id="hedgeQtyDisplay" style="color: var(--yellow);">0.000</span>
-        </div>
-
-        <button class="btn-hedge-limit" id="btnPlaceHedgeLimit" onclick="placeHedgeLimitOrder()" disabled>
-          COLOCAR CUBRIMIENTO (LIMIT)
+      <!-- BOTÓN DE EJECUCIÓN INMEDIATA DE LA ESTRATEGIA IA / CUBRIMIENTO LIMIT -->
+      <div style="display:flex; gap:8px;">
+        <button class="btn-hedge-limit" id="btnPlaceHedgeLimit" onclick="executeAiRecommendedAction(true)" disabled>
+          EJECUTAR REBALANCEO IA (LIMIT)
         </button>
       </div>
 
-      <div class="status-log" id="hedgeStatusLog">Monitoreando posición cada 5 segundos...</div>
+      <div class="status-log" id="hedgeStatusLog">IA lista. Monitoreando velas y posiciones cada 5s...</div>
     </section>
 
     <!-- PANEL 4: GRÁFICO Y LIQUIDEZ EN VIVO -->
@@ -599,18 +690,34 @@
     let currentPrice = 0;
     let bestBidPrice = 0;
     let bestAskPrice = 0;
+    let bidLiquiditySum = 0;
+    let askLiquiditySum = 0;
     let isHedgeMode = null;
     let exchangeFilters = { minNotional: 5, minQty: 0.001, stepSize: 0.001, tickSize: 0.01 };
 
+    // Historial de velas en memoria para el análisis de tendencia de la IA
+    let recentCandles = [];
+
+    // Posiciones en vivo
     let livePositions = [];
-    let pendingHedgeProposal = {
+
+    // Estado y Memoria Persistente de la IA
+    let aiAutoEnabled = false;
+    let aiActionInProgress = false;
+    let lastAiExecutionTime = 0;
+    let aiMemory = {
+      realizedProfitUsdt: 0,
+      cyclesExecuted: 0,
+      lastDirection: "NEUTRAL",
+      historyLog: []
+    };
+
+    // Plan de acción calculado en vivo por la IA
+    let currentAiPlan = {
       ready: false,
-      orderSide: null,
-      positionSide: null,
-      qty: 0,
-      marginUsdt: 0,
-      limitPrice: 0,
-      leverage: 20
+      trend: "NEUTRAL",        // "BULLISH" | "BEARISH" | "NEUTRAL"
+      description: "",
+      orders: []               // [{ side: 'BUY'|'SELL', positionSide: 'LONG'|'SHORT', qty: number, price: number, reason: string, estPnlCapture: number }]
     };
 
     let countdownSec = 5;
@@ -626,6 +733,7 @@
       if (sessionStorage.getItem("bn_key")) document.getElementById("apiKey").value = sessionStorage.getItem("bn_key");
       if (sessionStorage.getItem("bn_sec")) document.getElementById("apiSecret").value = sessionStorage.getItem("bn_sec");
 
+      loadAiMemoryFromStorage();
       initChart();
       loadSymbolData(currentSymbol);
       startLivePositionMonitor();
@@ -649,27 +757,10 @@
       document.getElementById("leverageInput").addEventListener("change", () => {
         calculateMinMargin();
         updateEstimatedOrder();
-        recalculateHedgeProposal();
+        evaluateAiStrategy();
       });
 
       document.getElementById("usdtAmount").addEventListener("input", updateEstimatedOrder);
-
-      document.getElementById("hedgeUsdtInput").addEventListener("input", () => {
-        const customUsdt = parseFloat(document.getElementById("hedgeUsdtInput").value) || 0;
-        const limitP = parseFloat(document.getElementById("hedgeLimitPriceInput").value) || currentPrice;
-        const lev = pendingHedgeProposal.leverage || parseFloat(document.getElementById("leverageInput").value) || 20;
-        if (limitP > 0) {
-          const newQty = parseFloat(formatQty((customUsdt * lev) / limitP));
-          pendingHedgeProposal.qty = newQty;
-          pendingHedgeProposal.marginUsdt = customUsdt;
-          document.getElementById("hedgeQtyDisplay").textContent = formatQty(newQty);
-        }
-      });
-
-      document.getElementById("hedgeLimitPriceInput").addEventListener("input", () => {
-        const limitP = parseFloat(document.getElementById("hedgeLimitPriceInput").value) || 0;
-        if (limitP > 0) pendingHedgeProposal.limitPrice = limitP;
-      });
 
       document.querySelectorAll(".tf-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -698,6 +789,79 @@
       );
       const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
       return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // ================= MEMORIA PERSISTENTE DE LA IA =================
+    function loadAiMemoryFromStorage() {
+      try {
+        const saved = localStorage.getItem("bn_ai_memory_v1");
+        if (saved) {
+          aiMemory = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn("No se pudo cargar memoria IA:", e);
+      }
+      updateMemoryDisplay();
+    }
+
+    function saveAiMemoryToStorage() {
+      try {
+        localStorage.setItem("bn_ai_memory_v1", JSON.stringify(aiMemory));
+      } catch (e) {
+        console.warn("No se pudo guardar memoria IA:", e);
+      }
+      updateMemoryDisplay();
+    }
+
+    function resetAiMemory() {
+      aiMemory = {
+        realizedProfitUsdt: 0,
+        cyclesExecuted: 0,
+        lastDirection: "NEUTRAL",
+        historyLog: []
+      };
+      saveAiMemoryToStorage();
+      appendHedgeLog("🧹 Memoria de ganancias de la IA reiniciada a 0.0000 USDT.");
+    }
+
+    function updateMemoryDisplay() {
+      const floatingPnl = livePositions.reduce((acc, p) => acc + (p.pnl || 0), 0);
+      const netTotal = aiMemory.realizedProfitUsdt + floatingPnl;
+
+      const elRealized = document.getElementById("memRealizedPnl");
+      const elFloating = document.getElementById("memFloatingPnl");
+      const elNet = document.getElementById("memNetTotal");
+
+      elRealized.textContent = `${aiMemory.realizedProfitUsdt >= 0 ? "+" : ""}${aiMemory.realizedProfitUsdt.toFixed(4)}`;
+      elRealized.style.color = aiMemory.realizedProfitUsdt >= 0 ? "var(--green)" : "var(--red)";
+
+      elFloating.textContent = `${floatingPnl >= 0 ? "+" : ""}${floatingPnl.toFixed(4)}`;
+      elFloating.style.color = floatingPnl >= 0 ? "var(--green)" : "var(--red)";
+
+      elNet.textContent = `${netTotal >= 0 ? "+" : ""}${netTotal.toFixed(4)}`;
+      elNet.style.color = netTotal >= 0 ? "var(--yellow)" : "var(--red)";
+    }
+
+    function toggleAiAutoMode() {
+      aiAutoEnabled = !aiAutoEnabled;
+      const btn = document.getElementById("btnToggleAi");
+      if (aiAutoEnabled) {
+        btn.className = "btn-ai-toggle btn-ai-on";
+        btn.textContent = "🤖 IA AUTO: ACTIVADA (5s)";
+        appendHedgeLog("🤖 IA Autónomo ACTIVADO. Evaluará velas y balanceará posiciones cada 5s.");
+        evaluateAiStrategy();
+      } else {
+        btn.className = "btn-ai-toggle btn-ai-off";
+        btn.textContent = "🤖 IA AUTO: PAUSADA";
+        appendHedgeLog("⏸️ IA Autónomo PAUSADO. Puedes seguir ejecutando manualmente.");
+      }
+    }
+
+    function appendHedgeLog(msg) {
+      const logEl = document.getElementById("hedgeStatusLog");
+      const timeStr = new Date().toLocaleTimeString();
+      const line = `[${timeStr}] ${msg}`;
+      logEl.innerHTML = `${line}<br>` + logEl.innerHTML.split("<br>").slice(0, 6).join("<br>");
     }
 
     // ================= DETECCIÓN DE MODO DE POSICIÓN =================
@@ -806,7 +970,7 @@
     }
 
     function calculateMinMargin() {
-      const lev = parseFloat(document.getElementById("leverageInput").value) || 20;
+      const lev = parseFloat(document.getElementById("leverageInput").value) || 75;
       document.getElementById("info-lev").textContent = `${lev}x`;
 
       const minOrderValueByQty = exchangeFilters.minQty * currentPrice;
@@ -834,7 +998,7 @@
     // ================= PANEL 2: COMPRA / VENTA Y CIERRE STOP-LIMIT =================
     function updateEstimatedOrder() {
       const usdt = parseFloat(document.getElementById("usdtAmount").value) || 0;
-      const lev = parseFloat(document.getElementById("leverageInput").value) || 20;
+      const lev = parseFloat(document.getElementById("leverageInput").value) || 75;
       const notional = usdt * lev;
       const qty = currentPrice > 0 ? (notional / currentPrice) : 0;
 
@@ -861,7 +1025,7 @@
       const apiKey = document.getElementById("apiKey").value.trim();
       const apiSecret = document.getElementById("apiSecret").value.trim();
       const usdt = parseFloat(document.getElementById("usdtAmount").value);
-      const lev = parseInt(document.getElementById("leverageInput").value, 10) || 20;
+      const lev = parseInt(document.getElementById("leverageInput").value, 10) || 75;
       const statusEl = document.getElementById("orderStatus");
 
       if (!usdt || usdt <= 0) {
@@ -878,15 +1042,23 @@
       }
 
       const posLabel = side === "BUY" ? "LONG" : "SHORT";
-      livePositions = [{
-        side: posLabel,
-        qty: parseFloat(quantity),
-        entryPrice: currentPrice,
-        pnl: 0,
-        leverage: lev
-      }];
+      // Actualizar o agregar posición local para modo simulación
+      const existing = livePositions.find(p => p.side === posLabel);
+      if (existing) {
+        const totalCost = existing.entryPrice * existing.qty + currentPrice * parseFloat(quantity);
+        existing.qty += parseFloat(quantity);
+        existing.entryPrice = totalCost / existing.qty;
+      } else {
+        livePositions.push({
+          side: posLabel,
+          qty: parseFloat(quantity),
+          entryPrice: currentPrice,
+          pnl: 0,
+          leverage: lev
+        });
+      }
       renderLivePositionsTable();
-      recalculateHedgeProposal();
+      evaluateAiStrategy();
       enableStopLimitButtons(side);
       autoFillStopLimitPrices();
 
@@ -947,17 +1119,14 @@
       const primaryPos = livePositions[0];
 
       if (primaryPos && primaryPos.side === "SHORT") {
-        // Para cerrar SHORT se compra (BUY): triggerPrice debe ser >= precio actual en STOP
         document.getElementById("closeStopPrice").value = formatPrice(currentPrice + tick * 2);
         document.getElementById("closeLimitPrice").value = formatPrice(currentPrice + tick * 4);
       } else {
-        // Para cerrar LONG se vende (SELL): triggerPrice debe ser <= precio actual en STOP
         document.getElementById("closeStopPrice").value = formatPrice(currentPrice - tick * 2);
         document.getElementById("closeLimitPrice").value = formatPrice(currentPrice - tick * 4);
       }
     }
 
-    // ================= RETIRO DE POSICIÓN EN STOP-LIMIT (ALGO ORDER API: /fapi/v1/algoOrder) =================
     async function closePositionStopLimit(targetPosSide) {
       const apiKey = document.getElementById("apiKey").value.trim();
       const apiSecret = document.getElementById("apiSecret").value.trim();
@@ -976,7 +1145,7 @@
       const matchedPos = livePositions.find(p => p.side === targetPosSide);
       const qty = matchedPos && matchedPos.qty > 0
         ? formatQty(matchedPos.qty)
-        : formatQty(((parseFloat(document.getElementById("usdtAmount").value) || 0) * (parseFloat(document.getElementById("leverageInput").value) || 20)) / currentPrice);
+        : formatQty(((parseFloat(document.getElementById("usdtAmount").value) || 0) * (parseFloat(document.getElementById("leverageInput").value) || 75)) / currentPrice);
 
       if (parseFloat(qty) <= 0) {
         statusEl.textContent = "⚠️ No hay cantidad válida para retirar.";
@@ -997,7 +1166,6 @@
         const baseUrl = getBaseUrl();
         const timestamp = Date.now();
 
-        // CORRECCIÓN ERROR -4120: Binance Futures exige POST /fapi/v1/algoOrder con algoType=CONDITIONAL y triggerPrice
         let queryString =
           `algoType=CONDITIONAL` +
           `&symbol=${currentSymbol}` +
@@ -1039,16 +1207,19 @@
       }
     }
 
-    // ================= PANEL 3: MONITOR EN VIVO CADA 5s Y CUBRIMIENTO EN PRECIO LIMIT =================
+    // ================= PANEL 3: MONITOR EN VIVO CADA 5s + MOTOR DE IA =================
     function startLivePositionMonitor() {
       if (monitorTimer) clearInterval(monitorTimer);
       countdownSec = 5;
 
-      monitorTimer = setInterval(() => {
+      monitorTimer = setInterval(async () => {
         countdownSec--;
         if (countdownSec <= 0) {
           countdownSec = 5;
-          syncLivePositionsFromBinance();
+          await syncLivePositionsFromBinance();
+          if (aiAutoEnabled) {
+            await executeAiRecommendedAction(false);
+          }
         }
         document.getElementById("syncCountdown").textContent = `${countdownSec}s`;
       }, 1000);
@@ -1057,7 +1228,6 @@
     async function syncLivePositionsFromBinance() {
       const apiKey = document.getElementById("apiKey").value.trim();
       const apiSecret = document.getElementById("apiSecret").value.trim();
-      const logEl = document.getElementById("hedgeStatusLog");
 
       if (!apiKey || !apiSecret) {
         if (livePositions.length > 0 && currentPrice > 0) {
@@ -1066,7 +1236,8 @@
             p.pnl = diff * p.qty;
           });
           renderLivePositionsTable();
-          recalculateHedgeProposal();
+          updateMemoryDisplay();
+          evaluateAiStrategy();
         }
         return;
       }
@@ -1084,7 +1255,7 @@
 
         const data = await res.json();
         if (!res.ok) {
-          logEl.textContent = `⚠️ Error sincronizando posiciones (${data.code}): ${data.msg}`;
+          appendHedgeLog(`⚠️ Error sync (${data.code}): ${data.msg}`);
           return;
         }
 
@@ -1101,7 +1272,7 @@
             qty: Math.abs(amt),
             entryPrice: parseFloat(p.entryPrice),
             pnl: parseFloat(p.unRealizedProfit),
-            leverage: parseInt(p.leverage, 10) || parseInt(document.getElementById("leverageInput").value, 10) || 20
+            leverage: parseInt(p.leverage, 10) || parseInt(document.getElementById("leverageInput").value, 10) || 75
           };
         });
 
@@ -1110,10 +1281,8 @@
         }
 
         renderLivePositionsTable();
-        recalculateHedgeProposal();
-
-        const nowStr = new Date().toLocaleTimeString();
-        logEl.textContent = `🟢 Sincronizado con Binance (${nowStr}) | Posiciones activas: ${livePositions.length}`;
+        updateMemoryDisplay();
+        evaluateAiStrategy();
       } catch (err) {
         console.warn("Error en monitor 5s:", err);
       }
@@ -1125,7 +1294,7 @@
       if (!livePositions || livePositions.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="4" style="text-align:center; color: var(--text-muted); padding: 10px;">
+            <td colspan="4" style="text-align:center; color: var(--text-muted); padding: 8px;">
               Sin posiciones abiertas en ${currentSymbol}
             </td>
           </tr>`;
@@ -1149,153 +1318,329 @@
       }).join("");
     }
 
-    function recalculateHedgeProposal() {
-      const badge = document.getElementById("hedgeDirectionBadge");
-      const usdtInput = document.getElementById("hedgeUsdtInput");
-      const priceInput = document.getElementById("hedgeLimitPriceInput");
-      const qtyDisplay = document.getElementById("hedgeQtyDisplay");
-      const btnHedge = document.getElementById("btnPlaceHedgeLimit");
-
-      if (!livePositions || livePositions.length === 0 || currentPrice <= 0) {
-        pendingHedgeProposal.ready = false;
-        badge.textContent = "SIN POSICIÓN";
-        badge.style.color = "var(--text-muted)";
-        usdtInput.value = "";
-        priceInput.value = "";
-        qtyDisplay.textContent = "0.000";
-        btnHedge.disabled = true;
-        return;
+    // ================= CEREBRO DE LA IA: ANÁLISIS DE VELAS + BALANCEO DE CONTRATOS =================
+    function analyzeCandleMomentum() {
+      if (recentCandles.length < 6) {
+        return { trend: "NEUTRAL", score: 0, label: "Analizando velas..." };
       }
 
-      let longQty = 0;
-      let shortQty = 0;
-      let refLeverage = parseInt(document.getElementById("leverageInput").value, 10) || 20;
+      const last5 = recentCandles.slice(-5);
+      const closes = last5.map(c => c.close);
+      const emaFast = (closes[4] * 0.5) + (closes[3] * 0.3) + (closes[2] * 0.2);
+      const emaSlow = closes.reduce((a, b) => a + b, 0) / closes.length;
 
-      livePositions.forEach(p => {
-        if (p.side === "LONG") longQty += p.qty;
-        if (p.side === "SHORT") shortQty += p.qty;
-        if (p.leverage) refLeverage = p.leverage;
+      // Dirección de las últimas 3 velas
+      let candleDirScore = 0;
+      last5.slice(-3).forEach(c => {
+        if (c.close > c.open) candleDirScore += 1;
+        else if (c.close < c.open) candleDirScore -= 1;
       });
 
-      const netQty = longQty - shortQty;
+      // Presión de liquidez del Order Book
+      const totalLiq = bidLiquiditySum + askLiquiditySum;
+      const obImbalance = totalLiq > 0 ? ((bidLiquiditySum - askLiquiditySum) / totalLiq) : 0;
 
-      if (Math.abs(netQty) < exchangeFilters.stepSize) {
-        pendingHedgeProposal.ready = false;
-        badge.textContent = "POSICIÓN YA CUBIERTA (EN TABLAS)";
-        badge.style.color = "var(--green)";
-        usdtInput.value = "0.00";
-        priceInput.value = formatPrice(currentPrice);
-        qtyDisplay.textContent = "0.000";
-        btnHedge.disabled = true;
-        return;
+      const priceDiffPct = emaSlow > 0 ? ((emaFast - emaSlow) / emaSlow) * 100 : 0;
+      const totalScore = (priceDiffPct * 100) + (candleDirScore * 0.4) + (obImbalance * 1.2);
+
+      if (totalScore > 0.15) {
+        return { trend: "BULLISH", score: totalScore, label: "ALCISTA (Velas + Compras)" };
+      } else if (totalScore < -0.15) {
+        return { trend: "BEARISH", score: totalScore, label: "BAJISTA (Velas + Ventas)" };
       }
-
-      const needShort = netQty > 0;
-      const targetOrderSide = needShort ? "SELL" : "BUY";
-      const targetPosSide = needShort ? "SHORT" : "LONG";
-      const coverQtyRaw = Math.abs(netQty);
-      const coverQtyFormatted = formatQty(coverQtyRaw);
-
-      const tick = exchangeFilters.tickSize || 0.01;
-      const suggestedLimitPrice = needShort
-        ? (bestAskPrice > 0 ? bestAskPrice : currentPrice + tick)
-        : (bestBidPrice > 0 ? bestBidPrice : currentPrice - tick);
-
-      const formattedLimit = formatPrice(suggestedLimitPrice);
-      const requiredMarginUsdt = ((parseFloat(coverQtyFormatted) * parseFloat(formattedLimit)) / refLeverage) * 1.001;
-
-      pendingHedgeProposal = {
-        ready: true,
-        orderSide: targetOrderSide,
-        positionSide: targetPosSide,
-        qty: parseFloat(coverQtyFormatted),
-        marginUsdt: requiredMarginUsdt,
-        limitPrice: parseFloat(formattedLimit),
-        leverage: refLeverage
-      };
-
-      badge.textContent = needShort ? "CUBRIR CON SHORT (SELL LIMIT)" : "CUBRIR CON LONG (BUY LIMIT)";
-      badge.style.color = needShort ? "var(--red)" : "var(--green)";
-
-      if (document.activeElement !== usdtInput) {
-        usdtInput.value = requiredMarginUsdt.toFixed(4);
-      }
-      if (document.activeElement !== priceInput) {
-        priceInput.value = formattedLimit;
-      }
-
-      qtyDisplay.textContent = `${coverQtyFormatted} ${currentSymbol.replace("USDT", "")}`;
-      btnHedge.disabled = false;
-      btnHedge.textContent = `COLOCAR CUBRIMIENTO ${targetPosSide} (LIMIT @ ${formattedLimit})`;
+      return { trend: "NEUTRAL", score: totalScore, label: "LATERAL / CONSOLIDACIÓN" };
     }
 
-    // ================= EJECUTAR CUBRIMIENTO EN PRECIO LIMIT (UN SOLO CLIC) =================
-    async function placeHedgeLimitOrder() {
+    function evaluateAiStrategy() {
+      const diagBox = document.getElementById("aiDecisionBox");
+      const btnExec = document.getElementById("btnPlaceHedgeLimit");
+      const stepPct = parseFloat(document.getElementById("aiStepPct").value) || 0.30;
+      const maxMarginUsdt = parseFloat(document.getElementById("aiMaxMarginInput").value) || 50;
+      const refLev = parseInt(document.getElementById("leverageInput").value, 10) || 75;
+
+      const momentum = analyzeCandleMomentum();
+      const longPos = livePositions.find(p => p.side === "LONG");
+      const shortPos = livePositions.find(p => p.side === "SHORT");
+
+      currentAiPlan = {
+        ready: false,
+        trend: momentum.trend,
+        description: "",
+        orders: []
+      };
+
+      if (!longPos && !shortPos) {
+        diagBox.style.borderLeftColor = "var(--text-muted)";
+        diagBox.innerHTML = `<b>Tendencia Velas:</b> ${momentum.label}<br>Esperando posición abierta para iniciar balanceo dinámico.`;
+        btnExec.disabled = true;
+        btnExec.textContent = "ESPERANDO POSICIÓN ACTIVA";
+        return;
+      }
+
+      // Calcular margen actualmente comprometido
+      const usedNotional = ((longPos ? longPos.qty : 0) + (shortPos ? shortPos.qty : 0)) * currentPrice;
+      const usedMargin = usedNotional / refLev;
+      const tick = exchangeFilters.tickSize || 0.01;
+      const minStep = exchangeFilters.stepSize || 0.001;
+
+      const ordersToRun = [];
+      let actionSummary = [];
+
+      // ESCENARIO A: IMPULSO BAJISTA (A FAVOR DEL SHORT / EN CONTRA DEL LONG)
+      if (momentum.trend === "BEARISH") {
+        diagBox.style.borderLeftColor = "var(--red)";
+
+        // 1. Si hay LONG abierto (lado contrario al movimiento), retirar una parte a conveniencia
+        if (longPos && longPos.qty >= minStep * 2) {
+          const reduceLongQty = parseFloat(formatQty(Math.max(minStep, longPos.qty * stepPct)));
+          if (reduceLongQty >= minStep && reduceLongQty < longPos.qty) {
+            const limitSellPrice = parseFloat(formatPrice(bestBidPrice > 0 ? bestBidPrice : currentPrice));
+            const estPnl = (limitSellPrice - longPos.entryPrice) * reduceLongQty;
+            ordersToRun.push({
+              side: "SELL",
+              positionSide: "LONG",
+              qty: reduceLongQty,
+              price: limitSellPrice,
+              reason: `Recortar ${reduceLongQty} LONG (frenar caída)`,
+              estPnlCapture: estPnl
+            });
+            actionSummary.push(`Retirar <b>${reduceLongQty}</b> de LONG`);
+          }
+        }
+
+        // 2. Aumentar contratos en SHORT a favor de la vela bajista (si está dentro del margen máximo)
+        if (usedMargin < maxMarginUsdt) {
+          const baseShortQty = shortPos ? shortPos.qty : (longPos ? longPos.qty : minStep * 2);
+          const addShortQty = parseFloat(formatQty(Math.max(minStep, baseShortQty * stepPct)));
+          const limitShortPrice = parseFloat(formatPrice(bestAskPrice > 0 ? bestAskPrice : currentPrice + tick));
+
+          if (addShortQty >= minStep) {
+            ordersToRun.push({
+              side: "SELL",
+              positionSide: "SHORT",
+              qty: addShortQty,
+              price: limitShortPrice,
+              reason: `Aumentar +${addShortQty} SHORT (a favor de velas)`,
+              estPnlCapture: 0
+            });
+            actionSummary.push(`Aumentar <b>+${addShortQty}</b> en SHORT @ ${limitShortPrice}`);
+          }
+        }
+      }
+      // ESCENARIO B: IMPULSO ALCISTA (A FAVOR DEL LONG / EN CONTRA DEL SHORT)
+      else if (momentum.trend === "BULLISH") {
+        diagBox.style.borderLeftColor = "var(--green)";
+
+        // 1. Si hay SHORT abierto, retirar una parte a conveniencia para equilibrar hacia positivo
+        if (shortPos && shortPos.qty >= minStep * 2) {
+          const reduceShortQty = parseFloat(formatQty(Math.max(minStep, shortPos.qty * stepPct)));
+          if (reduceShortQty >= minStep && reduceShortQty < shortPos.qty) {
+            const limitBuyPrice = parseFloat(formatPrice(bestAskPrice > 0 ? bestAskPrice : currentPrice));
+            const estPnl = (shortPos.entryPrice - limitBuyPrice) * reduceShortQty;
+            ordersToRun.push({
+              side: "BUY",
+              positionSide: "SHORT",
+              qty: reduceShortQty,
+              price: limitBuyPrice,
+              reason: `Recortar ${reduceShortQty} SHORT (asegurar/equilibrar)`,
+              estPnlCapture: estPnl
+            });
+            actionSummary.push(`Retirar <b>${reduceShortQty}</b> de SHORT`);
+          }
+        }
+
+        // 2. Aumentar contratos en LONG a favor del subidón
+        if (usedMargin < maxMarginUsdt) {
+          const baseLongQty = longPos ? longPos.qty : (shortPos ? shortPos.qty : minStep * 2);
+          const addLongQty = parseFloat(formatQty(Math.max(minStep, baseLongQty * stepPct)));
+          const limitLongPrice = parseFloat(formatPrice(bestBidPrice > 0 ? bestBidPrice : currentPrice - tick));
+
+          if (addLongQty >= minStep) {
+            ordersToRun.push({
+              side: "BUY",
+              positionSide: "LONG",
+              qty: addLongQty,
+              price: limitLongPrice,
+              reason: `Aumentar +${addLongQty} LONG (a favor de subida)`,
+              estPnlCapture: 0
+            });
+            actionSummary.push(`Aumentar <b>+${addLongQty}</b> en LONG @ ${limitLongPrice}`);
+          }
+        }
+      }
+      // ESCENARIO C: LATERAL -> COSECHAR GANANCIA PARCIAL SI ALGÚN LADO ESTÁ EN POSITIVO
+      else {
+        diagBox.style.borderLeftColor = "var(--yellow)";
+        if (shortPos && shortPos.pnl > 0.02 && shortPos.qty >= minStep * 2) {
+          const harvestQty = parseFloat(formatQty(shortPos.qty * stepPct));
+          const limitPrice = parseFloat(formatPrice(bestAskPrice || currentPrice));
+          if (harvestQty >= minStep) {
+            ordersToRun.push({
+              side: "BUY",
+              positionSide: "SHORT",
+              qty: harvestQty,
+              price: limitPrice,
+              reason: `Cobrar ganancia parcial SHORT (+${shortPos.pnl.toFixed(4)})`,
+              estPnlCapture: (shortPos.entryPrice - limitPrice) * harvestQty
+            });
+            actionSummary.push(`Cobrar parcial <b>${harvestQty}</b> SHORT`);
+          }
+        } else if (longPos && longPos.pnl > 0.02 && longPos.qty >= minStep * 2) {
+          const harvestQty = parseFloat(formatQty(longPos.qty * stepPct));
+          const limitPrice = parseFloat(formatPrice(bestBidPrice || currentPrice));
+          if (harvestQty >= minStep) {
+            ordersToRun.push({
+              side: "SELL",
+              positionSide: "LONG",
+              qty: harvestQty,
+              price: limitPrice,
+              reason: `Cobrar ganancia parcial LONG (+${longPos.pnl.toFixed(4)})`,
+              estPnlCapture: (limitPrice - longPos.entryPrice) * harvestQty
+            });
+            actionSummary.push(`Cobrar parcial <b>${harvestQty}</b> LONG`);
+          }
+        }
+      }
+
+      if (ordersToRun.length > 0) {
+        currentAiPlan = {
+          ready: true,
+          trend: momentum.trend,
+          description: actionSummary.join(" + "),
+          orders: ordersToRun
+        };
+        diagBox.innerHTML =
+          `<b>Impulso IA:</b> ${momentum.label} | Margen usado: ${usedMargin.toFixed(2)}/${maxMarginUsdt} USDT<br>` +
+          `<b>Plan listo:</b> ${currentAiPlan.description}`;
+        btnExec.disabled = false;
+        btnExec.textContent = `⚡ EJECUTAR PLAN IA (${ordersToRun.length} ÓRDENES LIMIT)`;
+      } else {
+        diagBox.innerHTML =
+          `<b>Impulso IA:</b> ${momentum.label} | Margen usado: ${usedMargin.toFixed(2)}/${maxMarginUsdt} USDT<br>` +
+          `<b>Estado:</b> Posiciones equilibradas o esperando mejor señal de vela.`;
+        btnExec.disabled = true;
+        btnExec.textContent = "SIN AJUSTE NECESARIO AHORA";
+      }
+    }
+
+    // ================= EJECUCIÓN DE ÓRDENES LIMIT DE LA IA =================
+    async function executeAiRecommendedAction(isManualClick) {
+      if (!currentAiPlan.ready || currentAiPlan.orders.length === 0) return;
+      if (aiActionInProgress) return;
+
+      // En modo automático, respetar un enfriamiento mínimo de 10 segundos entre ejecuciones para evitar sobre-operar
+      const now = Date.now();
+      if (!isManualClick && (now - lastAiExecutionTime < 10000)) {
+        return;
+      }
+
       const apiKey = document.getElementById("apiKey").value.trim();
       const apiSecret = document.getElementById("apiSecret").value.trim();
-      const logEl = document.getElementById("hedgeStatusLog");
 
-      if (!pendingHedgeProposal.ready) {
-        logEl.textContent = "⚠️ No hay cubrimiento pendiente por colocar.";
-        return;
-      }
-
-      const limitPrice = formatPrice(parseFloat(document.getElementById("hedgeLimitPriceInput").value) || pendingHedgeProposal.limitPrice);
-      const quantity = formatQty(pendingHedgeProposal.qty);
-      const side = pendingHedgeProposal.orderSide;
-      const posSide = pendingHedgeProposal.positionSide;
-
-      if (parseFloat(quantity) <= 0 || parseFloat(limitPrice) <= 0) {
-        logEl.textContent = "⚠️ Cantidad o precio límite inválido.";
-        return;
-      }
-
-      if (!apiKey || !apiSecret) {
-        logEl.textContent = `ℹ️ Simulación CUBRIMIENTO LIMIT: ${side} (${posSide}) ${quantity} ${currentSymbol} @ ${limitPrice} USDT`;
-        return;
-      }
-
-      logEl.textContent = `Enviando cubrimiento LIMIT ${posSide} (${quantity} @ ${limitPrice})...`;
+      aiActionInProgress = true;
+      lastAiExecutionTime = now;
 
       try {
         const hedgeMode = await resolveHedgeMode();
         const baseUrl = getBaseUrl();
-        const timestamp = Date.now();
 
-        let queryString =
-          `symbol=${currentSymbol}` +
-          `&side=${side}` +
-          `&type=LIMIT` +
-          `&timeInForce=GTC` +
-          `&quantity=${quantity}` +
-          `&price=${limitPrice}` +
-          `&timestamp=${timestamp}`;
+        for (const ord of currentAiPlan.orders) {
+          const qtyStr = formatQty(ord.qty);
+          const priceStr = formatPrice(ord.price);
 
-        if (hedgeMode) {
-          queryString += `&positionSide=${posSide}`;
+          // Modo simulación local si no hay API keys
+          if (!apiKey || !apiSecret) {
+            simulateAiOrderLocally(ord);
+            appendHedgeLog(`🤖 [SIM] ${ord.reason} @ ${priceStr}`);
+            continue;
+          }
+
+          const timestamp = Date.now();
+          let queryString =
+            `symbol=${currentSymbol}` +
+            `&side=${ord.side}` +
+            `&type=LIMIT` +
+            `&timeInForce=GTC` +
+            `&quantity=${qtyStr}` +
+            `&price=${priceStr}` +
+            `&timestamp=${timestamp}`;
+
+          if (hedgeMode) {
+            queryString += `&positionSide=${ord.positionSide}`;
+          }
+
+          const signature = await hmacSha256(apiSecret, queryString);
+
+          const res = await fetch(`${baseUrl}/fapi/v1/order?${queryString}&signature=${signature}`, {
+            method: "POST",
+            headers: {
+              "X-MBX-APIKEY": apiKey,
+              "Content-Type": "application/x-www-form-urlencoded"
+            }
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            if (ord.estPnlCapture !== 0) {
+              aiMemory.realizedProfitUsdt += ord.estPnlCapture;
+            }
+            aiMemory.cyclesExecuted += 1;
+            aiMemory.lastDirection = currentAiPlan.trend;
+            saveAiMemoryToStorage();
+
+            appendHedgeLog(`✅ IA LIMIT #${data.orderId}: ${ord.reason} @ ${priceStr}`);
+          } else {
+            appendHedgeLog(`❌ Error IA (${data.code}): ${data.msg}`);
+          }
         }
 
-        const signature = await hmacSha256(apiSecret, queryString);
-
-        const response = await fetch(`${baseUrl}/fapi/v1/order?${queryString}&signature=${signature}`, {
-          method: "POST",
-          headers: {
-            "X-MBX-APIKEY": apiKey,
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          logEl.textContent = `✅ Cubrimiento LIMIT colocado ID: ${data.orderId} | ${posSide} ${quantity} @ ${limitPrice}`;
+        if (apiKey && apiSecret) {
           setTimeout(syncLivePositionsFromBinance, 800);
         } else {
-          logEl.textContent = `❌ Error Binance (${data.code}): ${data.msg}`;
+          renderLivePositionsTable();
+          updateMemoryDisplay();
+          evaluateAiStrategy();
         }
       } catch (err) {
-        logEl.textContent = `⚠️ Error de red/CORS al colocar cubrimiento Limit.`;
-        console.error(err);
+        appendHedgeLog(`⚠️ Error ejecutando plan IA: ${err.message}`);
+      } finally {
+        aiActionInProgress = false;
       }
+    }
+
+    function simulateAiOrderLocally(ord) {
+      const targetPos = livePositions.find(p => p.side === ord.positionSide);
+      const isOpening = (ord.positionSide === "LONG" && ord.side === "BUY") || (ord.positionSide === "SHORT" && ord.side === "SELL");
+
+      if (isOpening) {
+        if (targetPos) {
+          const totalCost = targetPos.entryPrice * targetPos.qty + ord.price * ord.qty;
+          targetPos.qty += ord.qty;
+          targetPos.entryPrice = totalCost / targetPos.qty;
+        } else {
+          livePositions.push({
+            side: ord.positionSide,
+            qty: ord.qty,
+            entryPrice: ord.price,
+            pnl: 0,
+            leverage: parseInt(document.getElementById("leverageInput").value, 10) || 75
+          });
+        }
+      } else if (targetPos) {
+        const closedQty = Math.min(targetPos.qty, ord.qty);
+        const realized = ord.positionSide === "LONG"
+          ? (ord.price - targetPos.entryPrice) * closedQty
+          : (targetPos.entryPrice - ord.price) * closedQty;
+
+        aiMemory.realizedProfitUsdt += realized;
+        aiMemory.cyclesExecuted += 1;
+        targetPos.qty -= closedQty;
+
+        if (targetPos.qty < exchangeFilters.stepSize) {
+          livePositions = livePositions.filter(p => p.side !== ord.positionSide);
+        }
+      }
+      saveAiMemoryToStorage();
     }
 
     // ================= PANEL 4: GRÁFICO Y LIQUIDEZ (ORDER BOOK) =================
@@ -1349,6 +1694,7 @@
           close: parseFloat(k[4]),
         }));
 
+        recentCandles = formatted.slice(-20);
         candleSeries.setData(formatted);
 
         const wsUrl = `${getWsBaseUrl()}/${symbol.toLowerCase()}@kline_${interval}`;
@@ -1362,16 +1708,26 @@
           document.getElementById("live-price-tag").textContent = `${currentPrice} USDT`;
           document.getElementById("ob-mid-price").textContent = `${currentPrice} USDT`;
 
-          candleSeries.update({
+          const candleObj = {
             time: Math.floor(k.t / 1000),
             open: parseFloat(k.o),
             high: parseFloat(k.h),
             low: parseFloat(k.l),
             close: currentPrice,
-          });
+          };
+
+          candleSeries.update(candleObj);
+
+          // Actualizar buffer de velas recientes para la IA
+          if (recentCandles.length > 0 && recentCandles[recentCandles.length - 1].time === candleObj.time) {
+            recentCandles[recentCandles.length - 1] = candleObj;
+          } else {
+            recentCandles.push(candleObj);
+            if (recentCandles.length > 25) recentCandles.shift();
+          }
 
           updateEstimatedOrder();
-          recalculateHedgeProposal();
+          evaluateAiStrategy();
         };
       } catch (err) {
         console.error("Error cargando velas:", err);
@@ -1396,6 +1752,9 @@
 
         const asks = data.a.slice(0, 8).reverse();
         const bids = data.b.slice(0, 8);
+
+        askLiquiditySum = asks.reduce((sum, a) => sum + parseFloat(a[1]), 0);
+        bidLiquiditySum = bids.reduce((sum, b) => sum + parseFloat(b[1]), 0);
 
         const maxAskQty = Math.max(...asks.map(a => parseFloat(a[1])), 1);
         const maxBidQty = Math.max(...bids.map(b => parseFloat(b[1])), 1);
